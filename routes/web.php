@@ -16,6 +16,10 @@ use Inertia\Inertia;
 |
 */
 
+
+
+
+/*
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -40,3 +44,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+*/
