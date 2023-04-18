@@ -23,7 +23,7 @@ class StoreGroupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'expire_type' => ['required',Rule::in(['no_expire', 'minutes','hours','days','month','year'])],
+            'expire_type' => ['required'],
             'name' => 'required',
             'expire_value' => 'required_if:expire_type,minutes,hours,days,month,year',
         ];

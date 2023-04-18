@@ -24,6 +24,9 @@ class RadAcct extends Model implements  JWTSubject
         return [];
     }
 
+    function servername(){
+        return $this->hasOne(Ras::class,'ipaddress','nasipaddress');
+    }
 
 
 }

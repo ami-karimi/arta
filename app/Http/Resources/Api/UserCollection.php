@@ -33,6 +33,7 @@ class UserCollection extends ResourceCollection
                     'group_id' => $item->group_id,
                     'expire_date' => ($item->expire_date !== NULL ? Jalalian::forge($item->expire_date)->__toString() : '---'),
                     'status' => ($item->isOnline ? 'online': 'offline'),
+                    'is_enabled' => $item->is_enabled ,
                     'created_at' => Jalalian::forge($item->created_at)->__toString(),
                 ];
             }),

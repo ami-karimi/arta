@@ -36,6 +36,15 @@ Route::middleware(['api'])->group(function () {
         Route::get('/list', [\App\Http\Controllers\Admin\UserController::class, 'index']);
         Route::post('/create', [\App\Http\Controllers\Admin\UserController::class, 'create']);
         Route::post('/edit/{id}', [\App\Http\Controllers\Admin\UserController::class, 'edit']);
+        Route::get('/show/{id}', [\App\Http\Controllers\Admin\UserController::class, 'show']);
+        Route::post('/ReChargeAccount/{username}', [\App\Http\Controllers\Admin\UserController::class, 'ReChargeAccount']);
+
+    });
+
+    Route::prefix('radius')->group(function () {
+        Route::post('/radlog', [\App\Http\Controllers\Admin\RadiusController::class, 'radlog']);
+        Route::post('/radauth', [\App\Http\Controllers\Admin\RadiusController::class, 'radauth']);
+        Route::post('/user_report', [\App\Http\Controllers\Admin\RadiusController::class, 'radUserReport']);
     });
 
 });
