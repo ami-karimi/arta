@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class Groups extends Model implements JWTSubject
+class AcctSaved extends Model implements  JWTSubject
 {
     use HasFactory;
-    protected $table = 'groups';
+
+    protected $table = 'acct_saved';
     protected $guarded = ['id'];
 
     public function getJWTIdentifier()

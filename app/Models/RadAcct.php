@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class Groups extends Model implements JWTSubject
+class RadAcct extends Model implements  JWTSubject
 {
+
     use HasFactory;
-    protected $table = 'groups';
+
+    protected $table = 'radacct';
     protected $guarded = ['id'];
 
     public function getJWTIdentifier()
@@ -21,6 +23,7 @@ class Groups extends Model implements JWTSubject
     {
         return [];
     }
+
 
 
 }

@@ -22,6 +22,15 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'username',
+        'group_id',
+        'creator',
+        'role',
+        'multi_login',
+        'expire_set',
+        'exp_val_minute',
+        'expire_type',
+        'expire_value',
         'default_password',
     ];
     public function setPasswordAttribute($password){
@@ -57,4 +66,16 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+
+    function group(){
+        return $this->hasOne(Groups::class,'id','group_id');
+    }
+    function creator_name(){
+        return $this->hasOne(User::class,'id','creator');
+    }
+
+    function isOnline(){
+        return $this->hasOne(RadAcct::class,'username','username')->where('acctstoptime','=',NULL);
+    }
 }

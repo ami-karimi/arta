@@ -32,4 +32,10 @@ Route::middleware(['api'])->group(function () {
         Route::post('/edit/{id}', [\App\Http\Controllers\Admin\GroupsController::class, 'edit']);
     });
 
+    Route::prefix('users')->group(function () {
+        Route::get('/list', [\App\Http\Controllers\Admin\UserController::class, 'index']);
+        Route::post('/create', [\App\Http\Controllers\Admin\UserController::class, 'create']);
+        Route::post('/edit/{id}', [\App\Http\Controllers\Admin\UserController::class, 'edit']);
+    });
+
 });

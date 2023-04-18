@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('username', 20)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('expire_date')->nullable();
+            $table->timestamp('exp_val_minute')->default(0);
             $table->enum('expire_type',['no_expire','minutes','month','hours','days','year'])->default('no_expire');
             $table->enum('role',['admin','user','agent'])->default('user');
             $table->string('expire_value')->nullable();
