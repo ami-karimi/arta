@@ -82,5 +82,8 @@ class User extends Authenticatable implements JWTSubject
     function raddacct(){
         return $this->hasOne(RadAcct::class,'username','username');
     }
+    function agent_users(){
+        return $this->hasMany(User::class,'creator','id');
+    }
 
 }

@@ -53,4 +53,15 @@ Route::middleware(['api'])->group(function () {
         Route::post('/user_report', [\App\Http\Controllers\Admin\RadiusController::class, 'radUserReport']);
     });
 
+    Route::prefix('admins')->group(function () {
+        Route::get('/list', [\App\Http\Controllers\Admin\AdminsController::class, 'index']);
+        Route::get('/view/{id}', [\App\Http\Controllers\Admin\AdminsController::class, 'view']);
+        Route::post('/create', [\App\Http\Controllers\Admin\AdminsController::class, 'create']);
+        Route::post('/edit/{id}', [\App\Http\Controllers\Admin\AdminsController::class, 'edit']);
+    });
+
+    Route::prefix('financial')->group(function () {
+        Route::post('/create', [\App\Http\Controllers\Admin\FinancialController::class, 'create']);
+
+    });
 });

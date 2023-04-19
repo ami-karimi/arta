@@ -24,7 +24,7 @@ class GroupsController extends Controller
         if(!$find){
             return;
         }
-        $find->update($request->only(['name','expire_type','expire_value','multi_login']));
+        $find->update($request->only(['name','expire_type','expire_value','multi_login','price','price_reseler']));
         return response()->json(['status' => true,'message' => 'گروه با موفقیت بروزرسانی شد!']);
     }
 }
