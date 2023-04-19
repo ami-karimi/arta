@@ -57,7 +57,7 @@ class UserController extends Controller
             }
         }
 
-        return new UserCollection($user->orderBy('id','DESC')->paginate(10));
+        return new UserCollection($user->orderBy('id','DESC')->paginate(50));
     }
     public function create(StoreSingleUserRequest $request){
 
@@ -100,6 +100,7 @@ class UserController extends Controller
             $req_all = $request->all();
             $req_all['username'] = $row['username'];
             $req_all['password'] = $row['password'];
+            $req_all['groups'] = $request->username;
             AcctSaved::create($req_all);
 
             $findGroup = Groups::where('id', $request->group_id)->first();
