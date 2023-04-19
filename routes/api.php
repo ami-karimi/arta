@@ -64,6 +64,7 @@ Route::middleware(['api'])->group(function () {
         Route::get('/list', [\App\Http\Controllers\Admin\FinancialController::class, 'index']);
         Route::post('/create', [\App\Http\Controllers\Admin\FinancialController::class, 'create']);
         Route::post('/edit/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'edit']);
+        Route::post('/save_custom_price/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'save_custom_price']);
 
     });
 });

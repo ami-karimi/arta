@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Morilog\Jalali\Jalalian;
+use App\Models\Groups;
+use App\Models\PriceReseler;
 
 class AgentDetailResource extends JsonResource
 {
@@ -24,6 +26,16 @@ class AgentDetailResource extends JsonResource
         $amn_price = Financial::where('for',$this->id)->whereIn('type',['plus_amn'])->sum('price');
 
 
+        $listGroup = Groups::all();
+        $map_price = $listGroup->map(function($item){
+            $findS = PriceReseler::where('group_id',$item->id)->first();
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'price' => $item->price_reseler,
+                'price_for' => ($findS ? $findS->price : $item->price_reseler),
+            ];
+        });
 
         $block = $amn_price - $icom_user - $minus_income;
         $block = ($block < 0 ? 0 : $block);
@@ -47,7 +59,7 @@ class AgentDetailResource extends JsonResource
             'all_users_expire' =>  $this->when($this->agent_users !== null, $this->agent_users->where('expire_date','!=',NULL)->where('expire_date','<=',Carbon::now('Asia/Tehran'))->count()),
             'agent_income' =>  number_format($incom),
             'block' =>  number_format($block),
-
+            'price_list' => $map_price,
         ];
     }
 }

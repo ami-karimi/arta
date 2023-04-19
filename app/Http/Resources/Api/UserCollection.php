@@ -18,7 +18,7 @@ class UserCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'groups' => Groups::select('name','id')->get(),
+            'groups' => Groups::select('name','id','price_reseler')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             'data' => $this->collection->map(function($item){
                 return [

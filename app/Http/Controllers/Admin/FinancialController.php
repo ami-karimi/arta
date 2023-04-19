@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\FinancialCollection;
+use App\Models\Groups;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Requests\AddFinancialRequest;
 use App\Models\Financial;
+use App\Models\PriceReseler;
 
 class FinancialController extends Controller
 {
@@ -110,6 +113,33 @@ class FinancialController extends Controller
             'status' => true,
             'message'=> 'با موفقیت ثبت شد!'
             ]);
+    }
+
+    public function save_custom_price(Request $request,$id){
+        $find_admin = User::where('id',$id)->first();
+        if(!$find_admin){
+            return response()->json([
+                'status' => false,
+                'message'=> 'نماینده یافت نشد!'
+            ],403);
+        }
+        PriceReseler::where('reseler_id',$id)->delete();
+        foreach ($request->price_list as $row){
+            $findGroup = Groups::where('id',$row['id'])->first();
+            if($findGroup){
+                if($row['price_for']){
+                    PriceReseler::create([
+                        'group_id' => $findGroup->id,
+                        'reseler_id' => $id,
+                        'price' => $row['price_for'],
+                    ]);
+                }
+            }
+        }
+        return response()->json([
+            'status' => true,
+            'message'=> 'بروزرسانی با موفقت انجام شد!'
+        ]);
     }
 
 }
