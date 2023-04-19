@@ -22,7 +22,7 @@ class StoreSingleUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => 'required|unique:users|max:20|regex:/^[a-zA-Z0-9]+$/u',
+            'username' => 'required|unique:users|max:20|regex:/^[a-zA-Z0-9{}-]+$/u',
             'password' => 'required',
             'group_id' => 'required',
             'creator' => 'required',

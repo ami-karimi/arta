@@ -18,40 +18,117 @@ use Carbon\Carbon;
 
 class UserController extends Controller
 {
-    public function index(){
-
-        return new UserCollection(User::where('role','user')->orderBy('id','DESC')->paginate(10));
-    }
-    public function create(StoreSingleUserRequest $request){
-
-
-        $req_all = $request->all();
-        AcctSaved::create($request->only(['username','password','creator']));
-
-        $findGroup = Groups::where('id',$request->group_id)->first();
-        if($findGroup->expire_type !== 'no_expire'){
-            if($findGroup->expire_type == 'minutes'){
-                $req_all['exp_val_minute'] = $findGroup->expire_value;
-            }elseif($findGroup->expire_type == 'month'){
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
-            }elseif($findGroup->expire_type == 'days'){
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
-            }elseif($findGroup->expire_type == 'hours'){
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
-            }elseif($findGroup->expire_type == 'year'){
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+    public function index(Request $request){
+        $user =  User::where('role','user');
+        if($request->SearchText){
+            $user->where('name', 'LIKE', "%$request->SearchText%")
+            ->orWhere('username', 'LIKE', "%$request->SearchText%");
+        }
+        if($request->creator){
+            $user->where('creator',$request->creator);
+        }
+        if($request->group_id){
+            $user->where('group_id',$request->group_id);
+        }
+        if($request->is_enabled){
+            $user->where('is_enabled',(int) $request->is_enabled);
+        }
+        if($request->is_enabled){
+            $user->where('is_enabled',(int) $request->is_enabled);
+        }
+        if($request->online_status){
+            if($request->online_status == 'online') {
+                $user->whereHas('raddacct', function ($query) {
+                  return $query->where('acctstoptime',NULL);
+                });
+            }elseif($request->online_status == 'offline'){
+                $user->whereHas('raddacct', function ($query) {
+                    return $query->where('acctstoptime','!=',NULL);
+                });
             }
         }
 
-        $req_all['multi_login'] = $findGroup->multi_login;
-        $req_all['expire_value'] = $findGroup->expire_value;
-        $req_all['expire_type'] = $findGroup->expire_type;
-        $req_all['expire_set'] = 0;
+        if($request->expire_date){
+            if($request->expire_date == 'expired'){
+                $user->where('expire_date','<=',Carbon::now('Asia/Tehran'));
+            }
+            if($request->expire_date == 'expire_5day'){
+                $user->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(5));
+            }
+        }
+
+        return new UserCollection($user->orderBy('id','DESC')->paginate(10));
+    }
+    public function create(StoreSingleUserRequest $request){
+
+        $userNameList = [];
+
+        $type = 'single';
+        if(strpos($request->username,'{')) {
 
 
-        User::create($req_all);
+            $type = 'group';
+            $pos = strpos($request->username,'{');
+            $pos2 = strlen($request->username);
+            $rem = substr($request->username,$pos,$pos2);
+            $replace = str_replace(['{','}'],'',substr($request->username,$pos,$pos2));
+            $exp_count = explode('-',$replace);
+            $start = (int) $exp_count[0];
+            $end = (int) $exp_count[1] + 1;
+            $userNames = str_replace($rem,'',$request->username);
+        }else{
+            array_push($userNameList,['username' => $request->username,'password' => $request->password]);
+        }
 
-        return response()->json(['status' => true,'message' => 'کاربر با موفقیت اضافه شد!']);
+        if($type == 'group'){
+            for ($i= $start; $i < $end;$i++){
+                $buildUsername = $userNames.$i;
+                $findUsername = User::where('username',$buildUsername)->first();
+                if($findUsername){
+                    return response()->json(['status' => false,'نام کاربری '.$buildUsername.' موجود میباشد!']);
+                }
+                $password = $request->password;
+                if($request->random_password){
+                    $password = substr(rand(0,99999),0,(int) $request->random_password_num);
+                }
+
+                array_push($userNameList,['username' => $buildUsername ,'password'  => $password]);
+            }
+        }
+
+        foreach ($userNameList as $row) {
+            $req_all = $request->all();
+            $req_all['username'] = $row['username'];
+            $req_all['password'] = $row['password'];
+            AcctSaved::create($req_all);
+
+            $findGroup = Groups::where('id', $request->group_id)->first();
+            if ($findGroup->expire_type !== 'no_expire') {
+                if ($findGroup->expire_type == 'minutes') {
+                    $req_all['exp_val_minute'] = $findGroup->expire_value;
+                } elseif ($findGroup->expire_type == 'month') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                } elseif ($findGroup->expire_type == 'days') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                } elseif ($findGroup->expire_type == 'year') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                }
+            }
+
+            $req_all['multi_login'] = $findGroup->multi_login;
+            $req_all['expire_value'] = $findGroup->expire_value;
+            $req_all['expire_type'] = $findGroup->expire_type;
+            $req_all['expire_set'] = 0;
+
+
+            User::create($req_all);
+
+        }
+
+        return response()->json(['status' => true, 'message' => 'کاربر با موفقیت اضافه شد!']);
+
     }
     public function edit(EditSingleUserRequest $request,$id){
         $find = User::where('id',$id)->first();
@@ -141,6 +218,142 @@ class UserController extends Controller
         ]);
     }
 
+    public function groupdelete(Request $request){
+
+        foreach ($request->user_ids as $user_id){
+            User::destroy($user_id);
+        }
+
+
+        return response()->json([
+            'status' => true,
+            'message' => 'کاربران انتخابی با موفقیت حذف شدند!'
+        ]);
+
+    }
+    public function group_recharge(Request $request){
+
+        foreach ($request->user_ids as $user_id){
+            $find = User::where('id',$user_id)->first();
+            if($find) {
+                $find->expire_date = NULL;
+                $find->first_login = NULL;
+                $find->expire_set = 0;
+                $find->save();
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'کاربران انتخابی با موفقیت شارژ شدند!'
+        ]);
+
+    }
+    public function group_deactive(Request $request){
+
+        foreach ($request->user_ids as $user_id){
+            $find = User::where('id',$user_id)->first();
+            if($find) {
+                $find->is_enabled = 0;
+                $find->save();
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'کاربران انتخابی با موفقیت غیرفعال شدند!'
+        ]);
+
+    }
+    public function group_active(Request $request){
+
+        foreach ($request->user_ids as $user_id){
+            $find = User::where('id',$user_id)->first();
+            if($find) {
+                $find->is_enabled = 1;
+                $find->save();
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'کاربران انتخابی با موفقیت فعال شدند!'
+        ]);
+
+    }
+    public function change_group_id(Request $request){
+        $findGroup = Groups::where('id',$request->group_id)->first();
+        foreach ($request->user_ids as $user_id){
+            $find = User::where('id',$user_id)->first();
+            if($find){
+
+            $exp_val_minute = $find->exp_val_minute;
+
+            if($request->group_id !== $find->group_id){
+                if($findGroup->expire_type !== 'no_expire'){
+                    if($findGroup->expire_type == 'minutes'){
+                        $exp_val_minute = $findGroup->expire_value;
+                    }elseif($findGroup->expire_type == 'month'){
+                        $exp_val_minute = floor($findGroup->expire_value * 43800);
+                    }elseif($findGroup->expire_type == 'days'){
+                        $exp_val_minute = floor($findGroup->expire_value * 1440);
+                    }elseif($findGroup->expire_type == 'hours'){
+                        $exp_val_minute = floor($findGroup->expire_value * 60);
+                    }elseif($findGroup->expire_type == 'year'){
+                        $exp_val_minute = floor($findGroup->expire_value * 525600);
+                    }
+                }
+                $find->exp_val_minute = $exp_val_minute;
+                $find->multi_login = $findGroup->multi_login;
+                $find->group_id = $findGroup->id;
+
+            }
+
+            $expire_date = false;
+            if($find->first_login !== NULL){
+                $expire_date = Carbon::parse($find->first_login)->addMinutes($exp_val_minute)->toDateTimeString();
+            }
+
+             if($expire_date){
+                $find->expire_date = $expire_date;
+                $find->expire_set = 1;
+                $find->save();
+               }
+
+                $find->save();
+          }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'تغییر گروه کاربری با موفقیت انجام شد!'
+        ]);
+
+    }
+
+    public function change_creator(Request $request){
+        $findCreator = User::where('id',$request->creator)->first();
+        if(!$findCreator){
+            return response()->json([
+                'status' => true,
+                'message' => 'خطا! ایجاد کننده یافت نشد'
+            ]);
+        }
+        foreach ($request->user_ids as $user_id){
+            $find = User::where('id',$user_id)->first();
+            if($find){
+
+              $find->creator = $findCreator->id;
+              $find->save();
+          }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'تغییر ایجاد کننده  با موفقیت انجام شد!'
+        ]);
+
+    }
 
 
 }

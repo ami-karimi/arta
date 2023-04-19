@@ -38,6 +38,12 @@ Route::middleware(['api'])->group(function () {
         Route::post('/edit/{id}', [\App\Http\Controllers\Admin\UserController::class, 'edit']);
         Route::get('/show/{id}', [\App\Http\Controllers\Admin\UserController::class, 'show']);
         Route::post('/ReChargeAccount/{username}', [\App\Http\Controllers\Admin\UserController::class, 'ReChargeAccount']);
+        Route::post('/groupdelete', [\App\Http\Controllers\Admin\UserController::class, 'groupdelete']);
+        Route::post('/group_recharge', [\App\Http\Controllers\Admin\UserController::class, 'group_recharge']);
+        Route::post('/group_deactive', [\App\Http\Controllers\Admin\UserController::class, 'group_deactive']);
+        Route::post('/group_active', [\App\Http\Controllers\Admin\UserController::class, 'group_active']);
+        Route::post('/change_group_id', [\App\Http\Controllers\Admin\UserController::class, 'change_group_id']);
+        Route::post('/change_creator', [\App\Http\Controllers\Admin\UserController::class, 'change_creator']);
 
     });
 

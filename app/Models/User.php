@@ -79,4 +79,8 @@ class User extends Authenticatable implements JWTSubject
     function isOnline(){
         return $this->hasOne(RadAcct::class,'username','username')->where('acctstoptime','=',NULL);
     }
+    function raddacct(){
+        return $this->hasOne(RadAcct::class,'username','username');
+    }
+
 }
