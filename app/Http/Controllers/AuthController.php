@@ -9,6 +9,7 @@ class AuthController extends Controller
 {
 
 
+
     public function login(Request $request)
     {
         $request->validate([
@@ -24,7 +25,12 @@ class AuthController extends Controller
                 'message' => 'Unauthorized',
             ], 401);
         }
-
+        if(!Auth::user()->is_enabled){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'حساب کاربری شما مسدود میباشد لطفا جهت رفع این مشکل با پشتیبانی تماس بگیرید',
+            ], 403);
+        }
         $user = Auth::user();
         return response()->json([
             'status' => 'success',

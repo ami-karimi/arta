@@ -30,12 +30,12 @@ class UserController extends Controller
         if($request->group_id){
             $user->where('group_id',$request->group_id);
         }
-        if($request->is_enabled){
-            $user->where('is_enabled',(int) $request->is_enabled);
+        if($request->is_enabled == 'active'){
+            $user->where('is_enabled',1);
+        }elseif($request->is_enabled == 'deactive'){
+            $user->where('is_enabled',0);
         }
-        if($request->is_enabled){
-            $user->where('is_enabled',(int) $request->is_enabled);
-        }
+
         if($request->online_status){
             if($request->online_status == 'online') {
                 $user->whereHas('raddacct', function ($query) {

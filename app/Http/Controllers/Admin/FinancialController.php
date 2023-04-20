@@ -114,7 +114,6 @@ class FinancialController extends Controller
             'message'=> 'با موفقیت ثبت شد!'
             ]);
     }
-
     public function save_custom_price(Request $request,$id){
         $find_admin = User::where('id',$id)->first();
         if(!$find_admin){
