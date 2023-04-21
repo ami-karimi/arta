@@ -20,10 +20,10 @@ class AgentDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
 
-        $minus_income = Financial::where('for',$this->id)->whereIn('type',['minus'])->sum('price');
-        $icom_user = Financial::where('for',$this->id)->whereIn('type',['plus'])->sum('price');
+        $minus_income = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
+        $icom_user = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
 
-        $amn_price = Financial::where('for',$this->id)->whereIn('type',['plus_amn'])->sum('price');
+        $amn_price = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['plus_amn'])->sum('price');
 
 
         $listGroup = Groups::all();

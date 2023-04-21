@@ -6,6 +6,7 @@ use App\Models\Financial;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Morilog\Jalali\Jalalian;
+use App\Models\CardNumbers;
 
 class FinancialCollection extends ResourceCollection
 {
@@ -31,7 +32,8 @@ class FinancialCollection extends ResourceCollection
                   'approved' => $item->approved,
                   'created_at' =>  Jalalian::forge($item->created_at)->__toString(),
                 ];
-            })
+            }),
+            'card_numbers' => CardNumbers::select(['card_number_name','card_number','card_number_bank'])->where('is_enabled',1)->get(),
         ];
     }
 }
