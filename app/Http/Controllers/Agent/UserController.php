@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\UserCollection;
+use App\Http\Resources\Api\ActivityCollection;
 use App\Models\Groups;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Morilog\Jalali\Jalalian;
+use App\Utility\SaveActivityUser;
+use App\Models\Activitys;
 
 class UserController extends Controller
 {
@@ -123,6 +126,52 @@ class UserController extends Controller
             'groups' => Groups::select('name','id')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
         ]);
+
+
     }
 
+    public function getActivity($id){
+        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        if(!$find){
+            return response()->json([
+                'message' => 'کاربر یافت نشد!'
+            ],403);
+        }
+        return new ActivityCollection(Activitys::where('user_id',$find->id)->orderBy('id','DESC')->paginate(5));
+    }
+    public function edit(Request $request,$id){
+        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        if(!$find){
+            return response()->json([
+                'message' => 'کاربر یافت نشد!'
+            ],404);
+        }
+        if(!$request->password){
+            return response()->json([
+                'message' => 'کلمه عبور کاربر نباید خالی باشد!'
+            ],403);
+        }
+        if(strlen($request->password) < 4){
+            return response()->json([
+                'message' => 'کلمه عبور کاربر حداقل بایستی 4 کاراکتر باشد!'
+            ],403);
+        }
+
+
+        if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
+
+            $find->is_enabled = ($request->is_enabled === true ? 1 : 0);
+            SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => $find->is_enabled]);
+        }
+
+        if($request->password !== $find->password){
+            SaveActivityUser::send($find->id,auth()->user()->id,'change_password',['new' => $request->password,'last' => $find->password]);
+            $find->password = $request->password;
+        }
+
+        $find->save();
+        return response()->json([
+            'message' => 'کاربر با موفقیت بروزرسانی شد!'
+        ]);
+    }
 }

@@ -38,6 +38,7 @@ class UserCollection extends ResourceCollection
                     'created_at' => Jalalian::forge($item->created_at)->__toString(),
                 ];
             }),
+
         ];
     }
 }

@@ -12,4 +12,8 @@ class Activitys extends Model
     protected $table = 'users_activity';
 
     protected $guarded = ['id'];
+
+    public function from(){
+        return $this->hasOne(User::class,'id','by');
+    }
 }

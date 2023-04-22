@@ -31,6 +31,8 @@ class User extends Authenticatable implements JWTSubject
         'expire_set',
         'exp_val_minute',
         'expire_type',
+        'expire_date',
+        'first_login',
         'expire_value',
         'default_password',
     ];

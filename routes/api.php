@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+
+Route::get('/restore', [\App\Http\Controllers\RestoreController::class, 'index']);
+
+
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
 Route::get('/login', function(){
     return \response()->json(['status' => false,'message' => '403 forbidden Login'],403);
@@ -48,6 +53,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/create', [\App\Http\Controllers\Admin\UserController::class, 'create']);
             Route::post('/edit/{id}', [\App\Http\Controllers\Admin\UserController::class, 'edit']);
             Route::get('/show/{id}', [\App\Http\Controllers\Admin\UserController::class, 'show']);
+            Route::get('/activity/{id}', [\App\Http\Controllers\Admin\UserController::class, 'getActivity']);
             Route::post('/ReChargeAccount/{username}', [\App\Http\Controllers\Admin\UserController::class, 'ReChargeAccount']);
             Route::post('/groupdelete', [\App\Http\Controllers\Admin\UserController::class, 'groupdelete']);
             Route::post('/group_recharge', [\App\Http\Controllers\Admin\UserController::class, 'group_recharge']);
@@ -96,6 +102,8 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::post('/group_deactive', [\App\Http\Controllers\Agent\UserController::class, 'group_deactive']);
                 Route::post('/group_active', [\App\Http\Controllers\Agent\UserController::class, 'group_active']);
                 Route::get('/show/{id}', [\App\Http\Controllers\Agent\UserController::class, 'show']);
+                Route::post('/edit/{id}', [\App\Http\Controllers\Agent\UserController::class, 'edit']);
+                Route::get('/activity/{id}', [\App\Http\Controllers\Agent\UserController::class, 'getActivity']);
             });
             Route::prefix('radius')->group(function () {
                 Route::post('/radlog', [\App\Http\Controllers\Admin\RadiusController::class, 'radlog']);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\FinancialCollection;
 use App\Models\Financial;
 use Illuminate\Http\Request;
+use App\Utility\SendNotificationAdmin;
 
 class FinancialController extends Controller
 {
@@ -86,6 +87,8 @@ class FinancialController extends Controller
         }
         $save->save();
 
+        SendNotificationAdmin::send(auth()->user()->id,'financial_create',['price' => $request->price ]);
+
         return response()->json([
             'message' => 'سند پرداختی با موفقیت ثبت شد بعد از تایید مدیریت به موجودی پنل اضافه خواهد شد!'
         ]);
@@ -137,7 +140,12 @@ class FinancialController extends Controller
         if($attachment) {
             $save->attachment = '/attachment/payment/'.$imageName;
         }
+
+
+
         $save->save();
+        SendNotificationAdmin::send(auth()->user()->id,'financial_edit',['id' => $save->id ]);
+
 
         return response()->json([
             'message' => 'سند با موفقیت بروزرسانی شد و در وضعیت در انتظار قرار گرفت!'

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\UserCollection;
+use App\Http\Resources\Api\ActivityCollection;
+use App\Models\Activitys;
 use App\Models\User;
 use App\Models\RadPostAuth;
 use App\Models\Groups;
@@ -218,7 +220,15 @@ class UserController extends Controller
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
         ]);
     }
-
+    public function getActivity($id){
+        $find = User::where('id',$id)->first();
+        if(!$find){
+            return response()->json([
+                'message' => 'کاربر یافت نشد!'
+            ],403);
+        }
+        return new ActivityCollection(Activitys::where('user_id',$find->id)->orderBy('id','DESC')->paginate(5));
+    }
     public function groupdelete(Request $request){
 
         foreach ($request->user_ids as $user_id){
