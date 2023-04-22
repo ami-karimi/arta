@@ -104,7 +104,7 @@ sql {
 
         # Postgreql doesn't take tls{} options in its module config like mysql does - if you want to
         # use SSL connections then use this form of connection info parameter
-#	radius_db = "host=localhost port=5432 dbname=radius user=radius password=raddpass sslmode=verify-full sslcert=/etc/ssl/client.crt sslkey=/etc/ssl/client.key sslrootcert=/etc/ssl/ca.crt" 
+#	radius_db = "host=localhost port=5432 dbname=radius user=radius password=raddpass sslmode=verify-full sslcert=/etc/ssl/client.crt sslkey=/etc/ssl/client.key sslrootcert=/etc/ssl/ca.crt"
 
 	# If you want both stop and start records logged to the
 	# same SQL table, leave this as is.  If you want them in
@@ -131,7 +131,7 @@ sql {
 
 	# If set to 'yes' (default) we read the group tables unless Fall-Through = no in the reply table.
 	# If set to 'no' we do not read the group tables unless Fall-Through = yes in the reply table.
-#	read_groups = yes
+	read_groups = no
 
 	# If set to 'yes' (default) we read profiles unless Fall-Through = no in the groupreply table.
 	# If set to 'no' we do not read profiles unless Fall-Through = yes in the groupreply table.
