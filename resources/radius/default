@@ -870,6 +870,13 @@ post-auth {
        	"%{sql:UPDATE users SET expire_date = date_add(now(),interval +expire_value MINUTE) ,first_login = FROM_UNIXTIME(%{integer:Event-Timestamp}), expire_set = 1 WHERE username = '%{User-Name}'}"
       }
 
+      update reply {
+              	&Reply-Message = "%{sql:SELECT date_add(now(),interval +expire_value MINUTE) AS date FROM users WHERE username = '%{User-Name}'  }"
+              }
+
+
+      reject
+
 	#
 	#  Access-Reject packets are sent through the REJECT sub-section of the
 	#  post-auth section.

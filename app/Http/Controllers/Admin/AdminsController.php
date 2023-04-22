@@ -39,6 +39,7 @@ class AdminsController extends Controller
 
         $reqall = $request->all();
         $reqall['is_enabled'] = ($request->is_enabled ? 1 : 0);
+        $reqall['password'] = Hash::make($request->password);
         User::create($reqall);
 
         return response()->json([
