@@ -302,14 +302,6 @@ authorize {
 	preprocess
 
 	##Edit by Mitul
-	if("%{sql:SELECT COUNT(*) FROM mac_addresses ma JOIN users u ON u.id = ma.user_id WHERE u.is_enabled = 1 AND macaddress = '%{User-Name}'}" >= 1){
-		update request{
-			&User-Name := "%{sql:SELECT username FROM users u JOIN mac_addresses ma ON u.id = ma.user_id WHERE u.is_enabled = 1 AND macaddress = '%{User-Name}'}"
-			&SQL-User-Name := '%{User-Name}'
-			&User-Password := "%{sql:SELECT password FROM users WHERE username = '%{User-Name}'}"
-		}
-	}
-
 
 	  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
        	update reply {
@@ -435,7 +427,7 @@ authorize {
 	#  is meant to mirror the "users" file.
 	#
 	#  See "Authorization Queries" in mods-available/sql
-	sql
+	-sql
 
 
 
@@ -578,7 +570,7 @@ authenticate {
 
 	#
 	#  Allow EAP authentication.
-	#eap
+	eap
 
 	#
 	#  The older configurations sent a number of attributes in
@@ -735,7 +727,7 @@ session {
 
 	#
 	#  See "Simultaneous Use Checking Queries" in mods-available/sql
-   sql
+   -sql
 }
 
 

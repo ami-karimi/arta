@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::get('/restore', [\App\Http\Controllers\RestoreController::class, 'index']);
 
 
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
