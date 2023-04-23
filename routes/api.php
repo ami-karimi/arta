@@ -102,6 +102,7 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::post('/group_active', [\App\Http\Controllers\Agent\UserController::class, 'group_active']);
                 Route::get('/show/{id}', [\App\Http\Controllers\Agent\UserController::class, 'show']);
                 Route::post('/edit/{id}', [\App\Http\Controllers\Agent\UserController::class, 'edit']);
+                Route::post('/create', [\App\Http\Controllers\Agent\UserController::class, 'create']);
                 Route::get('/activity/{id}', [\App\Http\Controllers\Agent\UserController::class, 'getActivity']);
             });
             Route::prefix('radius')->group(function () {

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\AgentUserCollection;
 use App\Http\Resources\Api\ActivityCollection;
+use App\Models\Financial;
 use App\Models\Groups;
+use App\Models\PriceReseler;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -55,7 +57,6 @@ class UserController extends Controller
 
         return new AgentUserCollection($user->orderBy('id','DESC')->paginate(50));
     }
-
     public function group_deactive(Request $request){
 
         foreach ($request->user_ids as $user_id){
@@ -98,7 +99,6 @@ class UserController extends Controller
         ]);
 
     }
-
     public function show($id){
         $userDetial = User::where('id',$id)->where('creator',auth()->user()->id)->first();
         if(!$userDetial){
@@ -129,7 +129,6 @@ class UserController extends Controller
 
 
     }
-
     public function getActivity($id){
         $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
         if(!$find){
@@ -138,6 +137,87 @@ class UserController extends Controller
             ],403);
         }
         return new ActivityCollection(Activitys::where('user_id',$find->id)->orderBy('id','DESC')->paginate(5));
+    }
+    public function create(Request $request){
+
+
+        $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
+        $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
+        $amn_price = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus_amn'])->sum('price');
+        $incom  = $amn_price + $icom_user - $minus_income;
+        if($incom <= 0 ){
+            return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
+        }
+
+        if(!$request->username || $request->group_id){
+            return response()->json(['status' => false,'message' => 'تمامی فیلد ها ضروری میباشند!'],403);
+        }
+        $findGroup = Groups::where('id',$request->group_id)->first();
+        if(!$findGroup){
+            return response()->json(['status' => false,'message' => 'گروه کاربری یافت نشد!'],403);
+        }
+
+
+        $price = $findGroup->price_reseler;
+
+        $findSellectPrice =  PriceReseler::where('group_id',$findGroup->id)->where('reseler_id',auth()->user()->id)->first();
+        if($findSellectPrice){
+            $price = (int) $findSellectPrice->price;
+        }
+
+
+        if($incom < $price ){
+            return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
+        }
+
+        $findNotUserIn = User::where('username',$request->username)->first();
+        if($findNotUserIn){
+            return response()->json(['status' => false,'message' => " نام کاربری ".$request->username." در سیستم موجود میباشد لطفا نام کاربری دیگری انتخاب نمایید!"],403);
+        }
+
+        $req_all = $request->all();
+
+        if($request->random_password){
+            if(!(int) $request->random_password_num){
+                return response()->json(['status' => false,'message' => " نام کاربری ".$request->username."لطفا طول پسورد کاربر را انتخاب نمایید به عدد!"],403);
+            }
+            $req_all['password'] =  substr(rand(1,999999),0,(int) $request->random_password_num);
+        }
+
+        if ($findGroup->expire_type !== 'no_expire') {
+            if ($findGroup->expire_type == 'minutes') {
+                $req_all['exp_val_minute'] = $findGroup->expire_value;
+            } elseif ($findGroup->expire_type == 'month') {
+                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+            } elseif ($findGroup->expire_type == 'days') {
+                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+            } elseif ($findGroup->expire_type == 'hours') {
+                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+            } elseif ($findGroup->expire_type == 'year') {
+                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+            }
+        }
+
+        $req_all['multi_login'] = $findGroup->multi_login;
+        $req_all['expire_value'] = $findGroup->expire_value;
+        $req_all['expire_type'] = $findGroup->expire_type;
+        $req_all['expire_set'] = 0;
+        $req_all['creator'] = auth()->user()->id;
+
+        $user = User::create($req_all);
+
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت ایجاد اکانت '.$req_all['username'];
+        $new->creator = 2;
+        $new->for = auth()->user()->id;
+        $new->save();
+
+        SaveActivityUser::send($user->id,auth()->user()->id,'create');
+        return response()->json(['status' => false,'message' => "اکانت با موفقیت ایجاد شد!"]);
+
     }
     public function edit(Request $request,$id){
         $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();

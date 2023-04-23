@@ -29,7 +29,9 @@ class SaveActivityUser
        if($type == 'active_status'){
            self::ChangeStatusAccount();
        }
-       if($type == 'delete'){
+       if($type == 'create'){
+           self::create();
+
        }
        if($type == 're_charge'){
            self::re_charge();
@@ -99,6 +101,14 @@ class SaveActivityUser
    }
    public static function re_charge(){
        $content = 'اکانت شارژ شد!';
+       Activitys::create([
+           'by' => self::$by,
+           'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+   public static function create(){
+       $content = 'اکانت ایجاد شد!';
        Activitys::create([
            'by' => self::$by,
            'user_id' => self::$user_id,

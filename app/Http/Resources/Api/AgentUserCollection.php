@@ -28,7 +28,7 @@ class AgentUserCollection extends ResourceCollection
 
         $listGroup = Groups::all();
         $map_price = $listGroup->map(function($item){
-            $findS = PriceReseler::where('group_id',$item->id)->first();
+            $findS = PriceReseler::where('group_id',$item->id)->where('reseler_id',auth()->user()->id)->first();
             return [
                 'group_id' => $item->id,
                 'name' => $item->name,
