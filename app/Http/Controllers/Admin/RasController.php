@@ -11,7 +11,7 @@ use App\Http\Requests\EditRasRequest;
 class RasController extends Controller
 {
     public function index(Request $request){
-        return new RasResources(Ras::orderBy('id','DESC')->paginate(10));
+        return new RasResources(Ras::orderBy('id','DESC')->paginate(20));
     }
 
     public function create(StoreRasRequest $request){
