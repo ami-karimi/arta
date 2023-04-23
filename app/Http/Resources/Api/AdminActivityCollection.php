@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Morilog\Jalali\Jalalian;
 
-class ActivityCollection extends ResourceCollection
+class AdminActivityCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,6 +17,7 @@ class ActivityCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
+            'admins' => User::select(['name','id'])->where('role','!=','user')->get(),
             'data' => $this->collection->map(function ($item){
                 return [
                     'content' => $item->content,

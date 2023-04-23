@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\FinancialCollection;
+use App\Http\Resources\Api\AdminFinancialCollection;
 use App\Models\Groups;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -24,8 +25,12 @@ class FinancialController extends Controller
             $financial = $financial->where('for',$request->for);
         }
 
+        $per_page = 4;
+        if($request->per_page){
+            $per_page = (int) $request->per_page;
+        }
 
-        return new FinancialCollection($financial->orderBy('id','DESC')->paginate(4));
+        return new AdminFinancialCollection($financial->orderBy('id','DESC')->paginate($per_page));
     }
     public function create(Request $request){
 
@@ -55,9 +60,14 @@ class FinancialController extends Controller
         if($attachment){
             $new->attachment = '/attachment/payment/'.$imageName;
         }
-        $new->for = $request->admin_id;
+        if($request->admin_id) {
+            $new->for = $request->admin_id;
+        }
+        if($request->for) {
+            $new->for = $request->for;
+        }
         $new->creator = auth()->user()->id;
-        $new->approved = ($request->approved ? 1 : 0);
+        $new->approved = ($request->approved === 'true' ? 1 : 0);
         if($request->description) {
             $new->description = $request->description;
         }
@@ -103,7 +113,7 @@ class FinancialController extends Controller
         }
         $new->for = $request->admin_id;
         $new->creator = auth()->user()->id;
-        $new->approved = ($request->approved ? 1 : 0);
+        $new->approved = ($request->approved === 'true' ? 1 : 0);
         if($request->description) {
             $new->description = $request->description;
         }

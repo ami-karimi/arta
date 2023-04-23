@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\AgentUserCollection;
 use App\Http\Resources\Api\ActivityCollection;
+use App\Http\Resources\Api\AdminActivityCollection;
 use App\Models\Financial;
 use App\Models\Groups;
 use App\Models\PriceReseler;
@@ -137,6 +138,18 @@ class UserController extends Controller
             ],403);
         }
         return new ActivityCollection(Activitys::where('user_id',$find->id)->orderBy('id','DESC')->paginate(5));
+    }
+    public function getActivityAll(Request $request){
+
+        $getAgentUsers = User::select('id')->where('creator',auth()->user()->id)->get()->pluck('id');
+        $activitys =  Activitys::whereIn('user_id',$getAgentUsers);
+
+        $per_page = 10;
+        if($request->per_page){
+            $per_page = (int) $request->per_page;
+        }
+
+        return new ActivityCollection($activitys->orderBy('id','DESC')->paginate($per_page));
     }
     public function ReChargeAccount($username){
         if(!$username){

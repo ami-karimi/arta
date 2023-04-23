@@ -60,6 +60,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/group_active', [\App\Http\Controllers\Admin\UserController::class, 'group_active']);
             Route::post('/change_group_id', [\App\Http\Controllers\Admin\UserController::class, 'change_group_id']);
             Route::post('/change_creator', [\App\Http\Controllers\Admin\UserController::class, 'change_creator']);
+            Route::get('/activitys', [\App\Http\Controllers\Admin\UserController::class, 'getActivityAll']);
 
         });
 
@@ -105,6 +106,8 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::post('/create', [\App\Http\Controllers\Agent\UserController::class, 'create']);
                 Route::get('/activity/{id}', [\App\Http\Controllers\Agent\UserController::class, 'getActivity']);
                 Route::POST('/ReChargeAccount/{username}', [\App\Http\Controllers\Agent\UserController::class, 'ReChargeAccount']);
+                Route::get('/activitys', [\App\Http\Controllers\Agent\UserController::class, 'getActivityAll']);
+
             });
             Route::prefix('radius')->group(function () {
                 Route::post('/radlog', [\App\Http\Controllers\Admin\RadiusController::class, 'radlog']);

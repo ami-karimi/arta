@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\AdminActivityCollection;
 use App\Http\Resources\Api\UserCollection;
 use App\Http\Resources\Api\ActivityCollection;
 use App\Models\Activitys;
@@ -424,6 +425,24 @@ class UserController extends Controller
         ]);
 
     }
+
+    public function getActivityAll(Request $request){
+
+        $activitys = new Activitys();
+        if($request->user_id){
+            $activitys = $activitys->where('user_id',$request->user_id);
+        }
+        if($request->by){
+            $activitys = $activitys->where('by',$request->by);
+        }
+        $per_page = 10;
+        if($request->per_page){
+            $per_page = (int) $request->per_page;
+        }
+
+        return new AdminActivityCollection($activitys->orderBy('id','DESC')->paginate($per_page));
+    }
+
 
 
 }
