@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\UserCollection;
+use App\Http\Resources\Api\AgentUserCollection;
 use App\Http\Resources\Api\ActivityCollection;
 use App\Models\Groups;
 use App\Models\User;
@@ -53,7 +53,7 @@ class UserController extends Controller
             }
         }
 
-        return new UserCollection($user->orderBy('id','DESC')->paginate(50));
+        return new AgentUserCollection($user->orderBy('id','DESC')->paginate(50));
     }
 
     public function group_deactive(Request $request){
