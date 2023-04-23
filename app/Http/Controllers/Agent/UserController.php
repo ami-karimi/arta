@@ -184,6 +184,8 @@ class UserController extends Controller
 
         $find->expire_value = $findGroup->expire_value;
         $find->expire_type = $findGroup->expire_type;
+        $find->expire_date = NULL;
+        $find->first_login = NULL;
         $find->expire_set = 0;
         $find->creator = auth()->user()->id;
 
