@@ -149,7 +149,7 @@ class UserController extends Controller
             return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
         }
 
-        if(!$request->username || $request->group_id){
+        if(!$request->username && !$request->group_id){
             return response()->json(['status' => false,'message' => 'تمامی فیلد ها ضروری میباشند!'],403);
         }
         $findGroup = Groups::where('id',$request->group_id)->first();
