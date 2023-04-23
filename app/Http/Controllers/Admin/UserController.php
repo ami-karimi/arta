@@ -9,6 +9,7 @@ use App\Models\Activitys;
 use App\Models\User;
 use App\Models\RadPostAuth;
 use App\Models\Groups;
+use App\Utility\SaveActivityUser;
 use Illuminate\Http\Request;
 use App\Models\AcctSaved;
 use App\Http\Requests\StoreSingleUserRequest;
@@ -21,6 +22,7 @@ use Carbon\Carbon;
 class UserController extends Controller
 {
     public function index(Request $request){
+
         $user =  User::where('role','user');
         if($request->SearchText){
             $user->where('name', 'LIKE', "%$request->SearchText%")
@@ -138,10 +140,16 @@ class UserController extends Controller
         if(!$find){
             return;
         }
-        $exp_val_minute = $find->exp_val_minute;
+        $lst_name = $find->creator_name->name;
+        $change_owner = false;
+        if($request->creator !== $find->creator){
+            $change_owner = true;
+        }
 
-        if($request->group_id !== $find->group_id){
-            $findGroup = Groups::where('id',$request->group_id)->first();
+        $exp_val_minute = $find->exp_val_minute;
+        $findGroup = Groups::where('id',$request->group_id)->first();
+
+        if($findGroup->id !== $find->group_id){
             if($findGroup->expire_type !== 'no_expire'){
                 if($findGroup->expire_type == 'minutes'){
                     $exp_val_minute = $findGroup->expire_value;
@@ -155,27 +163,57 @@ class UserController extends Controller
                     $exp_val_minute = floor($findGroup->expire_value * 525600);
                 }
             }
+
+            SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new' => $findGroup->name]);
+
+
         }
+
+
+
+        $find->expire_value = $findGroup->expire_value;
+        $find->expire_type = $findGroup->expire_type;
+
 
         $expire_date = false;
         if($find->first_login !== NULL){
             $expire_date = Carbon::parse($find->first_login)->addMinutes($exp_val_minute)->toDateTimeString();
         }
 
-        $is_enabled = 1;
-        if(!$request->is_enabled){
-            $is_enabled = 0;
+        if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
+            $find->is_enabled = ($request->is_enabled === true ? 1 : 0);
+            SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => $find->is_enabled]);
         }
 
-        $find->update($request->only(['group_id','name','creator','multi_login','password','username']));
-        $find->exp_val_minute = $exp_val_minute;
-        $find->is_enabled = $is_enabled;
+        if($request->password !== $find->password){
+            SaveActivityUser::send($find->id,auth()->user()->id,'change_password',['new' => $request->password,'last' => $find->password]);
+            $find->password = $request->password;
+        }
+        if($request->username !== $find->username){
+            SaveActivityUser::send($find->id,auth()->user()->id,'change_multi_login',['new' => $request->username,'last' => $find->username]);
+            $find->username = $request->username;
+        }
+        if($request->multi_login !== $find->multi_login){
+            SaveActivityUser::send($find->id,auth()->user()->id,'change_multi_login',['last' => $find->multi_login,'new' => $request->multi_login]);
+        }
 
+
+        $find->update($request->only(['group_id','name','creator','multi_login']));
+        $find->exp_val_minute = $exp_val_minute;
         if($expire_date){
             $find->expire_date = $expire_date;
             $find->expire_set = 1;
-            $find->save();
         }
+
+        $find->save();
+
+        if($change_owner) {
+            $cr_name = User::where('id',$find->creator)->first();
+            if($cr_name) {
+                SaveActivityUser::send($find->id, auth()->user()->id, 'change_owner', ['last' => $lst_name, 'new' => $cr_name->name]);
+            }
+        }
+
         return response()->json(['status' => true,'message' => 'کاربر با موفقیت بروزرسانی شد!']);
     }
     public function ReChargeAccount($username){
@@ -183,9 +221,13 @@ class UserController extends Controller
         if(!$findUser){
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!']);
         }
+
         $findUser->expire_set = 0;
         $findUser->first_login = NULL;
         $findUser->expire_date = NULL;
+
+        SaveActivityUser::send($findUser->id,auth()->user()->id,'re_charge');
+
         $findUser->save();
 
         return response()->json(['status' => false,'message' => 'کاربر با نام کاربری '.$findUser->username." با موفقیت شارژ شد."]);
@@ -250,6 +292,8 @@ class UserController extends Controller
                 $find->expire_date = NULL;
                 $find->first_login = NULL;
                 $find->expire_set = 0;
+                SaveActivityUser::send($find->id,auth()->user()->id,'re_charge');
+
                 $find->save();
             }
         }
@@ -266,6 +310,8 @@ class UserController extends Controller
             $find = User::where('id',$user_id)->first();
             if($find) {
                 $find->is_enabled = 0;
+                SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => 0]);
+
                 $find->save();
             }
         }
@@ -282,6 +328,8 @@ class UserController extends Controller
             $find = User::where('id',$user_id)->first();
             if($find) {
                 $find->is_enabled = 1;
+                SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => 1]);
+
                 $find->save();
             }
         }
@@ -301,6 +349,8 @@ class UserController extends Controller
             $exp_val_minute = $find->exp_val_minute;
 
             if($request->group_id !== $find->group_id){
+                SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new' => $findGroup->name]);
+
                 if($findGroup->expire_type !== 'no_expire'){
                     if($findGroup->expire_type == 'minutes'){
                         $exp_val_minute = $findGroup->expire_value;
@@ -316,6 +366,8 @@ class UserController extends Controller
                 }
                 $find->exp_val_minute = $exp_val_minute;
                 $find->multi_login = $findGroup->multi_login;
+                $find->expire_type = $findGroup->expire_type;
+                $find->expire_value = $findGroup->expire_value;
                 $find->group_id = $findGroup->id;
 
             }
@@ -353,10 +405,17 @@ class UserController extends Controller
         foreach ($request->user_ids as $user_id){
             $find = User::where('id',$user_id)->first();
             if($find){
-
+              $lst_name = $find->creator_name->name;
+              $change_owner = false;
+              if($findCreator->id !== $find->creator){
+                  $change_owner = true;
+              }
               $find->creator = $findCreator->id;
               $find->save();
-          }
+              if($change_owner) {
+                  SaveActivityUser::send($find->id, auth()->user()->id, 'change_owner', ['last' => $lst_name, 'new' => $findCreator->name]);
+              }
+           }
         }
 
         return response()->json([

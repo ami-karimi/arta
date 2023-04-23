@@ -866,16 +866,11 @@ post-auth {
 	#  Remove reply message if the response contains an EAP-Message
 	remove_reply_message_if_eap
 
-     if("%{sql:SELECT expire_value,expire_type FROM users WHERE username = '%{User-Name}' AND expire_set = 0  AND  expire_type != 'no_expire' }"){
-       	"%{sql:UPDATE users SET expire_date = date_add(now(),interval +expire_value MINUTE) ,first_login = FROM_UNIXTIME(%{integer:Event-Timestamp}), expire_set = 1 WHERE username = '%{User-Name}'}"
+     if("%{sql:SELECT exp_val_minute,expire_value,expire_type FROM users WHERE username = '%{User-Name}' AND expire_set = 0  AND  expire_type != 'no_expire' }"){
+       	"%{sql:UPDATE users SET expire_date = date_add(now(),interval +exp_val_minute MINUTE) ,first_login = FROM_UNIXTIME(%{integer:Event-Timestamp}), expire_set = 1 WHERE username = '%{User-Name}'}"
       }
 
-      update reply {
-              	&Reply-Message = "%{sql:SELECT date_add(now(),interval +expire_value MINUTE) AS date FROM users WHERE username = '%{User-Name}'  }"
-              }
 
-
-      reject
 
 	#
 	#  Access-Reject packets are sent through the REJECT sub-section of the

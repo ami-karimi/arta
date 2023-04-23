@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use \Morilog\Jalali\Jalalian;
@@ -32,6 +33,7 @@ class UserCollection extends ResourceCollection
                     'group' => ($item->group ? $item->group->name : '---'),
                     'group_id' => $item->group_id,
                     'expire_date' => ($item->expire_date !== NULL ? Jalalian::forge($item->expire_date)->__toString() : '---'),
+                    'time_left' => ($item->expire_date !== NULL ? Carbon::now()->diffInDays($item->expire_date, false) : false),
                     'status' => ($item->isOnline ? 'online': 'offline'),
                     'first_login' =>($item->first_login !== NULL ? Jalalian::forge($item->first_login)->__toString() : '---'),
                     'is_enabled' => $item->is_enabled ,

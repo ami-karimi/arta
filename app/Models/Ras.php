@@ -10,4 +10,8 @@ class Ras extends Model
     use HasFactory;
     protected $table = 'nas';
     protected $guarded = ['id'];
+
+    public function getUsersOnline(){
+        return $this->hasMany(RadAcct::class,'nasipaddress','ipaddress')->where('acctstoptime','=',NULL);
+    }
 }
