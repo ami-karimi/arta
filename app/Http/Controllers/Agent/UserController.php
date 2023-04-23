@@ -138,6 +138,68 @@ class UserController extends Controller
         }
         return new ActivityCollection(Activitys::where('user_id',$find->id)->orderBy('id','DESC')->paginate(5));
     }
+    public function ReChargeAccount($username){
+        if(!$username){
+            return response()->json(['status' => false,'message' => 'حساب یافت نشد'],403);
+        }
+        $find = User::where('username',$username)->where('creator',auth()->user()->id)->where('expire_set',1)->first();
+        if(!$find){
+            return response()->json(['status' => false,'message' => 'کاربر یافت نشد!'],403);
+        }
+
+        $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
+        $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
+        $amn_price = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus_amn'])->sum('price');
+        $incom  = $amn_price + $icom_user - $minus_income;
+        if($incom <= 0 ){
+            return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
+        }
+        $findGroup = Groups::where('id',$find->group_id)->first();
+        if(!$findGroup){
+            return response()->json(['status' => false,'message' => 'گروه کاربری یافت نشد!'],403);
+        }
+
+        $price = $findGroup->price_reseler;
+        $findSellectPrice =  PriceReseler::where('group_id',$findGroup->id)->where('reseler_id',auth()->user()->id)->first();
+        if($findSellectPrice){
+            $price = (int) $findSellectPrice->price;
+        }
+        if($incom < $price ){
+            return response()->json(['status' => false,'message' => 'موجودی شما برای پرداخت '.number_format($price).' تومان کافی نمیباشد!'],403);
+        }
+
+        if ($findGroup->expire_type !== 'no_expire') {
+            if ($findGroup->expire_type == 'minutes') {
+                $find->exp_val_minute = $findGroup->expire_value;
+            } elseif ($findGroup->expire_type == 'month') {
+                $find->exp_val_minute = floor($findGroup->expire_value * 43800);
+            } elseif ($findGroup->expire_type == 'days') {
+                $find->exp_val_minute = floor($findGroup->expire_value * 1440);
+            } elseif ($findGroup->expire_type == 'hours') {
+                $find->exp_val_minute = floor($findGroup->expire_value * 60);
+            } elseif ($findGroup->expire_type == 'year') {
+                $find->exp_val_minute = floor($findGroup->expire_value * 525600);
+            }
+        }
+
+        $find->expire_value = $findGroup->expire_value;
+        $find->expire_type = $findGroup->expire_type;
+        $find->expire_set = 0;
+        $find->creator = auth()->user()->id;
+
+        $find->save();
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت شارژ اکانت '.$find->username;
+        $new->creator = 2;
+        $new->for = auth()->user()->id;
+        $new->save();
+
+        SaveActivityUser::send($find->id,auth()->user()->id,'re_charge');
+        return response()->json(['status' => false,'message' => "اکانت با موفقیت شارژ شد!"]);
+    }
     public function create(Request $request){
 
 
