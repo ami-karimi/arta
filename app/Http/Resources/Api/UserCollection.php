@@ -28,7 +28,7 @@ class UserCollection extends ResourceCollection
                     'username' => $item->username,
                     'creator' => $item->creator,
                     'multi_login' => $item->multi_login,
-                    'creator_detial' => ($item->creator_name ? ['name' => $item->creator_name->name ,'id' =>$item->creator_name->id] : [] ) ,
+                    'creator_detial' => ($item->creator_name ? ['name' => $item->creator_name->name,'role' =>$item->creator_name->role ,'id' =>$item->creator_name->id] : [] ) ,
                     'password' => $item->password,
                     'group' => ($item->group ? $item->group->name : '---'),
                     'group_id' => $item->group_id,
