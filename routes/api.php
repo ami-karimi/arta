@@ -62,7 +62,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/change_creator', [\App\Http\Controllers\Admin\UserController::class, 'change_creator']);
             Route::get('/activitys', [\App\Http\Controllers\Admin\UserController::class, 'getActivityAll']);
             Route::get('/AcctSaveds', [\App\Http\Controllers\Admin\UserController::class, 'AcctSaved']);
-            Route::get('/AcctSavedView', [\App\Http\Controllers\Admin\UserController::class, 'AcctSavedView']);
+            Route::POST('/AcctSavedView', [\App\Http\Controllers\Admin\UserController::class, 'AcctSavedView']);
 
         });
 
