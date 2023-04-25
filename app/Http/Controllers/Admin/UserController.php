@@ -446,7 +446,6 @@ class UserController extends Controller
     public function AcctSaved(Request $request){
         $savedAccounts = AcctSaved::select('*')->orderBy('id','DESC')->groupBy('groups')->paginate(20);
 
-        return response()->json($savedAccounts);
         return new AcctSavedCollection($savedAccounts->paginate(20));
     }
 
