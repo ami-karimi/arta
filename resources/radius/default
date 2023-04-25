@@ -312,7 +312,7 @@ authorize {
     		reject
       }
 
-        if("%{sql:SELECT multi_login AS multi_login  FROM users  WHERE users.username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users LEFT JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) }"){
+        if("%{sql:SELECT multi_login  FROM users  WHERE users.username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) }"){
          	update reply {
           	    &Reply-Message := "Maximum Online"
                	&Framed-Pool := "Maximum Online"
