@@ -107,6 +107,7 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::get('/activity/{id}', [\App\Http\Controllers\Agent\UserController::class, 'getActivity']);
                 Route::POST('/ReChargeAccount/{username}', [\App\Http\Controllers\Agent\UserController::class, 'ReChargeAccount']);
                 Route::get('/activitys', [\App\Http\Controllers\Agent\UserController::class, 'getActivityAll']);
+                Route::get('/AcctSaveds', [\App\Http\Controllers\Agent\UserController::class, 'AcctSaved']);
 
             });
             Route::prefix('radius')->group(function () {

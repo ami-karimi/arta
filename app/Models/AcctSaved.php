@@ -4,24 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class AcctSaved extends Model implements  JWTSubject
+class AcctSaved extends Model
 {
     use HasFactory;
 
     protected $table = 'acct_saved';
     protected $guarded = ['id'];
 
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
+    function by(){
+        return $this->hasOne(User::class,'creator','id');
     }
-
-    public function getJWTCustomClaims()
-    {
-        return [];
-    }
-
 
 }

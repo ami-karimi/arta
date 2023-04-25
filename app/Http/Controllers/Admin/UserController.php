@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\AdminActivityCollection;
+use App\Http\Resources\Api\AcctSavedCollection;
 use App\Http\Resources\Api\UserCollection;
 use App\Http\Resources\Api\ActivityCollection;
 use App\Models\Activitys;
@@ -441,6 +442,11 @@ class UserController extends Controller
         }
 
         return new AdminActivityCollection($activitys->orderBy('id','DESC')->paginate($per_page));
+    }
+    public function AcctSaved(Request $request){
+        $savedAccounts = AcctSaved::orderBY('id','DESC')->groupBy('groups');
+
+        return new AcctSavedCollection($savedAccounts->paginate(20));
     }
 
 
