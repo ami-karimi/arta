@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Morilog\Jalali\Jalalian;
@@ -17,12 +18,12 @@ class AcctSavedCollection extends ResourceCollection
     {
         return [
             'data' => $this->collection->map(function($item){
+                $creator_find = User::where('id',(int) $item->creator)->first();
                 return [
                    'id' => $item->id,
-                   'creator' => $item->creator,
+                   'creator' => (int) $item->creator,
                    'groups' => $item->groups,
-                    'item'=> $item,
-                   'by' => ($item->by ? ['id'=> $item->by->id ,'name' => $item->by->name] : '---'),
+                   'by' => ($creator_find ? ['id'=> $creator_find->id ,'name' => $creator_find->name] : '---'),
                    'created_at' => Jalalian::forge($item->created_at)->__toString(),
                 ];
             })
