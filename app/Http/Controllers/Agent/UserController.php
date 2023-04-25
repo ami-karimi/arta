@@ -293,6 +293,12 @@ class UserController extends Controller
         $new->creator = 2;
         $new->for = auth()->user()->id;
         $new->save();
+        $req_all = $request->all();
+        $req_all['username'] = $request->username;
+        $req_all['password'] = $request->password;
+        $req_all['groups'] = $request->username;
+        $req_all['creator'] = auth()->user()->id;
+        AcctSaved::create($req_all);
 
         SaveActivityUser::send($user->id,auth()->user()->id,'create');
         return response()->json(['status' => false,'message' => "اکانت با موفقیت ایجاد شد!"]);

@@ -107,6 +107,8 @@ class UserController extends Controller
             $req_all['username'] = $row['username'];
             $req_all['password'] = $row['password'];
             $req_all['groups'] = $request->username;
+            $req_all['creator'] = $request->creator;
+
             AcctSaved::create($req_all);
 
             $findGroup = Groups::where('id', $request->group_id)->first();

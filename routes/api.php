@@ -16,17 +16,26 @@ use Illuminate\Support\Facades\Route;
 
 
 
+Route::post('/login_user', [\App\Http\Controllers\AuthController::class, 'login_user'])->name('login_user');
 
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
 Route::get('/login', function(){
     return \response()->json(['status' => false,'message' => '403 forbidden Login'],403);
-
 });
 
 
 
 Route::middleware(['auth:api'])->group(function () {
-    Route::get('/user', [\App\Http\Controllers\AuthController::class, 'me']);
+
+      // User Controller
+       Route::prefix('user')->group(function () {
+
+          Route::get('/detial', [\App\Http\Controllers\User\UserController::class, 'index']);
+          Route::POST('/edit_password', [\App\Http\Controllers\User\UserController::class, 'edit_password']);
+
+       });
+
+        Route::get('/user', [\App\Http\Controllers\AuthController::class, 'me']);
 
     // Admin Route
     Route::middleware(['is_admin'])->group(function () {
