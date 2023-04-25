@@ -12,7 +12,7 @@ class AcctSaved extends Model
     protected $table = 'acct_saved';
     protected $guarded = ['id'];
 
-    function by(){
+    public function by(){
         return $this->hasOne(User::class,'creator','id');
     }
 
