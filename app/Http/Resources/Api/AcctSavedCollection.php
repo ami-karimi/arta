@@ -22,6 +22,8 @@ class AcctSavedCollection extends ResourceCollection
                 return [
                    'id' => $item->id,
                    'creator' => (int) $item->creator,
+                   'username' =>  $item->username,
+                   'password' => $item->password,
                    'groups' => $item->groups,
                    'by' => ($creator_find ? ['id'=> $creator_find->id ,'name' => $creator_find->name] : '---'),
                    'created_at' => Jalalian::forge($item->created_at)->__toString(),
