@@ -21,6 +21,8 @@ class RadAuthAcctCollection extends ResourceCollection
                   'id' => $item->id,
                    'username' => $item->username,
                    'reply' => $item->reply,
+                   'pass' => $item->pass,
+                   'message' => $item->message,
                    'created_at' =>  Jalalian::forge($item->created_at)->__toString()
                 ];
             })
