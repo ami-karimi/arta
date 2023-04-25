@@ -16,4 +16,7 @@ class Activitys extends Model
     public function from(){
         return $this->hasOne(User::class,'id','by');
     }
+    public function user(){
+        return $this->hasOne(User::class,'id','user_id');
+    }
 }

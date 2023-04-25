@@ -22,6 +22,7 @@ class ActivityCollection extends ResourceCollection
                     'content' => $item->content,
                     'created_at' => Jalalian::forge($item->created_at)->__toString(),
                     'by' => $item->by,
+                    'user' => ($item->user !== NULL ? ['name' => $item->user->username  ,'id' => $item->user->id] : false),
                     'from' => ($item->from !== NULL ? ['name' => $item->from->name ,'role' => $item->from->role ,'id' => $item->from->id] : false)
                 ];
             })

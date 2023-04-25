@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\AcctSavedCollection;
 use App\Http\Resources\Api\AgentUserCollection;
 use App\Http\Resources\Api\ActivityCollection;
 use App\Http\Resources\Api\AdminActivityCollection;
+use App\Models\AcctSaved;
 use App\Models\Financial;
 use App\Models\Groups;
 use App\Models\PriceReseler;
@@ -331,4 +333,26 @@ class UserController extends Controller
             'message' => 'کاربر با موفقیت بروزرسانی شد!'
         ]);
     }
+
+    public function AcctSaved(Request $request){
+        $savedAccounts = AcctSaved::where('creator',auth()->user()->id)->select('*')->orderBy('id','DESC')->groupBy('groups');
+
+        return new AcctSavedCollection($savedAccounts->paginate(20));
+    }
+    public function AcctSavedView(Request $request){
+
+        $findSaved = AcctSaved::where('id',$request->id)->where('creator',auth()->user()->id)->first();
+        if(!$findSaved){
+            return response()->json([
+                'status' => false,
+                'message' => 'اکانت یافت نشد!'
+            ],403);
+        }
+        $savedAccounts = AcctSaved::where('groups',$findSaved->groups);
+
+        return new AcctSavedCollection($savedAccounts->paginate(50));
+    }
+
+
+
 }
