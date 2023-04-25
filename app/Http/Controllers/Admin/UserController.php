@@ -444,8 +444,9 @@ class UserController extends Controller
         return new AdminActivityCollection($activitys->orderBy('id','DESC')->paginate($per_page));
     }
     public function AcctSaved(Request $request){
-        $savedAccounts = AcctSaved::groupBy('groups');
+        $savedAccounts = AcctSaved::orderBy('id','DESC')->groupBy('groups')->paginate(20);
 
+        return response()->json($savedAccounts);
         return new AcctSavedCollection($savedAccounts->paginate(20));
     }
 
