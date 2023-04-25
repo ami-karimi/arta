@@ -448,6 +448,19 @@ class UserController extends Controller
 
         return new AcctSavedCollection($savedAccounts->paginate(20));
     }
+    public function AcctSavedView(Request $request){
+
+        $findSaved = AcctSaved::where('id',$request->id)->first();
+        if(!$findSaved){
+            return response()->json([
+                'status' => false,
+                'message' => 'اکانت یافت نشد!'
+            ],403);
+        }
+        $savedAccounts = AcctSaved::where('groups',$findSaved->groups);
+
+        return new AcctSavedCollection($savedAccounts->paginate(50));
+    }
 
 
 
