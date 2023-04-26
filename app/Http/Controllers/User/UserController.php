@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\RadAuthAcctCollection;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\RadAcct;
 use Morilog\Jalali\Jalalian;
+use App\Models\RadPostAuth;
 
 class UserController extends Controller
 {
@@ -84,5 +86,13 @@ class UserController extends Controller
        $findUser->password = $request->password;
        $findUser->save();
        return response()->json(['status' => false,'message' => 'کله عبور با موفقیت بروزرسانی شد!']);
+   }
+
+
+   public function auth_log(Request $request){
+       $radLog =  new RadPostAuth();
+       $radLog = $radLog->where('username',$request->user()->username);
+
+       return new RadAuthAcctCollection($radLog->orderBY('id','DESC')->paginate(5));
    }
 }
