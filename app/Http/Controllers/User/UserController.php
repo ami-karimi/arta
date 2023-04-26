@@ -4,9 +4,11 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\RadAuthAcctCollection;
+use App\Http\Resources\Api\GetServerCollection;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Ras;
 use App\Models\RadAcct;
 use Morilog\Jalali\Jalalian;
 use App\Models\RadPostAuth;
@@ -54,12 +56,11 @@ class UserController extends Controller
                'last_online' => ($lastOnline ? Jalalian::forge($lastOnline->acctupdatetime)->__toString() : false),
                'preg_left' => $preg,
                'expire_date' => ($findUser->expire_date !== NULL ? Jalalian::forge($findUser->expire_date)->__toString() : false),
-               'last_connect' => ($lastOnline ? $lastOnline->servername->name : false),
+               'last_connect' => ($lastOnline->servername ? $lastOnline->servername->name : false),
                'online_count' => $onlineCount,
            ]
        ]);
    }
-
    public function edit_password(Request $request){
        if(!$request->password){
            return response()->json([
@@ -87,12 +88,14 @@ class UserController extends Controller
        $findUser->save();
        return response()->json(['status' => false,'message' => 'کله عبور با موفقیت بروزرسانی شد!']);
    }
-
-
    public function auth_log(Request $request){
        $radLog =  new RadPostAuth();
        $radLog = $radLog->where('username',$request->user()->username);
 
        return new RadAuthAcctCollection($radLog->orderBY('id','DESC')->paginate(5));
+   }
+   public function get_servers(Request $request){
+
+       return new GetServerCollection(Ras::where('is_enabled',1)->orderBy('name','DESC')->get());
    }
 }
