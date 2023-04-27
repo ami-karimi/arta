@@ -23,7 +23,7 @@ class AgentDetailResource extends JsonResource
         $minus_income = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
 
-        $amn_price = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['plus_amn'])->sum('price');
+        $amn_price = Financial::where('for',$this->id)->where('approved',0)->whereIn('type',['plus_amn'])->sum('price');
 
 
         $listGroup = Groups::all();
@@ -37,10 +37,10 @@ class AgentDetailResource extends JsonResource
             ];
         });
 
-        $block = $amn_price - $icom_user - $minus_income;
+        $block = $amn_price;
         $block = ($block < 0 ? 0 : $block);
 
-        $incom  = $amn_price + $icom_user - $minus_income;
+        $incom  =  $icom_user - $minus_income;
 
         return [
             'detail' => [

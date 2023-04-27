@@ -24,7 +24,6 @@ class AgentUserCollection extends ResourceCollection
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
 
-        $amn_price = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus_amn'])->sum('price');
 
         $listGroup = Groups::all();
         $map_price = $listGroup->map(function($item){
@@ -38,7 +37,7 @@ class AgentUserCollection extends ResourceCollection
         });
 
 
-        $incom  = $amn_price + $icom_user - $minus_income;
+        $incom  = $icom_user - $minus_income;
 
         return [
             'groups' => Groups::select('name','id','price_reseler')->get(),

@@ -165,8 +165,8 @@ class UserController extends Controller
 
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
-        $amn_price = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus_amn'])->sum('price');
-        $incom  = $amn_price + $icom_user - $minus_income;
+        $incom  =  $icom_user - $minus_income;
+
         if($incom <= 0 ){
             return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
         }
@@ -223,8 +223,7 @@ class UserController extends Controller
 
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
-        $amn_price = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus_amn'])->sum('price');
-        $incom  = $amn_price + $icom_user - $minus_income;
+        $incom  = $icom_user - $minus_income;
         if($incom <= 0 ){
             return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
         }
