@@ -464,8 +464,8 @@ class UserController extends Controller
         return new AcctSavedCollection($savedAccounts->paginate(50));
     }
 
-    public function acct_id($acct_id){
-        $find = RadAcct::where('radacctid',$acct_id)->first();
+    public function acct_id(Request $request){
+        $find = RadAcct::where('radacctid',$request->radacctid)->first();
         if($find){
             return response()->json([
                 'status' => false,

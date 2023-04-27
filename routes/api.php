@@ -74,7 +74,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/activitys', [\App\Http\Controllers\Admin\UserController::class, 'getActivityAll']);
             Route::get('/AcctSaveds', [\App\Http\Controllers\Admin\UserController::class, 'AcctSaved']);
             Route::POST('/AcctSavedView', [\App\Http\Controllers\Admin\UserController::class, 'AcctSavedView']);
-            Route::POST('/kill_user/{acct_id}', [\App\Http\Controllers\Admin\UserController::class, 'kill_user']);
+            Route::POST('/kill_user', [\App\Http\Controllers\Admin\UserController::class, 'kill_user']);
 
         });
 
@@ -123,7 +123,7 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::get('/activitys', [\App\Http\Controllers\Agent\UserController::class, 'getActivityAll']);
                 Route::get('/AcctSaveds', [\App\Http\Controllers\Agent\UserController::class, 'AcctSaved']);
                 Route::POST('/AcctSavedView', [\App\Http\Controllers\Agent\UserController::class, 'AcctSavedView']);
-                Route::POST('/kill_user/{acct_id}', [\App\Http\Controllers\Agent\UserController::class, 'kill_user']);
+                Route::POST('/kill_user', [\App\Http\Controllers\Agent\UserController::class, 'kill_user']);
 
             });
             Route::prefix('radius')->group(function () {
