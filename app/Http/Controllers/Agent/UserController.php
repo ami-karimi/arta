@@ -11,6 +11,7 @@ use App\Models\AcctSaved;
 use App\Models\Financial;
 use App\Models\Groups;
 use App\Models\PriceReseler;
+use App\Models\RadAcct;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -359,6 +360,22 @@ class UserController extends Controller
         return new AcctSavedCollection($savedAccounts->paginate(50));
     }
 
+    public function acct_id($acct_id){
+        $find = RadAcct::where('radacctid',$acct_id)->first();
+        if($find){
+            return response()->json([
+                'status' => false,
+                'message' => 'نشست یافت نشد!'
+            ],403);
+        }
+
+        $find->acctstoptime = Carbon::now('Asia/Tehran');
+        $find->save();
+        return response()->json([
+            'status' => false,
+            'message' => 'عملیات با موفقیت انجام شد!'
+        ]);
+    }
 
 
 }

@@ -464,6 +464,22 @@ class UserController extends Controller
         return new AcctSavedCollection($savedAccounts->paginate(50));
     }
 
+    public function acct_id($acct_id){
+        $find = RadAcct::where('radacctid',$acct_id)->first();
+        if($find){
+            return response()->json([
+                'status' => false,
+                'message' => 'نشست یافت نشد!'
+            ],403);
+        }
+
+        $find->acctstoptime = Carbon::now('Asia/Tehran');
+        $find->save();
+        return response()->json([
+            'status' => false,
+            'message' => 'عملیات با موفقیت انجام شد!'
+        ]);
+    }
 
 
 }
