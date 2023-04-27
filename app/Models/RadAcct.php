@@ -14,6 +14,8 @@ class RadAcct extends Model implements  JWTSubject
     protected $table = 'radacct';
     protected $guarded = ['radacctid'];
 
+    protected $primaryKey = 'radacctid';
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
