@@ -360,7 +360,7 @@ class UserController extends Controller
         return new AcctSavedCollection($savedAccounts->paginate(50));
     }
 
-    public function acct_id(Request $request){
+    public function kill_user(Request $request){
         $find = RadAcct::where('radacctid',$request->radacctid)->first();
         if($find){
             return response()->json([
