@@ -12,7 +12,7 @@ class RadAcct extends Model implements  JWTSubject
     use HasFactory;
 
     protected $table = 'radacct';
-    protected $guarded = ['id'];
+    protected $guarded = ['radacctid'];
 
     public function getJWTIdentifier()
     {
