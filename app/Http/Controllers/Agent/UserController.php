@@ -362,7 +362,7 @@ class UserController extends Controller
 
     public function kill_user(Request $request){
         $find = RadAcct::where('radacctid',$request->radacctid)->first();
-        if($find){
+        if(!$find){
             return response()->json([
                 'status' => false,
                 'message' => 'نشست یافت نشد!'
