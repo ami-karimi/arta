@@ -302,6 +302,8 @@ authorize {
 	preprocess
 
 	##Edit by Mitul
+	 "%{sql:DELETE FROM radacct   WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 1 MINUTE)  AND  ISNULL(acctstoptime) }"
+
 
 	  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
        	update reply {
@@ -452,7 +454,7 @@ authorize {
     	# Let him connect with EXPIRED pool in reply
 
     	update reply {
-    	  &Reply-Message := "Your account has expired, %{User-Name} / Reason: DATE LIMIT REACHED"
+    	  &Reply-Message := "Expired Account"
        	 &Framed-Pool := "Expired"
     	}
     }
