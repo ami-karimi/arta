@@ -170,13 +170,32 @@ class UserController extends Controller
 
             SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new' => $findGroup->name]);
 
+            $find->expire_value = $findGroup->expire_value;
+            $find->expire_type = $findGroup->expire_type;
+
+        }
+
+        if($request->change_expire_type){
+            if($request->expire_type == 'minutes'){
+                $exp_val_minute = $request->expire_value;
+            }elseif($request->expire_type == 'month'){
+                $exp_val_minute = floor(((int) $request->expire_value) * 43800);
+            }elseif($request->expire_type == 'days'){
+                $exp_val_minute = floor(((int) $request->expire_value) * 1440);
+            }elseif($request->expire_type == 'hours'){
+                $exp_val_minute = floor(((int) $request->expire_value) * 60);
+            }elseif($request->expire_type == 'year'){
+                $exp_val_minute = floor(((int) $request->expire_value) * 525600);
+            }
+            $find->expire_value = $request->expire_value;
+            $find->expire_type = $request->expire_type;
+            SaveActivityUser::send($find->id,auth()->user()->id,'change_expire',['type' => $request->expire_type,'value' => $request->expire_value]);
 
         }
 
 
 
-        $find->expire_value = $findGroup->expire_value;
-        $find->expire_type = $findGroup->expire_type;
+
 
 
         $expire_date = false;
@@ -256,6 +275,8 @@ class UserController extends Controller
                 'password' => $userDetial->password,
                 'group' => ($userDetial->group ? $userDetial->group->name : '---'),
                 'group_id' => $userDetial->group_id,
+                'expire_type' => $userDetial->expire_type,
+                'expire_value' => $userDetial->expire_value,
                 'expire_date' => ($userDetial->expire_date !== NULL ? Jalalian::forge($userDetial->expire_date)->__toString() : '---'),
                 'left_time' => ($userDetial->expire_date !== NULL ? Carbon::now()->diffInDays($userDetial->expire_date, false) : '---'),
                 'status' => ($userDetial->isOnline ? 'online': 'offline'),

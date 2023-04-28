@@ -37,6 +37,9 @@ class SaveActivityUser
            self::re_charge();
 
        }
+       if($type == 'change_expire'){
+           self::ChangeExpireRelative();
+       }
        if($type == 'delete_session'){
        }
        if($type == 'change_username'){
@@ -61,6 +64,14 @@ class SaveActivityUser
    }
    public static function ChangePassword(){
        $content = 'کلمه عبور از '.self::$data['last']." به ".self::$data['new']."  تغییر کرد.";
+       Activitys::create([
+           'by' => self::$by,
+           'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+   public static function ChangeExpireRelative(){
+       $content = vsprintf('انقضا کاربر بصورت دسترسی روی %s با مقدار %s تنظیم شد',[self::$data['type'],self::$data['value']]);
        Activitys::create([
            'by' => self::$by,
            'user_id' => self::$user_id,
