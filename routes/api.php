@@ -103,6 +103,14 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/save_custom_price/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'save_custom_price']);
 
         });
+
+        Route::prefix('cards')->group(function () {
+            Route::get('/list', [\App\Http\Controllers\Admin\CardsController::class, 'list']);
+            Route::post('/create', [\App\Http\Controllers\Admin\CardsController::class, 'create']);
+            Route::post('/edit/{id}', [\App\Http\Controllers\Admin\CardsController::class, 'edit']);
+            Route::delete('/delete/{id}', [\App\Http\Controllers\Admin\CardsController::class, 'delete']);
+
+        });
     });
 
 
@@ -137,6 +145,19 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::post('/user_report', [\App\Http\Controllers\Admin\RadiusController::class, 'radUserReport']);
             });
 
+            Route::prefix('notifications')->group(function () {
+                Route::get('/dashboard', [\App\Http\Controllers\Agent\NotificationController::class, 'dashboard']);
+                Route::post('/read', [\App\Http\Controllers\Agent\NotificationController::class, 'read']);
+                Route::get('/list', [\App\Http\Controllers\Agent\NotificationController::class, 'list']);
+            });
+
+            Route::prefix('cards')->group(function () {
+                Route::get('/list', [\App\Http\Controllers\Agent\CardsController::class, 'list']);
+                Route::post('/create', [\App\Http\Controllers\Agent\CardsController::class, 'create']);
+                Route::post('/edit/{id}', [\App\Http\Controllers\Agent\CardsController::class, 'edit']);
+                Route::delete('/delete/{id}', [\App\Http\Controllers\Agent\CardsController::class, 'delete']);
+
+            });
 
         });
     });

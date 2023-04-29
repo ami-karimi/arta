@@ -20,6 +20,40 @@ class SendNotificationAdmin
        if($type == 'financial_edit'){
            self::EditFinancial();
        }
+
+       if($type == 'created_cart_agent'){
+           self::CreateCard();
+       }
+       if($type == 'edit_cart_agent'){
+           self::EditCard();
+       }
+      if($type == 'admin_create_card'){
+           self::AdminCreateCard();
+       }
+
+      if($type == 'admin_enabled_card'){
+           self::AdminEnabledCard();
+       }
+      if($type == 'admin_disabled_card'){
+           self::AdminDisabledCard();
+       }
+      if($type == 'create_financial_admin'){
+           self::CreateFinancialAdmin();
+       }
+      if($type == 'approved_financial_admin'){
+           self::ApprovedFinancialAdmin();
+       }
+      if($type == 'reject_financial_admin'){
+           self::RejectFinancialAdmin();
+       }
+
+      if($type == 'admin_change_price_factore'){
+           self::ChangeFinancialPriceAdmin();
+       }
+      if($type == 'admin_change_custom_price'){
+           self::ChangeCustomPrice();
+       }
+
    }
 
    public static function SendFinancial(){
@@ -37,6 +71,115 @@ class SendNotificationAdmin
        Notifications::create([
            'from' => self::$from,
            'for' => 'admin',
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+
+   public static function CreateCard(){
+       $content = 'شماره کارت جدید ثبت شد با شناسه : '.number_format(self::$data['id']);
+       Notifications::create([
+           'from' => self::$from,
+           'for' => 'admin',
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+
+   public static function EditCard(){
+       $content = 'شماره کارت ویرایش شد با شناسه : '.number_format(self::$data['id']);
+       Notifications::create([
+           'from' => self::$from,
+           'for' => 'admin',
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+
+   public static function AdminCreateCard(){
+       $content = 'شماره حساب توسط مدیر برای شما ایجاد شد';
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+
+   public static function AdminEnabledCard(){
+       $content = 'شماره حساب شما به شناسه '.self::$data['id']." توسط مدیر فعال شد !";
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function AdminDisabledCard(){
+       $content = 'شماره حساب شما به شناسه '.self::$data['id']." توسط مدیر غیرفعال شد !";
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function CreateFinancialAdmin(){
+      $content = vsprintf(' یک فاکتور مالی برای شما ثبت شد توسط مدیر به مبلغ %s نوع (%s) با وضعیت (%s) توضیحات : %s',[number_format(self::$data['price'])." تومان",(self::$data['type'] == 'plus' ? 'افزایش' : (self::$data['type'] == 'minus' ? 'کاهش' : 'بدهکاری')),
+          (self::$data['approved'] ? 'تایید شده' : 'تایید نشده' ),self::$data['description']]);
+
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function ApprovedFinancialAdmin(){
+      $content = vsprintf('فاکتور ثبتی به شناسه %s و با مبلغ (%s) تومان توسط مدیر تایید شد توضیحات : (%s) و به مبلغ پنل شما اضافه شد.',[self::$data['id'],number_format(self::$data['price']),self::$data['description']]);
+
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function RejectFinancialAdmin(){
+      $content = vsprintf('فاکتور ثبتی به شناسه %s و با مبلغ (%s) تومان توسط مدیر رد شد توضیحات : (%s) ',[self::$data['id'],number_format(self::$data['price']),self::$data['description']]);
+
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function ChangeFinancialPriceAdmin(){
+      $content = vsprintf('فاکتور ثبتی به شناسه %s  مبلغ (%s) تومان به (%s) تومان توسط مدیر تغییر کرد توضیحات : (%s) ',[self::$data['id'],number_format(self::$data['price']),number_format(self::$data['new_price']),self::$data['description']]);
+
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function ChangeCustomPrice(){
+      $content = vsprintf('قیمت بسته گروه (%s) برای شما توسط مدیر از (%s) تومان  به (%s) تومان تغییر داده شد.',[self::$data['group_name'],number_format(self::$data['price']),number_format(self::$data['new_price'])]);
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
            'content' => $content,
        ]);
 

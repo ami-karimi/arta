@@ -17,7 +17,7 @@ class NotificationController extends Controller
 
     }
     public function list(Request $request){
-        $notificationList = Notifications::where('for','admin')->orderBy('id','DESC')->paginate(30);
+        $notificationList = Notifications::orderBy('id','DESC')->paginate(30);
         return new AdminNotificationCollection($notificationList);
     }
 

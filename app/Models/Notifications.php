@@ -16,4 +16,7 @@ class Notifications extends Model
     public function sender(){
         return $this->hasOne(User::class,'id','from');
     }
+    public function foruser(){
+        return $this->hasOne(User::class,'id','for');
+    }
 }

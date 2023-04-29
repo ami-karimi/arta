@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests\AddFinancialRequest;
 use App\Models\Financial;
 use App\Models\PriceReseler;
+use App\Utility\SendNotificationAdmin;
+
 
 class FinancialController extends Controller
 {
@@ -73,6 +75,16 @@ class FinancialController extends Controller
         }
         $new->save();
 
+        SendNotificationAdmin::send('admin', 'create_financial_admin', [
+            'id' => $new->id,
+            'for' => $new->for,
+            'price' => $new->price,
+            'type' => $new->type,
+            'approved' => $new->approved,
+            'description' => $request->description,
+        ]);
+
+
         return response()->json([
             'status' => true,
             'message'=> 'با موفقیت ثبت شد!'
@@ -107,13 +119,47 @@ class FinancialController extends Controller
         }
 
         $new->type = $request->type;
+
+        if($new->price !== $request->price){
+
+              SendNotificationAdmin::send('admin', 'admin_change_price_factore', [
+                  'id' => $new->id,
+                  'price' => $new->price,
+                  'new_price' => $request->price,
+                  'for' => $new->for,
+                  'description' => $request->description,
+              ]);
+        }
         $new->price = $request->price;
         if($attachment){
             $new->attachment = '/attachment/payment/'.$imageName;
         }
         $new->for = $request->admin_id;
         $new->creator = auth()->user()->id;
+
+        if($new->approved !== ($request->approved === 'true' ? 1 : 0)) {
+            if(($request->approved === 'true' ? 1 : 0)) {
+                SendNotificationAdmin::send('admin', 'approved_financial_admin', [
+                    'id' => $new->id,
+                    'price' => $new->price,
+                    'for' => $new->for,
+                    'description' => $request->description,
+                ]);
+            }else{
+                SendNotificationAdmin::send('admin', 'reject_financial_admin', [
+                    'id' => $new->id,
+                    'price' => $new->price,
+                    'for' => $new->for,
+                    'description' => $request->description,
+                ]);
+            }
+        }
+
+
         $new->approved = ($request->approved === 'true' ? 1 : 0);
+
+
+
         if($request->description) {
             $new->description = $request->description;
         }
@@ -142,6 +188,14 @@ class FinancialController extends Controller
                         'reseler_id' => $id,
                         'price' => $row['price_for'],
                     ]);
+                    SendNotificationAdmin::send('admin', 'admin_change_custom_price', [
+                        'price' => $findGroup->price_reseler,
+                        'new_price' => $row['price_for'],
+                        'for' => $id,
+                        'group_name' => $findGroup->name,
+                    ]);
+
+
                 }
             }
         }
