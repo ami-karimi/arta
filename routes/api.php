@@ -44,6 +44,11 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
+        Route::prefix('notifications')->group(function () {
+            Route::get('/dashboard', [\App\Http\Controllers\Admin\NotificationController::class, 'dashboard']);
+            Route::post('/read', [\App\Http\Controllers\Admin\NotificationController::class, 'read']);
+            Route::get('/list', [\App\Http\Controllers\Admin\NotificationController::class, 'list']);
+        });
 
 
         Route::prefix('ras')->group(function () {

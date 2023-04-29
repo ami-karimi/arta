@@ -12,4 +12,8 @@ class Notifications extends Model
 
     protected $guarded = ['id'];
 
+
+    public function sender(){
+        return $this->hasOne(User::class,'id','from');
+    }
 }
