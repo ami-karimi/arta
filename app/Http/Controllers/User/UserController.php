@@ -9,9 +9,14 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Ras;
+use App\Models\Groups;
 use App\Models\RadAcct;
 use Morilog\Jalali\Jalalian;
 use App\Models\RadPostAuth;
+use App\Models\UserMetas;
+use App\Models\ReselerMeta;
+use App\Utility\Helper;
+
 
 class UserController extends Controller
 {
@@ -55,8 +60,10 @@ class UserController extends Controller
                'time_left' => $leftTime,
                'last_online' => ($lastOnline ? Jalalian::forge($lastOnline->acctupdatetime)->__toString() : false),
                'preg_left' => $preg,
+               'expire_set' => $findUser->expire_set,
+               'credit' => $findUser->creadit,
                'expire_date' => ($findUser->expire_date !== NULL ? Jalalian::forge($findUser->expire_date)->__toString() : false),
-               'last_connect' => ($lastOnline->servername ? $lastOnline->servername->name : false),
+               'last_connect' => ($lastOnline !== NULL ? ($lastOnline->servername ? $lastOnline->servername->name : '---') : '---'),
                'online_count' => $onlineCount,
            ]
        ]);
@@ -97,5 +104,20 @@ class UserController extends Controller
    public function get_servers(Request $request){
 
        return new GetServerCollection(Ras::where('is_enabled',1)->orderBy('name','DESC')->get());
+   }
+
+
+   public function get_groups(){
+         return response()->json([
+             'groups' => Helper::getGroupPriceReseler(),
+             'credit' => auth()->user()->creadit,
+             'expire_set' => auth()->user()->expire_set,
+             'left_time' => (auth()->user()->expire_date !== NULL ? Carbon::now()->diffInDays(auth()->user()->expire_date, false) : false),
+
+         ]);
+   }
+
+   public function get_group(){
+       return response()->json(Helper::getGroupPriceReseler('one',auth()->user()->group_id));
    }
 }

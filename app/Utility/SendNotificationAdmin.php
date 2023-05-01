@@ -54,6 +54,11 @@ class SendNotificationAdmin
            self::ChangeCustomPrice();
        }
 
+
+       if($type == 'user_send_financial'){
+           self::UserSendFinancial();
+       }
+
    }
 
    public static function SendFinancial(){
@@ -185,4 +190,15 @@ class SendNotificationAdmin
 
        return true;
    }
+   public static function UserSendFinancial(){
+      $content = vsprintf('یک رسید پرداختی برای شما ارسال کرد به مبلغ : %s',[number_format(self::$data['price'])]);
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
 }
+
