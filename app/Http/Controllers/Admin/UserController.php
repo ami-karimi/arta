@@ -317,6 +317,7 @@ class UserController extends Controller
                 $find->expire_date = NULL;
                 $find->first_login = NULL;
                 $find->expire_set = 0;
+
                 SaveActivityUser::send($find->id,auth()->user()->id,'re_charge');
 
                 $find->save();

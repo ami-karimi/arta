@@ -59,6 +59,13 @@ class SendNotificationAdmin
            self::UserSendFinancial();
        }
 
+       if($type == 'user_edit_financial'){
+           self::UserEditFinancial();
+       }
+      if($type == 'user_charge_account'){
+           self::user_charge_account();
+       }
+
    }
 
    public static function SendFinancial(){
@@ -192,6 +199,27 @@ class SendNotificationAdmin
    }
    public static function UserSendFinancial(){
       $content = vsprintf('یک رسید پرداختی برای شما ارسال کرد به مبلغ : %s',[number_format(self::$data['price'])]);
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+
+   public static function UserEditFinancial(){
+      $content = vsprintf(' کاربر رسید پرداختی  به شناسه  (%s) مبلغ : %s را ویرایش کرد.',[self::$data['id'],number_format(self::$data['price'])]);
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function user_charge_account(){
+      $content = vsprintf(' کاربر حساب کاربری خود را در  گروه (%s) با مبلغ (%s) تومان شارژ کرد.',[self::$data['group_name'],number_format(self::$data['price'])]);
        Notifications::create([
            'from' => auth()->user()->id,
            'for' => self::$data['for'],

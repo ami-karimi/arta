@@ -10,4 +10,6 @@ class ReselerMeta extends Model
     use HasFactory;
     protected $table = 'rseler_meta';
     protected $guarded = ['id'];
+
+    public $timestamps = false;
 }

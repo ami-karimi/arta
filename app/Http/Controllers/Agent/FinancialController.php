@@ -12,7 +12,7 @@ class FinancialController extends Controller
 {
     public function index(Request $request){
         $perpage = ($request->per_page && $request->per_page < 100 ? (int)  $request->per_page : 4);
-        $financial =  Financial::where('for',auth()->user()->id);
+        $financial =  Financial::where('for',auth()->user()->id)->orWhere('creator',auth()->user()->id);
         if($request->approved){
            if($request->approved == 'approved'){
                $financial->where('approved',1);
@@ -94,9 +94,24 @@ class FinancialController extends Controller
         ]);
 
     }
+
     public function edit(Request $request,$id){
-        $save =  Financial::where('id',$id)->where('approved','!=',1)->where('for',auth()->user()->id)->first();
+
+        $save =  Financial::where('id',$id)->where('approved','!=',1)->first();
         if(!$save){
+            return response()->json([
+                'message' => 'سند پرداختی یافت نشد یا در وضعیت تایید شده میباشد'
+            ],403);
+        }
+        if($save->for_user){
+            if($save->for_user->role == 'agent'){
+                if($save->for !== auth()->user()->id){
+                    return response()->json([
+                        'message' => 'سند پرداختی یافت نشد یا در وضعیت تایید شده میباشد'
+                    ],403);
+                }
+            }
+        }else{
             return response()->json([
                 'message' => 'سند پرداختی یافت نشد یا در وضعیت تایید شده میباشد'
             ],403);
@@ -135,7 +150,12 @@ class FinancialController extends Controller
 
         $save->description = $request->description;
         $save->type = 'plus';
-        $save->approved = 0;
+        if($save->for_user->role == 'agent') {
+            $save->approved = 0;
+        }
+        if($save->for_user->role == 'user') {
+            $save->approved =  ($request->approved === 'true' ? 1 : 0);
+        }
         $save->price = $request->price;
         if($attachment) {
             $save->attachment = '/attachment/payment/'.$imageName;

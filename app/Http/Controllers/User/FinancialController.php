@@ -46,6 +46,7 @@ class FinancialController extends Controller
    }
 
 
+
    public function create(Request $request){
        if(!$request->price){
            return response()->json(['message' => 'لطفا هزینه پرداختی را وارد نمایید'],403);
@@ -73,7 +74,6 @@ class FinancialController extends Controller
        $financial->for = auth()->user()->id;
        $financial->description = $request->description;
        $financial->type = 'plus';
-       $financial->attachment = $attachment;
        if($attachment){
            $financial->attachment = '/attachment/payment/'.$imageName;
        }
@@ -84,6 +84,47 @@ class FinancialController extends Controller
        SendNotificationAdmin::send(auth()->user()->id,'user_send_financial',['for' => $creator ,'price' => $request->price]);
 
        return response()->json(['message' => 'سند پرداختی با موفقیت ثبت شد، پس از تایید به موجودی شما اضافه خواهد شد.']);
+
+   }
+
+   public function edit(Request $request,$id){
+       $find = Financial::where('id',$id)->where('for',auth()->user()->id)->where('approved','!=',1)->first();
+       if(!$find){
+           return response()->json(['message' => 'رسید یافت نشد و یا تایید شده است امکان ویرایش ندارد!'],403);
+       }
+       if(!$request->price){
+           return response()->json(['message' => 'لطفا هزینه پرداختی را وارد نمایید'],403);
+       }
+
+       if((int) $request->price < 5000){
+           return response()->json(['message' => 'ثبت هزینه پرداختی زیر 5000 تومان قابل قبول نمیباشد!'],403);
+       }
+       $attachment = false;
+       $imageName = '';
+           if (!$request->file('attachment') && !$find->attachment) {
+               return response()->json(['message' => 'لطفا رسید پرداخت را انتخاب نمایید!'], 403);
+           }
+           if($request->has('attachment')){
+               if($request->file('attachment')){
+                   $imageName = time().'.'.$request->attachment->extension();
+                   $attachment =  $request->attachment->move(public_path('attachment/payment'), $imageName);
+               }
+           }
+
+
+       $find->description = $request->description;
+       $find->type = 'plus';
+       if($attachment){
+           $find->attachment = '/attachment/payment/'.$imageName;
+       }
+       $find->approved = 0;
+       $find->price = $request->price;
+       $find->save();
+
+       SendNotificationAdmin::send(auth()->user()->id,'user_edit_financial',['id' => $find->id,'for' => $find->creator ,'price' => $request->price]);
+
+       return response()->json(['message' => 'سند پرداختی با موفقیت بروزرسانی شد!']);
+
 
    }
 }

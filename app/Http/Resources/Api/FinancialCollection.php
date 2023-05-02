@@ -22,9 +22,10 @@ class FinancialCollection extends ResourceCollection
                 return [
                   'id' => $item->id,
                   'creator' => $item->creator,
+                  'type_send' =>   ($item->for_user ? $item->for_user->role : 'me'),
                   'creator_name' => ($item->creator_by ? $item->creator_by->name : '---'),
                   'for' => $item->for,
-                  'for_name' => ($item->for_user ? $item->for_user->name : '---'),
+                  'for_name' => ($item->for_user ? ($item->for_user->name ? $item->for_user->name : $item->for_user->username) : '---'),
                   'description' => $item->description,
                   'type' => $item->type,
                   'price' => $item->price,

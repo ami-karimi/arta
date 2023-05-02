@@ -37,10 +37,13 @@ Route::middleware(['auth:api'])->group(function () {
           Route::get('/get_groups', [\App\Http\Controllers\User\UserController::class, 'get_groups']);
           Route::get('/get_group', [\App\Http\Controllers\User\UserController::class, 'get_group']);
 
+          Route::POST('/charge_account', [\App\Http\Controllers\User\UserController::class, 'charge_account']);
+
 
           Route::prefix('financial')->group(function () {
               Route::POST('/create', [\App\Http\Controllers\User\FinancialController::class, 'create']);
               Route::get('/list', [\App\Http\Controllers\User\FinancialController::class, 'list']);
+              Route::POST('/edit/{id}', [\App\Http\Controllers\User\FinancialController::class, 'edit']);
 
           });
        });
@@ -167,7 +170,10 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::delete('/delete/{id}', [\App\Http\Controllers\Agent\CardsController::class, 'delete']);
 
             });
-
+            Route::prefix('groups')->group(function () {
+                Route::get('/list', [\App\Http\Controllers\Agent\AgentController::class, 'GetGroups']);
+                Route::post('/edit/{group_id}', [\App\Http\Controllers\Agent\AgentController::class, 'edit']);
+            });
         });
     });
 

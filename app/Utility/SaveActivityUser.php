@@ -51,6 +51,13 @@ class SaveActivityUser
        if($type == 'change_multi_login'){
            self::change_multi_login();
        }
+
+       if($type == 'change_group_user'){
+           self::change_group_user();
+       }
+       if($type == 'user_recharge_account'){
+           self::user_recharge_account();
+       }
    }
 
    public static function ChangeStatusAccount(){
@@ -123,6 +130,23 @@ class SaveActivityUser
        Activitys::create([
            'by' => self::$by,
            'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+
+   public static function change_group_user(){
+       $content = vsprintf('گروه کاربری کاربر از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
+           'content' => $content,
+       ]);
+   }
+   public static function user_recharge_account(){
+       $content = vsprintf('حساب کاربری شارژ شد!',[]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
            'content' => $content,
        ]);
    }
