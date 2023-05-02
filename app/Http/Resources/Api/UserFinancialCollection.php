@@ -27,7 +27,7 @@ class UserFinancialCollection extends ResourceCollection
 
 
         $cart_numbers = CardNumbers::where('for',auth()->user()->creator)->where('is_enabled',1)->first();
-        if(!$cart_numbers){
+        if($cart_numbers){
             $cart_numbers = CardNumbers::where('for',0)->where('is_enabled',1)->first();
         }
 
