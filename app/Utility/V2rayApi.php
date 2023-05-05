@@ -48,7 +48,7 @@ class V2rayApi
         $this->default_transmission =
             empty($default_transmission) ? "ws" : $default_transmission;
         $this->empty_object = new \stdClass();
-        $this->cookies_directory = public_path('.cookies');
+        $this->cookies_directory = public_path('.cookies/');
         $this->cookie_txt_path = "$this->cookies_directory$this->address.$this->port.txt";
 
         if(!is_dir($this->cookies_directory)) mkdir($this->cookies_directory);
