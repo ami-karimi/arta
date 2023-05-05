@@ -19,6 +19,12 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $fillable = [
+        'service_group',
+        'protocol_v2ray',
+        'remark_v2ray',
+        'v2ray_transmission',
+        'v2ray_location',
+        'port_v2ray',
         'name',
         'email',
         'password',
@@ -86,6 +92,9 @@ class User extends Authenticatable implements JWTSubject
     }
     function agent_users(){
         return $this->hasMany(User::class,'creator','id');
+    }
+    function v2ray_server(){
+        return $this->hasOne(Ras::class,'id','v2ray_location');
     }
 
 

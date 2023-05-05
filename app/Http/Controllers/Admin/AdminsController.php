@@ -12,6 +12,9 @@ use App\Http\Requests\CreateAdminRequest;
 use App\Http\Requests\EitAdminRequest;
 use Illuminate\Support\Facades\Hash;
 use Morilog\Jalali\Jalalian;
+use App\Utility\V2rayApi;
+use App\Http\Resources\Api\V2rayServersStatusCollection;
+use App\Models\Ras;
 
 class AdminsController extends Controller
 {
@@ -87,6 +90,10 @@ class AdminsController extends Controller
             'message' => 'حساب کاربری با موفقیت بروزرسانی شد'
         ]);
     }
+    public function GetRealV2rayServerStatus(Request $request){
+        $gets = Ras::where('server_type','v2ray')->where('is_enabled',1)->paginate(5);
 
+        return new V2rayServersStatusCollection($gets);
+    }
 
 }

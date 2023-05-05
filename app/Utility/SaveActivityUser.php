@@ -58,6 +58,21 @@ class SaveActivityUser
        if($type == 'user_recharge_account'){
            self::user_recharge_account();
        }
+       if($type == 'change_user_protocol'){
+           self::change_user_protocol();
+       }
+       if($type == 'change_user_port'){
+           self::change_user_port();
+       }
+       if($type == 'change_user_transmission'){
+           self::change_user_transmission();
+       }
+       if($type == 'change_user_location'){
+           self::change_user_location();
+       }
+       if($type == 'remark_v2ray'){
+           self::remark_v2ray();
+       }
    }
 
    public static function ChangeStatusAccount(){
@@ -136,6 +151,46 @@ class SaveActivityUser
 
    public static function change_group_user(){
        $content = vsprintf('گروه کاربری کاربر از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
+           'content' => $content,
+       ]);
+   }
+   public static function change_user_protocol(){
+       $content = vsprintf('پرتکل کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
+           'content' => $content,
+       ]);
+   }
+   public static function change_user_port(){
+       $content = vsprintf('پرت کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
+           'content' => $content,
+       ]);
+   }
+   public static function change_user_transmission(){
+       $content = vsprintf('transmission کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
+           'content' => $content,
+       ]);
+   }
+   public static function change_user_location(){
+       $content = vsprintf('لوکیشن کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
+           'content' => $content,
+       ]);
+   }
+   public static function remark_v2ray(){
+       $content = vsprintf('ریمارک کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
            'user_id' => auth()->user()->id,

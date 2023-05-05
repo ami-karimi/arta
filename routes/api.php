@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+Route::get('/ping', [\App\Http\Controllers\ApiController::class, 'index']);
+
 
 Route::post('/login_user', [\App\Http\Controllers\AuthController::class, 'login_user'])->name('login_user');
 
@@ -55,6 +57,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::middleware(['is_admin'])->group(function () {
 
         Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+
+        Route::prefix('v2ray')->group(function () {
+            Route::get('/status', [\App\Http\Controllers\Admin\AdminsController::class, 'GetRealV2rayServerStatus']);
+        });
 
         Route::prefix('notifications')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Admin\NotificationController::class, 'dashboard']);

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Groups;
 use App\Http\Resources\Api\GroupsCollection;
 use App\Http\Requests\StoreGroupRequest;
-class GroupsController extends Controller
+class VolumeGroupsController extends Controller
 {
     public function index(){
 
@@ -17,14 +17,14 @@ class GroupsController extends Controller
     public function create(StoreGroupRequest $request){
         Groups::create($request->all());
 
-        return response()->json(['status' => true,'message' => 'گروه با موفقیت اضافه شد!']);
+        return response()->json(['status' => true,'message' => 'گروه حجمی با موفقیت اضافه شد!']);
     }
     public function edit(StoreGroupRequest $request,$id){
         $find = Groups::where('id',$id)->first();
         if(!$find){
             return;
         }
-        $find->update($request->only(['name','expire_type','expire_value','multi_login','price','price_reseler','group_type','group_volume']));
-        return response()->json(['status' => true,'message' => 'گروه با موفقیت بروزرسانی شد!']);
+        $find->update($request->only(['name','expire_type','expire_value','multi_login','price','price_reseler']));
+        return response()->json(['status' => true,'message' => 'گروه حجمی با موفقیت بروزرسانی شد!']);
     }
 }

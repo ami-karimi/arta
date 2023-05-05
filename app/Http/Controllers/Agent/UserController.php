@@ -12,7 +12,9 @@ use App\Models\Financial;
 use App\Models\Groups;
 use App\Models\PriceReseler;
 use App\Models\RadAcct;
+use App\Models\Ras;
 use App\Models\User;
+use App\Utility\V2rayApi;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Morilog\Jalali\Jalalian;
@@ -107,6 +109,72 @@ class UserController extends Controller
         $userDetial = User::where('id',$id)->where('creator',auth()->user()->id)->first();
         if(!$userDetial){
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!']);
+        }
+
+        if($userDetial->service_group == 'v2ray'){
+
+            $findServer = false;
+            $usage = 0;
+            $total = 0;
+            $left_usage = 0;
+            $v2ray_user = [];
+            $preg_left = 0;
+            $down = 0;
+            $up = 0;
+            if($userDetial->v2ray_server){
+                $login_s =new V2rayApi($userDetial->v2ray_server->ipaddress,$userDetial->v2ray_server->port_v2ray,$userDetial->v2ray_server->username_v2ray,$userDetial->v2ray_server->password_v2ray);
+                if($login_s) {
+                    $v2ray_user =  $login_s->list(['port' => (int) $userDetial->port_v2ray]);
+                    if(count($v2ray_user)) {
+                        if (!$userDetial->v2ray_id) {
+                            $userDetial->v2ray_id = $v2ray_user['id'];
+                            $userDetial->save();
+                        }
+                        $usage = $login_s->formatBytes($v2ray_user['usage'],2);
+                        $total = $login_s->formatBytes($v2ray_user['total'],2);
+                        $left_usage = $login_s->formatBytes($v2ray_user['total'] - $v2ray_user['usage']);
+                        $preg_left = ($v2ray_user['total'] > 0 ? ($v2ray_user['usage'] * 100 / $v2ray_user['total']) : 0);
+                        $preg_left = 100  - $preg_left  ;
+                        $down = $login_s->formatBytes($v2ray_user['down'],2);
+                        $up = $login_s->formatBytes($v2ray_user['up'],2);
+                    }
+                }
+            }
+
+            return  response()->json([
+                'status' => true,
+                'user' => [
+                    'id' => $userDetial->id,
+                    'server_detial' => ($userDetial->v2ray_server ? $userDetial->v2ray_server->only(['server_location','ipaddress','cdn_address_v2ray']) : false),
+                    'left_usage' => $left_usage,
+                    'down' => $down,
+                    'up' => $up,
+                    'preg_left' => $preg_left,
+                    'v2ray_user' => $v2ray_user,
+                    'usage' => $usage,
+                    'total' => $total,
+                    'name' => $userDetial->name,
+                    'v2ray_location' => $userDetial->v2ray_location,
+                    'v2ray_transmission' => $userDetial->v2ray_transmission,
+                    'port_v2ray' => $userDetial->port_v2ray,
+                    'remark_v2ray' => $userDetial->remark_v2ray,
+                    'protocol_v2ray' => $userDetial->protocol_v2ray,
+                    'v2ray_id' => $userDetial->v2ray_id,
+                    'v2ray_u_id' => $userDetial->v2ray_u_id,
+                    'service_group' => $userDetial->service_group,
+                    'username' => $userDetial->username,
+                    'creator' => $userDetial->creator,
+                    'creator_detial' => ($userDetial->creator_name ? ['name' => $userDetial->creator_name->name ,'id' =>$userDetial->creator_name->id] : [] ) ,
+                    'password' => $userDetial->password,
+                    'group' => ($userDetial->group ? $userDetial->group->name : '---'),
+                    'group_id' => $userDetial->group_id,
+                    'is_enabled' => $userDetial->is_enabled ,
+                    'created_at' => Jalalian::forge($userDetial->created_at)->__toString(),
+                ],
+                'groups' => Groups::select('name','id')->get(),
+                'v2ray_servers' => Ras::select(['id','server_type','name','server_location'])->where('server_type','v2ray')->where('is_enabled',1)->get(),
+                'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
+            ]);
         }
 
         return  response()->json([
@@ -322,11 +390,48 @@ class UserController extends Controller
             ],403);
         }
 
+        $login = false;
+        if($find->service_group == 'v2ray'){
+            $login = new V2rayApi($find->v2ray_server->ipaddress,$find->v2ray_server->port_v2ray,$find->v2ray_server->username_v2ray,$find->v2ray_server->password_v2ray);
+        }
+
+        if($find->service_group == 'v2ray') {
+            if ($request->protocol_v2ray !== $find->protocol_v2ray) {
+                if ($login) {
+                    $change = $login->update($find->port_v2ray, ['protocol' => $request->protocol_v2ray]);
+                    if ($change) {
+                        SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_protocol', ['last' => $find->protocol_v2ray, 'new' => $request->protocol_v2ray]);
+                        $find->protocol_v2ray = $request->protocol_v2ray;
+                    }
+                }
+            }
+            if ($request->v2ray_transmission !== $find->v2ray_transmission) {
+                if ($login) {
+                    $change = $login->update($find->port_v2ray, ['transmission' => $request->v2ray_transmission]);
+                    if ($change) {
+                        SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_transmission', ['last' => $find->v2ray_transmission, 'new' => $request->v2ray_transmission]);
+                        $find->v2ray_transmission = $request->v2ray_transmission;
+                    }
+                }
+            }
+            if ($request->remark_v2ray !== $find->remark_v2ray) {
+                if ($login) {
+                    $change = $login->update($find->port_v2ray, ['remark' => $request->remark_v2ray]);
+                    if ($change) {
+                        SaveActivityUser::send($find->id, auth()->user()->id, 'remark_v2ray', ['last' => $find->remark_v2ray, 'new' => $request->remark_v2ray]);
+                        $find->remark_v2ray = $request->remark_v2ray;
+                    }
+                }
+            }
+
+        }
 
         if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
-
             $find->is_enabled = ($request->is_enabled === true ? 1 : 0);
             SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => $find->is_enabled]);
+            if($login){
+                $login->update($find->port_v2ray,['enable' => $request->is_enabled]);
+            }
         }
 
         if($request->password !== $find->password){

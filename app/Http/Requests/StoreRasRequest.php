@@ -24,7 +24,6 @@ class StoreRasRequest extends FormRequest
         return [
             'ipaddress' => 'required|unique:nas|max:20|ip',
             'name' => 'required',
-            'secret' => 'required',
         ];
     }
 

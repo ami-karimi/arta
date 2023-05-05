@@ -25,7 +25,7 @@ class RasController extends Controller
         if(!$find){
             return;
         }
-        $find->update($request->only(['name','secret','ipaddress','is_enabled','l2tp_address','server_location']));
+        $find->update($request->only(['name','secret','ipaddress','is_enabled','l2tp_address','server_location','password_v2ray','port_v2ray','username_v2ray','cdn_address_v2ray','server_location']));
         return response()->json(['status' => true,'message' => 'سرور با موفقیت بروزرسانی شد!']);
     }
 

@@ -23,15 +23,14 @@ class StoreGroupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'expire_type' => ['required'],
+            'group_type' => ['required'],
             'name' => 'required',
-            'expire_value' => 'required_if:expire_type,minutes,hours,days,month,year',
         ];
     }
     public function messages()
     {
         return [
-            'expire_type.required' => 'نوع انقضا ضروری میباشد.',
+            'group_type.required' => 'نوع انقضا ضروری میباشد.',
             'name.required' => 'نام غذا ضروری میباشد!',
             'expire_type.in' => 'نوع انقضا نامعتبر میباشد!',
             'expire_value.required' => 'مقدار انقضا ضروری میباشد!',
