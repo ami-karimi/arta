@@ -104,7 +104,7 @@ class UserController extends Controller
             }
 
 
-            $create_status =  $login->add($request->protocol_v2ray,$findLocation->group_volume,$request->v2ray_transmission,$request->remark_v2ray ." -".$request->username,$request->port_v2ray,strtotime(time()."+360 Days"));
+            $create_status =  $login->add($request->protocol_v2ray,(int) $findGroup->group_volume,$request->v2ray_transmission,$request->remark_v2ray ." -".$request->username,$request->port_v2ray,strtotime(time()."+360 Days"));
             if(!$create_status){
                 return response()->json(['message' => 'متسفانه کاربر در سرور مورد نظر ایجاد نشد ! مجددا تلاش نمایید'],403);
             }
