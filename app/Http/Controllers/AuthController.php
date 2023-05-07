@@ -17,7 +17,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $findUser = User::select(['name','username','password','expire_date','is_enabled','group_id','id'])->where('username',$request->username)->where('password',$request->password)->where('role','user')->first();
+        $findUser = User::select(['name','username','password','expire_date','service_group','is_enabled','group_id','id'])->where('username',$request->username)->where('password',$request->password)->where('role','user')->first();
         if(!$findUser){
             return response()->json(['status' => false,'message' => 'نام کاربری یا کلمه عبور اشتباه میباشد!'],403);
         }

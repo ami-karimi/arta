@@ -106,7 +106,7 @@ class V2rayApi
 
     public function login() : array
     {
-        return $this->request("login",[
+        return $this->request("2ete",[
             "username" => $this->username,
             "password" => $this->password
         ]);
@@ -115,7 +115,7 @@ class V2rayApi
     public function list(array $filter = []) : array
     {
         $list = (array)$this->request(
-            "xui/inbound/list"
+            "/2ete/xui/inbound/list"
         )["obj"];
 
         if(!empty($filter))
@@ -306,7 +306,7 @@ class V2rayApi
             ])
         ];
 
-        return (bool)$this->request("xui/inbound/add",$post)["success"];
+        return (bool)$this->request("2ete/xui/inbound/add",$post)["success"];
     }
 
     /**
@@ -387,13 +387,13 @@ class V2rayApi
 
         $user["sniffing"] = json_encode($user["sniffing"]);
 
-        return (bool)$this->request("xui/inbound/update/$id",$user)["success"];
+        return (bool)$this->request("2ete/xui/inbound/update/$id",$user)["success"];
     }
 
     public function del(int $id) : bool
     {
         return (bool)$this->request(
-            "xui/inbound/del/$id"
+            "2ete/xui/inbound/del/$id"
         )["success"];
     }
 

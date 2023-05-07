@@ -42,7 +42,12 @@ Route::middleware(['auth:api'])->group(function () {
           Route::POST('/charge_account', [\App\Http\Controllers\User\UserController::class, 'charge_account']);
 
 
-          Route::prefix('financial')->group(function () {
+           Route::prefix('v2ray')->group(function () {
+               Route::POST('/buy_volume', [\App\Http\Controllers\User\V2rayController::class, 'buy_volume']);
+               Route::POST('/update_config', [\App\Http\Controllers\User\V2rayController::class, 'update_config']);
+           });
+
+              Route::prefix('financial')->group(function () {
               Route::POST('/create', [\App\Http\Controllers\User\FinancialController::class, 'create']);
               Route::get('/list', [\App\Http\Controllers\User\FinancialController::class, 'list']);
               Route::POST('/edit/{id}', [\App\Http\Controllers\User\FinancialController::class, 'edit']);

@@ -7,6 +7,7 @@ use App\Http\Resources\Api\RadAuthAcctCollection;
 use App\Http\Resources\Api\GetServerCollection;
 use App\Models\Financial;
 use App\Utility\SendNotificationAdmin;
+use App\Utility\V2rayApi;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -29,6 +30,81 @@ class UserController extends Controller
            return response()->json(['status' => false,'message' => 'حساب کاربری یافت نشد!'],403);
        }
 
+       if($findUser->service_group == 'v2ray'){
+
+           $findServer = false;
+           $usage = 0;
+           $total = 0;
+           $left_usage = 0;
+           $v2ray_user = [];
+           $preg_left = 0;
+           $down = 0;
+           $up = 0;
+           if($findUser->v2ray_server){
+               $login_s =new V2rayApi($findUser->v2ray_server->ipaddress,$findUser->v2ray_server->port_v2ray,$findUser->v2ray_server->username_v2ray,$findUser->v2ray_server->password_v2ray);
+               if($login_s) {
+                   $v2ray_user =  $login_s->list(['port' => (int) $findUser->port_v2ray]);
+                   if(count($v2ray_user)) {
+                       if (!$findUser->v2ray_id) {
+                           $findUser->v2ray_id = $v2ray_user['id'];
+                           $findUser->save();
+                       }
+                       $usage = $login_s->formatBytes($v2ray_user['usage'],2);
+                       $total = $login_s->formatBytes($v2ray_user['total'],2);
+                       $left_usage = $login_s->formatBytes($v2ray_user['total'] - $v2ray_user['usage']);
+                       $preg_left = ($v2ray_user['total'] > 0 ? ($v2ray_user['usage'] * 100 / $v2ray_user['total']) : 0);
+                       $preg_left = 100  - $preg_left  ;
+                       $down = $login_s->formatBytes($v2ray_user['down'],2);
+                       $up = $login_s->formatBytes($v2ray_user['up'],2);
+                   }
+               }
+           }
+
+           $ballance = Financial::where('for',auth()->user()->id)->where('approved',1)->where('type','plus')->get()->sum('price');
+           $ballance_minus = Financial::where('for',auth()->user()->id)->where('approved',1)->where('type','minus')->get()->sum('price');
+
+           $credit = $ballance - $ballance_minus;
+           if($credit <= 0){
+               $credit = 0;
+           }
+
+
+           return  response()->json([
+               'status' => true,
+               'user' => [
+                   'id' => $findUser->id,
+                   'server_detial' => ($findUser->v2ray_server ? $findUser->v2ray_server->only(['server_location','ipaddress','cdn_address_v2ray','id']) : false),
+                   'left_usage' => $left_usage,
+                   'down' => $down,
+                   'up' => $up,
+                   'preg_left' => $preg_left,
+                   'v2ray_user' => $v2ray_user,
+                   'usage' => $usage,
+                   'total' => $total,
+                   'name' => $findUser->name,
+                   'v2ray_location' => $findUser->v2ray_location,
+                   'v2ray_transmission' => $findUser->v2ray_transmission,
+                   'port_v2ray' => $findUser->port_v2ray,
+                   'remark_v2ray' => $findUser->remark_v2ray,
+                   'protocol_v2ray' => $findUser->protocol_v2ray,
+                   'v2ray_id' => $findUser->v2ray_id,
+                   'v2ray_u_id' => $findUser->v2ray_u_id,
+                   'service_group' => $findUser->service_group,
+                   'username' => $findUser->username,
+                   'credit' => $credit,
+                   'creator' => $findUser->creator,
+                   'creator_detial' => ($findUser->creator_name ? ['name' => $findUser->creator_name->name ,'id' =>$findUser->creator_name->id] : [] ) ,
+                   'password' => $findUser->password,
+                   'group' => ($findUser->group ? $findUser->group->name : '---'),
+                   'group_id' => $findUser->group_id,
+                   'is_enabled' => $findUser->is_enabled ,
+                   'created_at' => Jalalian::forge($findUser->created_at)->__toString(),
+               ],
+               'groups' => Groups::select('name','id')->get(),
+               'credit'  => $findUser->credit,
+               'v2ray_servers' => Ras::select(['id','server_type','name','server_location'])->where('server_type','v2ray')->where('is_enabled',1)->get(),
+           ]);
+       }
        $leftTime = ($findUser->expire_date !== NULL ? Carbon::now()->diffInDays($findUser->expire_date, false) : false);
        $fulldate = 0;
        if($findUser->expire_type == 'month'){
@@ -60,6 +136,7 @@ class UserController extends Controller
            'user' =>  [
                'id' => $findUser->id,
                'username' => $findUser->username,
+               'service_group' => $findUser->service_group,
                'password' => $findUser->password,
                'name' => $findUser->name,
                'is_enabled'=> $findUser->is_enabled,
