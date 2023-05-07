@@ -73,6 +73,9 @@ class SaveActivityUser
        if($type == 'remark_v2ray'){
            self::remark_v2ray();
        }
+       if($type == 'by_volume_v2ray'){
+           self::by_volume_v2ray();
+       }
    }
 
    public static function ChangeStatusAccount(){
@@ -199,6 +202,15 @@ class SaveActivityUser
    }
    public static function user_recharge_account(){
        $content = vsprintf('حساب کاربری شارژ شد!',[]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => auth()->user()->id,
+           'content' => $content,
+       ]);
+   }
+
+   public static function by_volume_v2ray(){
+       $content = vsprintf('مقدار حجم %s خریداری شد. مانده قبلی: %s',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
            'user_id' => auth()->user()->id,
