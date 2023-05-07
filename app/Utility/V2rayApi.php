@@ -115,7 +115,7 @@ class V2rayApi
     public function list(array $filter = []) : array
     {
         $list = (array)$this->request(
-            "/xui/inbound/list"
+            "xui/inbound/list"
         )["obj"];
 
         if(!empty($filter))
