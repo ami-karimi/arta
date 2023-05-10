@@ -67,6 +67,9 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/status', [\App\Http\Controllers\Admin\AdminsController::class, 'GetRealV2rayServerStatus']);
         });
 
+        Route::get('/getDashboard', [\App\Http\Controllers\Admin\AdminsController::class, 'getDashboard']);
+
+
         Route::prefix('notifications')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Admin\NotificationController::class, 'dashboard']);
             Route::post('/read', [\App\Http\Controllers\Admin\NotificationController::class, 'read']);

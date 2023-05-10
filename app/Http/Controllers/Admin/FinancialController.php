@@ -26,6 +26,9 @@ class FinancialController extends Controller
         if($request->for){
             $financial = $financial->where('for',$request->for);
         }
+        if($request->type){
+            $financial = $financial->where('type',$request->type);
+        }
 
         $per_page = 4;
         if($request->per_page){

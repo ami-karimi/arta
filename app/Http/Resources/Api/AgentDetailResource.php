@@ -24,7 +24,10 @@ class AgentDetailResource extends JsonResource
         $icom_user = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
 
         $amn_price = Financial::where('for',$this->id)->where('approved',0)->whereIn('type',['plus_amn'])->sum('price');
-
+        $minus_price = Financial::where('for',$this->id)->where('approved',1)->whereIn('type',['minus_amn'])->sum('price');
+        if($minus_price){
+            $amn_price = $amn_price -  $minus_price;
+        }
 
         $listGroup = Groups::all();
         $map_price = $listGroup->map(function($item){

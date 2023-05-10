@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Financial;
+use App\Models\RadAcct;
 use Illuminate\Http\Request;
 use App\Http\Resources\Api\AdminCollection;
 use App\Http\Resources\Api\UserCollection;
@@ -15,9 +17,33 @@ use Morilog\Jalali\Jalalian;
 use App\Utility\V2rayApi;
 use App\Http\Resources\Api\V2rayServersStatusCollection;
 use App\Models\Ras;
+use Carbon\Carbon;
 
 class AdminsController extends Controller
 {
+
+    public function getDashboard(){
+        $total_month = 0;
+        $total_last_month = 0;
+        $total_day = 0;
+        $total_online = 0;
+
+
+        $AllOnlineCount = RadAcct::where('acctstoptime',NULL)->get()->count();
+
+        $total_month = Financial::whereIn('type',['plus','minus_amn'])->where('approved',1)->whereMonth('created_at', Carbon::now()->month)->get()->sum('price');
+        $total_day = Financial::whereIn('type',['plus','minus_amn'])->where('approved',1)->whereDay('created_at', Carbon::now()->day)->get()->sum('price');
+
+
+
+        return response()->json([
+           'total_month'  => $total_month,
+           'total_day'  => $total_day,
+           'total_last_month'  => 0,
+           'total_online'  => $AllOnlineCount,
+        ]);
+    }
+
     public function index(Request $request){
         $list = User::where('role','!=','user');
         if($request->SearchText){

@@ -32,6 +32,9 @@ class FinancialController extends Controller
             if($request->type == 'plus_amn'){
                 $financial->where('type','plus_amn');
             }
+            if($request->type == 'minus_amn'){
+                $financial->where('type','minus_amn');
+            }
             if($request->type == 'minus'){
                 $financial->where('type','minus');
             }
