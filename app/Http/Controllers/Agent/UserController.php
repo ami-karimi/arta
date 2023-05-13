@@ -16,6 +16,7 @@ use App\Models\Ras;
 use App\Models\User;
 use App\Utility\V2rayApi;
 use Carbon\Carbon;
+use http\Client\Response;
 use Illuminate\Http\Request;
 use Morilog\Jalali\Jalalian;
 use App\Utility\SaveActivityUser;
@@ -222,7 +223,7 @@ class UserController extends Controller
 
         return new ActivityCollection($activitys->orderBy('id','DESC')->paginate($per_page));
     }
-    public function ReChargeAccount($username){
+    public function ReChargeAccount(Request $request,$username){
         if(!$username){
             return response()->json(['status' => false,'message' => 'حساب یافت نشد'],403);
         }
@@ -231,6 +232,7 @@ class UserController extends Controller
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!'],403);
         }
 
+
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
         $incom  =  $icom_user - $minus_income;
@@ -238,7 +240,13 @@ class UserController extends Controller
         if($incom <= 0 ){
             return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
         }
-        $findGroup = Groups::where('id',$find->group_id)->first();
+
+        if(!$request->group_id){
+            return response()->json(['status' => false,'message' => 'لطفا گروه کاربری را انتخاب  نمایید!'],403);
+
+        }
+
+        $findGroup = Groups::where('id',$request->group_id)->first();
         if(!$findGroup){
             return response()->json(['status' => false,'message' => 'گروه کاربری یافت نشد!'],403);
         }
@@ -266,7 +274,12 @@ class UserController extends Controller
             }
         }
 
+        if($find->group_id !== $findGroup->id){
+            SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new'=> $findGroup->name]);
+        }
+
         $find->expire_value = $findGroup->expire_value;
+        $find->group_id = $findGroup->id;
         $find->expire_type = $findGroup->expire_type;
         $find->expire_date = NULL;
         $find->first_login = NULL;
@@ -312,46 +325,94 @@ class UserController extends Controller
             $price = (int) $findSellectPrice->price;
         }
 
+        $userNameList = [];
+        if($request->group_account){
+            if(!(int) $request->from){
+                return response()->json(['status' => false,'message' => 'لطفا عدد شروع ایجاد را به عدد و به درستی وارد نمایید'],403);
+            }
+            if(!(int)$request->to){
+                return response()->json(['status' => false,'message' => 'لطفا عدد شروع ایجاد را به عدد و به درستی وارد نمایید'],403);
+            }
+
+            $countAll =  (int)$request->to  - (int) $request->from + 1;
+            if($countAll <= 0){
+                return response()->json(['status' => false,'message' => 'تعداد اکانت نباید منفی باشد لطفا از تا را بررسی نمایید'],403);
+            }
+            $start  = (int) $request->from;
+            $end  = (int) $request->to;
+            $price *= $countAll;
+            $userNames = $request->username;
+            for ($i= $start; $i < $end;$i++) {
+                $buildUsername = $userNames . $i;
+                $findUsername = User::where('username', $buildUsername)->first();
+                if ($findUsername) {
+                    return response()->json(['status' => false, 'نام کاربری ' . $buildUsername . ' موجود میباشد!']);
+                }
+                $password = $request->password;
+                if ($request->random_password) {
+                    $password = substr(rand(0, 99999), 0, (int)$request->random_password_num);
+                }
+
+                $userNameList[] = ['username' => $buildUsername, 'password' => $password];
+            }
+
+
+        }else{
+
+            $findNotUserIn = User::where('username',$request->username)->first();
+            if($findNotUserIn){
+                return response()->json(['status' => false,'message' => " نام کاربری ".$request->username." در سیستم موجود میباشد لطفا نام کاربری دیگری انتخاب نمایید!"],403);
+            }
+            $password = $request->password;
+            if ($request->random_password) {
+                $password = substr(rand(0, 99999), 0, (int)$request->random_password_num);
+            }
+            $userNameList[] = ['username' => $request->username, 'password' =>$password];
+        }
 
         if($incom < $price ){
-            return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
+            return response()->json(['status' => false,'message' => 'موجودی شما برای پرداخت '.number_format($price).' تومان کافی نمیباشد!'],403);
         }
 
-        $findNotUserIn = User::where('username',$request->username)->first();
-        if($findNotUserIn){
-            return response()->json(['status' => false,'message' => " نام کاربری ".$request->username." در سیستم موجود میباشد لطفا نام کاربری دیگری انتخاب نمایید!"],403);
-        }
+
 
         $req_all = $request->all();
 
-        if($request->random_password){
-            if(!(int) $request->random_password_num){
-                return response()->json(['status' => false,'message' => " نام کاربری ".$request->username."لطفا طول پسورد کاربر را انتخاب نمایید به عدد!"],403);
+        foreach ($userNameList as $row) {
+
+
+            if ($findGroup->expire_type !== 'no_expire') {
+                if ($findGroup->expire_type == 'minutes') {
+                    $req_all['exp_val_minute'] = $findGroup->expire_value;
+                } elseif ($findGroup->expire_type == 'month') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                } elseif ($findGroup->expire_type == 'days') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                } elseif ($findGroup->expire_type == 'year') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                }
             }
-            $req_all['password'] =  substr(rand(1,999999),0,(int) $request->random_password_num);
+
+            $req_all['multi_login'] = $findGroup->multi_login;
+            $req_all['password'] = $row['password'];
+            $req_all['username'] = $row['username'];
+            $req_all['expire_value'] = $findGroup->expire_value;
+            $req_all['expire_type'] = $findGroup->expire_type;
+            $req_all['expire_set'] = 0;
+            $req_all['creator'] = auth()->user()->id;
+
+            $user = User::create($req_all);
+
+            $req_all = $request->all();
+            $req_all['username'] = $row['username'];
+            $req_all['password'] = $row['password'];
+            $req_all['groups'] = $request->username;
+            $req_all['creator'] = auth()->user()->id;
+            AcctSaved::create($req_all);
+            SaveActivityUser::send($user->id,auth()->user()->id,'create');
         }
-
-        if ($findGroup->expire_type !== 'no_expire') {
-            if ($findGroup->expire_type == 'minutes') {
-                $req_all['exp_val_minute'] = $findGroup->expire_value;
-            } elseif ($findGroup->expire_type == 'month') {
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
-            } elseif ($findGroup->expire_type == 'days') {
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
-            } elseif ($findGroup->expire_type == 'hours') {
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
-            } elseif ($findGroup->expire_type == 'year') {
-                $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
-            }
-        }
-
-        $req_all['multi_login'] = $findGroup->multi_login;
-        $req_all['expire_value'] = $findGroup->expire_value;
-        $req_all['expire_type'] = $findGroup->expire_type;
-        $req_all['expire_set'] = 0;
-        $req_all['creator'] = auth()->user()->id;
-
-        $user = User::create($req_all);
 
         $new =  new Financial;
         $new->type = 'minus';
@@ -361,14 +422,7 @@ class UserController extends Controller
         $new->creator = 2;
         $new->for = auth()->user()->id;
         $new->save();
-        $req_all = $request->all();
-        $req_all['username'] = $request->username;
-        $req_all['password'] = $request->password;
-        $req_all['groups'] = $request->username;
-        $req_all['creator'] = auth()->user()->id;
-        AcctSaved::create($req_all);
 
-        SaveActivityUser::send($user->id,auth()->user()->id,'create');
         return response()->json(['status' => false,'message' => "اکانت با موفقیت ایجاد شد!"]);
 
     }
@@ -437,6 +491,21 @@ class UserController extends Controller
         if($request->password !== $find->password){
             SaveActivityUser::send($find->id,auth()->user()->id,'change_password',['new' => $request->password,'last' => $find->password]);
             $find->password = $request->password;
+        }
+
+        if($request->name){
+            $find->name = $request->name;
+        }
+        if($request->username !== $find->username){
+            $findElse = User::where('username',$request->username)->where('id','!=',$find->id)->first();
+            if($findElse){
+                return response()->json([
+                    'message' => 'امکان تغییر به این نام کاربری وجود ندارد برای کاربر دیگری استفاده شده است!'
+                ],403);
+            }
+            SaveActivityUser::send($find->id, auth()->user()->id, 'change_username', ['last' =>$find->username, 'new' => $request->username]);
+            $find->username = $request->username;
+
         }
 
         $find->save();
