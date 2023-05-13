@@ -342,7 +342,7 @@ class UserController extends Controller
             $end  = (int) $request->to;
             $price *= $countAll;
             $userNames = $request->username;
-            for ($i= $start; $i < $end;$i++) {
+            for ($i= $start; $i <= $end;$i++) {
                 $buildUsername = $userNames . $i;
                 $findUsername = User::where('username', $buildUsername)->first();
                 if ($findUsername) {
