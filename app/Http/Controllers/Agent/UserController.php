@@ -339,10 +339,10 @@ class UserController extends Controller
                 return response()->json(['status' => false,'message' => 'تعداد اکانت نباید منفی باشد لطفا از تا را بررسی نمایید'],403);
             }
             $start  = (int) $request->from;
-            $end  = (int) $request->to;
+            $end  = (int) $request->to + 1;
             $price *= $countAll;
             $userNames = $request->username;
-            for ($i= $start; $i <= $end;$i++) {
+            for ($i= $start; $i < $end;$i++) {
                 $buildUsername = $userNames . $i;
                 $findUsername = User::where('username', $buildUsername)->first();
                 if ($findUsername) {
