@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api;
 use App\Models\Financial;
 use App\Models\PriceReseler;
 use App\Models\Ras;
+use App\Utility\Helper;
 use App\Utility\V2rayApi;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -40,12 +41,13 @@ class AgentUserCollection extends ResourceCollection
 
 
         $incom  = $icom_user - $minus_income;
+        $priceList = Helper::GetReselerGroupList('list',false,auth()->user()->id);
 
         return [
             'groups' => Groups::select('name','id','price_reseler')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             'credit' => $incom,
-            'map_price' => $map_price,
+            'map_price' => $priceList,
             'v2ray_servers' => Ras::select(['id','server_type','name','server_location'])->where('server_type','v2ray')->where('is_enabled',1)->get(),
             'data' => $this->collection->map(function($item){
                 $v2ray_user = false;

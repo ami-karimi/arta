@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api;
 
 use App\Models\Financial;
+use App\Utility\Helper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -45,7 +46,12 @@ class AgentDetailResource extends JsonResource
 
         $incom  =  $icom_user - $minus_income;
 
+
+        $priceList = Helper::GetReselerGroupList('list',false,$this->id);
+
+
         return [
+            'price_lists' => $priceList,
             'detail' => [
                 'id' => $this->id,
                 'name' => $this->name,

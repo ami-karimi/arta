@@ -145,6 +145,14 @@ Route::middleware(['auth:api'])->group(function () {
         Route::prefix('agent')->group(function () {
 
             Route::get('/panel', [\App\Http\Controllers\Agent\AgentController::class, 'index']);
+            Route::prefix('agents')->group(function () {
+                Route::get('/list', [\App\Http\Controllers\Agent\AgentsController::class, 'index']);
+                Route::post('/create', [\App\Http\Controllers\Agent\AgentsController::class, 'create']);
+                Route::post('/edit/{id}', [\App\Http\Controllers\Agent\AgentsController::class, 'edit']);
+                Route::get('/view/{id}', [\App\Http\Controllers\Agent\AgentsController::class, 'view']);
+                Route::post('/save_custom_price/{id}', [\App\Http\Controllers\Agent\AgentsController::class, 'save_custom_price']);
+            });
+
             Route::prefix('financial')->group(function () {
                 Route::get('/list', [\App\Http\Controllers\Agent\FinancialController::class, 'index']);
                 Route::post('/create', [\App\Http\Controllers\Agent\FinancialController::class, 'create']);

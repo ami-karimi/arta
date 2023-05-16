@@ -5,14 +5,21 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\FinancialCollection;
 use App\Models\Financial;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Utility\SendNotificationAdmin;
 
 class FinancialController extends Controller
 {
     public function index(Request $request){
+        if($request->for_agent){
+          $sx=  User::where('id',$request->for_agent)->where('creator',auth()->user()->id)->first();
+            if(!$sx){
+                return response()->json(['message' =>  '403',403]);
+            }
+        }
         $perpage = ($request->per_page && $request->per_page < 100 ? (int)  $request->per_page : 4);
-        $financial =  Financial::where('for',auth()->user()->id)->orWhere('creator',auth()->user()->id);
+        $financial =  Financial::where('for',($request->for_agent ? $request->for_agent :  auth()->user()->id))->orWhere('creator',($request->for_agent ? $request->for_agent :  auth()->user()->id));
         if($request->approved){
            if($request->approved == 'approved'){
                $financial->where('approved',1);

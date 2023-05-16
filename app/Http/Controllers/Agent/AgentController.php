@@ -49,6 +49,17 @@ class AgentController extends Controller
             ]);
 
 
+        ReselerMeta::updateOrCreate([
+            'reseler_id' => auth()->user()->id,
+            'key' => 'price_for_reseler_'.$findGroup['id'],
+        ],
+            [
+                'reseler_id' => auth()->user()->id,
+                'key' => 'price_for_reseler_'.$findGroup['id'],
+                'value' => $request->price_for_reseler,
+            ]);
+
+
 
         return response()->json([
                'data' => $findGroup,

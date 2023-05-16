@@ -148,6 +148,29 @@ class FinancialController extends Controller
                     'for' => $new->for,
                     'description' => $request->description,
                 ]);
+
+                if($new->for_user){
+                    if($new->for_user->role == 'agent' && $new->for_user->creator){
+                        $CreatorS = new Financial();
+                        $CreatorS->price = $request->price;
+                        $CreatorS->type = 'plus_amn';
+                        $CreatorS->description = 'تایید شارژ حساب زیر نماینده '.auth()->user()->name."|".auth()->user()->id;
+                        $CreatorS->for = $new->for_user->creator;
+                        $CreatorS->creator = 2;
+                        $CreatorS->approved = 0;
+                        $CreatorS->save();
+
+                        SendNotificationAdmin::send('admin', 'create_bd_agent', [
+                            'for' => $new->for_user->creator,
+                            'price' => $request->price,
+                            'name' => auth()->user()->name,
+                        ]);
+
+
+                    }
+                }
+
+
             }else{
                 SendNotificationAdmin::send('admin', 'reject_financial_admin', [
                     'id' => $new->id,

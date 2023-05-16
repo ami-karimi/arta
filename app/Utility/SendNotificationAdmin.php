@@ -65,6 +65,9 @@ class SendNotificationAdmin
       if($type == 'user_charge_account'){
            self::user_charge_account();
        }
+      if($type == 'create_bd_agent'){
+           self::create_bd_agent();
+       }
 
    }
 
@@ -220,6 +223,16 @@ class SendNotificationAdmin
    }
    public static function user_charge_account(){
       $content = vsprintf(' کاربر حساب کاربری خود را در  گروه (%s) با مبلغ (%s) تومان شارژ کرد.',[self::$data['group_name'],number_format(self::$data['price'])]);
+       Notifications::create([
+           'from' => auth()->user()->id,
+           'for' => self::$data['for'],
+           'content' => $content,
+       ]);
+
+       return true;
+   }
+   public static function create_bd_agent(){
+      $content = vsprintf(' یک مبلغ بدهی برای %s با مبلغ %s برای تایید پرداختی زیر نماینده برای شما ایجاد شد.',[self::$data['name'],number_format(self::$data['price'])]);
        Notifications::create([
            'from' => auth()->user()->id,
            'for' => self::$data['for'],
