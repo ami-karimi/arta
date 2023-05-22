@@ -38,9 +38,10 @@ class Kernel extends ConsoleKernel
                         ]);
                     }
                 }
+                RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
+
             }
 
-            RadAcct::where('username',$item->username)->where('acctstoptime','!=','NULL')->delete();
 
         })->everyMinute()->emailOutputOnFailure('takfashomal@gmail.com');;
     }
