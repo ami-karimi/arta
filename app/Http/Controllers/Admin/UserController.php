@@ -555,7 +555,6 @@ class UserController extends Controller
         $total = 0;
 
         if($userDetial->group){
-            if($userDetial->group->group_type === 'volume'){
                 $GraphData = UserGraph::where('user_id',$userDetial->id)->get();
                 $up = $GraphData->sum('tx');
                 $down = $GraphData->sum('rx');
@@ -563,7 +562,7 @@ class UserController extends Controller
                 $left_usage = $userDetial->max_usage - $usage;
 
                 $total = $userDetial->max_usage;
-            }
+
         }
 
 
