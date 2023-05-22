@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->call(function () {
-            $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as download_sum, sum(acctinputoctets) as upload_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->limit(1000)->get();
+            $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as download_sum, sum(acctinputoctets) as upload_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
             foreach ($data as $item){
                 $findUser = User::where('username',$item->username)->first();
