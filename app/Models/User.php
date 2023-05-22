@@ -33,6 +33,7 @@ class User extends Authenticatable implements JWTSubject
         'is_enabled',
         'creator',
         'role',
+        'max_usage',
         'multi_login',
         'expire_set',
         'exp_val_minute',

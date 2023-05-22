@@ -40,6 +40,9 @@ class SaveActivityUser
        if($type == 'change_expire'){
            self::ChangeExpireRelative();
        }
+       if($type == 'buy_new_volume'){
+           self::buy_new_volume();
+       }
        if($type == 'delete_session'){
        }
        if($type == 'change_username'){
@@ -156,7 +159,7 @@ class SaveActivityUser
        $content = vsprintf('گروه کاربری کاربر از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }
@@ -164,7 +167,7 @@ class SaveActivityUser
        $content = vsprintf('پرتکل کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }
@@ -172,7 +175,7 @@ class SaveActivityUser
        $content = vsprintf('پرت کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }
@@ -180,7 +183,7 @@ class SaveActivityUser
        $content = vsprintf('transmission کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }
@@ -188,7 +191,7 @@ class SaveActivityUser
        $content = vsprintf('لوکیشن کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }
@@ -196,7 +199,7 @@ class SaveActivityUser
        $content = vsprintf('ریمارک کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }
@@ -204,7 +207,7 @@ class SaveActivityUser
        $content = vsprintf('حساب کاربری شارژ شد!',[]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }
@@ -213,7 +216,15 @@ class SaveActivityUser
        $content = vsprintf('مقدار حجم %s خریداری شد. مانده قبلی: %s',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
-           'user_id' => auth()->user()->id,
+           'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+   public static function buy_new_volume(){
+       $content = vsprintf('مقدار حجم %s گیگ اضافه خریداری شد. مانده قبلی: %s گیگ',[self::$data['new'],self::$data['last']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => self::$user_id,
            'content' => $content,
        ]);
    }

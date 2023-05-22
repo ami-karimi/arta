@@ -15,7 +15,6 @@ class AgentController extends Controller
     }
 
     public function GetGroups(){
-
         return response()->json([
                'data' => Helper::GetReselerGroupList(),
             ]);

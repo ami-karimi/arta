@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\RadAuthAcctCollection;
 use App\Http\Resources\Api\GetServerCollection;
 use App\Models\Financial;
+use App\Models\UserGraph;
 use App\Utility\SendNotificationAdmin;
 use App\Utility\V2rayApi;
 use Carbon\Carbon;
@@ -24,7 +25,29 @@ use App\Utility\SaveActivityUser;
 
 class UserController extends Controller
 {
-   public function index(){
+
+    public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
+    {
+        $base = log($size, 1024);
+
+        if($format == 1) {
+            $suffixes = ['بایت', 'کلوبایت', 'مگابایت', 'گیگابایت', 'ترابایت']; # Persian
+        } elseif ($format == 2) {
+            $suffixes = ["B", "KB", "MB", "GB", "TB"];
+        } else {
+            $suffixes = ['B', 'K', 'M', 'G', 'T'];
+        }
+
+        if($size <= 0) return "0 ".$suffixes[1];
+
+        $result = pow(1024, $base - floor($base));
+        $result = round($result, $precision);
+        $suffixes = $suffixes[floor($base)];
+
+        return $result ." ". $suffixes;
+    }
+
+    public function index(){
        $findUser = User::where('id',auth()->user()->id)->first();
        if(!$findUser){
            return response()->json(['status' => false,'message' => 'حساب کاربری یافت نشد!'],403);
@@ -68,6 +91,15 @@ class UserController extends Controller
                $credit = 0;
            }
 
+           $left_usage = 0;
+           $up = 0;
+           $down = 0;
+           $usage = 0;
+           $total = 0;
+
+
+
+
 
            return  response()->json([
                'status' => true,
@@ -76,6 +108,7 @@ class UserController extends Controller
                    'server_detial' => ($findUser->v2ray_server ? $findUser->v2ray_server->only(['server_location','ipaddress','cdn_address_v2ray','id']) : false),
                    'left_usage' => $left_usage,
                    'down' => $down,
+
                    'up' => $up,
                    'preg_left' => $preg_left,
                    'v2ray_user' => $v2ray_user,
@@ -131,10 +164,43 @@ class UserController extends Controller
 
        $lastOnline = RadAcct::where('username',$findUser->username)->orderBy('radacctid','DESC')->first();
        $onlineCount = RadAcct::where('username',$findUser->username)->where('acctstoptime',NULL)->count();
+
+        $up = 0;
+        $down = 0;
+        $usage = 0;
+        $left_usage = 0;
+        $total = 0;
+
+        if($findUser->group){
+            if($findUser->group->group_type === 'volume'){
+                $GraphData = UserGraph::where('user_id',$findUser->id)->get();
+                $up = $GraphData->sum('tx');
+                $down = $GraphData->sum('rx');
+                $usage = $GraphData->sum('total');
+                $left_usage = $findUser->max_usage - $usage;
+
+                $total = $findUser->max_usage;
+            }
+        }
+        $preg_left = ($total > 0 ? ($usage * 100 / $total) : 0);
+        $preg_left = 100  - $preg_left  ;
+
+
        return  response()->json([
            'status'=> true,
            'user' =>  [
                'id' => $findUser->id,
+               'down' => $down,
+               'down_format' => $this->formatBytes($down,2),
+               'left_usage' => $left_usage,
+               'left_usage_format' =>  $this->formatBytes($left_usage,2),
+               'up' => $up,
+               'up_format' => $this->formatBytes($up,2),
+               'usage' => $usage,
+               'usage_format' => $this->formatBytes($usage,2),
+               'total' => $total,
+               'preg_left_volume' => $preg_left,
+               'total_format' => $this->formatBytes($total,2),
                'username' => $findUser->username,
                'service_group' => $findUser->service_group,
                'password' => $findUser->password,
@@ -142,6 +208,7 @@ class UserController extends Controller
                'is_enabled'=> $findUser->is_enabled,
                'group_id'=> $findUser->group_id,
                'group' => ($findUser->group ? $findUser->group->name : false),
+               'group_type' => ($findUser->group ? $findUser->group->group_type : false),
                'multi_login' => $findUser->multi_login,
                'first_login' =>($findUser->first_login !== NULL ? Jalalian::forge($findUser->first_login)->__toString() : false),
                'account_status' =>  ($findUser->isOnline ? 'online': 'offline'),

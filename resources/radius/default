@@ -302,8 +302,7 @@ authorize {
 	preprocess
 
 	##Edit by Mitul
-	 "%{sql:DELETE FROM radacct   WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
-
+	 "%{sql:UPDATE  radacct SET acctstoptime = date_add(now(),interval +1 MINUTE) WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
 
 	  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
        	update reply {

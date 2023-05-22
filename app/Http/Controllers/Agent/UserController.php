@@ -14,6 +14,7 @@ use App\Models\PriceReseler;
 use App\Models\RadAcct;
 use App\Models\Ras;
 use App\Models\User;
+use App\Models\UserGraph;
 use App\Utility\Helper;
 use App\Utility\V2rayApi;
 use Carbon\Carbon;
@@ -107,6 +108,27 @@ class UserController extends Controller
         ]);
 
     }
+    public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
+    {
+        $base = log($size, 1024);
+
+        if($format == 1) {
+            $suffixes = ['بایت', 'کلوبایت', 'مگابایت', 'گیگابایت', 'ترابایت']; # Persian
+        } elseif ($format == 2) {
+            $suffixes = ["B", "KB", "MB", "GB", "TB"];
+        } else {
+            $suffixes = ['B', 'K', 'M', 'G', 'T'];
+        }
+
+        if($size <= 0) return "0 ".$suffixes[1];
+
+        $result = pow(1024, $base - floor($base));
+        $result = round($result, $precision);
+        $suffixes = $suffixes[floor($base)];
+
+        return $result ." ". $suffixes;
+    }
+
     public function show($id){
         $userDetial = User::where('id',$id)->where('creator',auth()->user()->id)->first();
         if(!$userDetial){
@@ -179,11 +201,40 @@ class UserController extends Controller
             ]);
         }
 
+        $left_usage = 0;
+        $up = 0;
+        $down = 0;
+        $usage = 0;
+        $total = 0;
+
+        if($userDetial->group){
+            if($userDetial->group->group_type === 'volume'){
+                $GraphData = UserGraph::where('user_id',$userDetial->id)->get();
+                $up = $GraphData->sum('tx');
+                $down = $GraphData->sum('rx');
+                $usage = $GraphData->sum('total');
+                $left_usage = $userDetial->max_usage - $usage;
+
+                $total = $userDetial->max_usage;
+            }
+        }
+
         return  response()->json([
             'status' => true,
             'user' => [
                 'id' => $userDetial->id,
                 'name' => $userDetial->name,
+                'down' => $down,
+                'down_format' => $this->formatBytes($down,2),
+                'left_usage' => $left_usage,
+                'left_usage_format' =>  $this->formatBytes($left_usage,2),
+                'up' => $up,
+                'up_format' => $this->formatBytes($up,2),
+                'usage' => $usage,
+                'usage_format' => $this->formatBytes($usage,2),
+                'total' => $total,
+                'total_format' => $this->formatBytes($total,2),
+                'group_type' => ($userDetial->group ? $userDetial->group->group_type : '---'),
                 'username' => $userDetial->username,
                 'creator' => $userDetial->creator,
                 'multi_login' => $userDetial->multi_login,
@@ -283,13 +334,18 @@ class UserController extends Controller
         if($find->group_id !== $findGroup->id){
             SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new'=> $findGroup->name]);
         }
-
-        $find->expire_value = $findGroup->expire_value;
         $find->group_id = $findGroup->id;
-        $find->expire_type = $findGroup->expire_type;
-        $find->expire_date = NULL;
         $find->first_login = NULL;
-        $find->expire_set = 0;
+
+        if($findGroup->group_type == 'expire') {
+            $find->expire_value = $findGroup->expire_value;
+            $find->expire_type = $findGroup->expire_type;
+            $find->expire_date = NULL;
+            $find->expire_set = 0;
+        }elseif($findGroup->group_type == 'volume'){
+            UserGraph::where('user_id',$find->id)->delete();
+            $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 );
+        }
         $find->creator = auth()->user()->id;
 
         $find->save();
@@ -405,18 +461,26 @@ class UserController extends Controller
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
                 }
             }
+            if($findGroup->group_type == 'expire') {
+                $req_all['expire_value'] = $findGroup->expire_value;
+                $req_all['expire_type'] = $findGroup->expire_type;
+                $req_all['expire_set'] = 0;
+                $req_all['multi_login'] = $findGroup->multi_login;
+            }
 
-            $req_all['multi_login'] = $findGroup->multi_login;
+            if($findGroup->group_type == 'volume') {
+                $req_all['multi_login'] = 5;
+                $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+            }
+
+
             $req_all['password'] = $row['password'];
             $req_all['username'] = $row['username'];
-            $req_all['expire_value'] = $findGroup->expire_value;
-            $req_all['expire_type'] = $findGroup->expire_type;
-            $req_all['expire_set'] = 0;
+
             $req_all['creator'] = auth()->user()->id;
 
             $user = User::create($req_all);
 
-            $req_all = $request->all();
             $req_all['username'] = $row['username'];
             $req_all['password'] = $row['password'];
             $req_all['groups'] = $request->username;
@@ -559,6 +623,38 @@ class UserController extends Controller
             'status' => false,
             'message' => 'عملیات با موفقیت انجام شد!'
         ]);
+    }
+
+    public function buy_volume(Request $request,$id){
+        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        if(!$find){
+            return response()->json([
+                'message' => 'کاربر یافت نشد!'
+            ],404);
+        }
+        $price = 2300;
+        $total_price = (int) $request->volume * $price;
+        $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
+        $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
+        $incom  = $icom_user - $minus_income;
+        if($incom <= $total_price ){
+            return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
+        }
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $total_price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت خرید '.$request->volume.'گیگ حجم '.' اضافه '.$find->username;
+        $new->creator = 2;
+        $new->for = auth()->user()->id;
+        $new->save();
+        SaveActivityUser::send($find->id,auth()->user()->id,'buy_new_volume',['new' => $request->volume,'last' => $this->formatBytes($find->max_usage,2)]);
+
+        $find->max_usage += @round((((int) $request->volume *1024) * 1024) * 1024 ) ;
+        $find->save();
+
+        return response()->json(['status' => false,'message' => "حجم با موفقیت به کاربر اضافه شد!"]);
+
     }
 
 

@@ -61,6 +61,7 @@ Route::middleware(['auth:api'])->group(function () {
     // Admin Route
     Route::middleware(['is_admin'])->group(function () {
 
+
         Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
         Route::prefix('v2ray')->group(function () {
@@ -106,6 +107,10 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/AcctSaveds', [\App\Http\Controllers\Admin\UserController::class, 'AcctSaved']);
             Route::POST('/AcctSavedView', [\App\Http\Controllers\Admin\UserController::class, 'AcctSavedView']);
             Route::POST('/kill_user', [\App\Http\Controllers\Admin\UserController::class, 'kill_user']);
+
+            Route::get('/user_bandwidths', [\App\Http\Controllers\Admin\UserController::class, 'getUserBandwith']);
+
+            Route::POST('/buy_volume/{id}', [\App\Http\Controllers\Admin\UserController::class, 'buy_volume']);
 
         });
 
@@ -171,6 +176,7 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::get('/AcctSaveds', [\App\Http\Controllers\Agent\UserController::class, 'AcctSaved']);
                 Route::POST('/AcctSavedView', [\App\Http\Controllers\Agent\UserController::class, 'AcctSavedView']);
                 Route::POST('/kill_user', [\App\Http\Controllers\Agent\UserController::class, 'kill_user']);
+                Route::POST('/buy_volume/{id}', [\App\Http\Controllers\Agent\UserController::class, 'buy_volume']);
 
             });
             Route::prefix('radius')->group(function () {

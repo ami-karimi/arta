@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\AdminActivityCollection;
 use App\Http\Resources\Api\AcctSavedCollection;
+use App\Http\Resources\Api\UserGraphsResource;
 use App\Http\Resources\Api\UserCollection;
 use App\Http\Resources\Api\ActivityCollection;
 use App\Models\Activitys;
 use App\Models\User;
 use App\Models\RadPostAuth;
 use App\Models\Groups;
+use App\Models\UserGraph;
 use App\Utility\SaveActivityUser;
 use Illuminate\Http\Request;
 use App\Models\AcctSaved;
@@ -177,10 +179,16 @@ class UserController extends Controller
             }
 
             $req_all['multi_login'] = $findGroup->multi_login;
-            $req_all['expire_value'] = $findGroup->expire_value;
-            $req_all['expire_type'] = $findGroup->expire_type;
-            $req_all['expire_set'] = 0;
 
+            if($findGroup->group_type == 'expire') {
+                $req_all['expire_value'] = $findGroup->expire_value;
+                $req_all['expire_type'] = $findGroup->expire_type;
+                $req_all['expire_set'] = 0;
+            }
+            if($findGroup->group_type == 'volume') {
+                $req_all['multi_login'] = 5;
+                $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+            }
 
             User::create($req_all);
 
@@ -321,12 +329,25 @@ class UserController extends Controller
 
             SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new' => $findGroup->name]);
 
-            $find->expire_value = $findGroup->expire_value;
-            $find->expire_type = $findGroup->expire_type;
+            if($findGroup->group_type == 'expire') {
+                $find->expire_value = $findGroup->expire_value;
+                $find->expire_type = $findGroup->expire_type;
+            }
+            if($findGroup->group_type == 'volume') {
+                $find->multi_login = 5;
+                $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+                $find->expire_value = 0;
+                $find->expire_type = 'no_expire';
+                $find->expire_date = NULL;
+                $find->expire_set = 0;
+
+            }
+
+
 
         }
 
-        if($request->change_expire_type){
+        if($request->change_expire_type && $findGroup->group_type == 'expire'){
             if($request->expire_type == 'minutes'){
                 $exp_val_minute = $request->expire_value;
             }elseif($request->expire_type == 'month'){
@@ -350,7 +371,7 @@ class UserController extends Controller
 
 
         $expire_date = false;
-        if($find->first_login !== NULL){
+        if($find->first_login !== NULL && $findGroup->group_type == 'expire'){
             $expire_date = Carbon::parse($find->first_login)->addMinutes($exp_val_minute)->toDateTimeString();
         }
 
@@ -377,7 +398,7 @@ class UserController extends Controller
 
         $find->update($request->only(['group_id','name','creator','multi_login']));
         $find->exp_val_minute = $exp_val_minute;
-        if($expire_date){
+        if($expire_date && $findGroup->group_type == 'expire'){
             $find->expire_date = $expire_date;
             $find->expire_set = 1;
         }
@@ -407,11 +428,14 @@ class UserController extends Controller
         }
 
 
-        if($findUser->service_group !== 'v2ray'){
-        $findUser->expire_set = 0;
-        $findUser->first_login = NULL;
-        $findUser->expire_date = NULL;
+        if($findUser->service_group !== 'v2ray' && $findUser->group->group_type !== 'volume'){
+           $findUser->expire_set = 0;
+           $findUser->first_login = NULL;
+           $findUser->expire_date = NULL;
+        }elseif($findUser->group->group_type == 'volume'){
+            UserGraph::where('user_id',$findUser->id)->delete();
         }
+
 
         SaveActivityUser::send($findUser->id,auth()->user()->id,'re_charge');
 
@@ -421,6 +445,27 @@ class UserController extends Controller
 
 
     }
+    public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
+    {
+        $base = log($size, 1024);
+
+        if($format == 1) {
+            $suffixes = ['بایت', 'کلوبایت', 'مگابایت', 'گیگابایت', 'ترابایت']; # Persian
+        } elseif ($format == 2) {
+            $suffixes = ["B", "KB", "MB", "GB", "TB"];
+        } else {
+            $suffixes = ['B', 'K', 'M', 'G', 'T'];
+        }
+
+        if($size <= 0) return "0 ".$suffixes[1];
+
+        $result = pow(1024, $base - floor($base));
+        $result = round($result, $precision);
+        $suffixes = $suffixes[floor($base)];
+
+        return $result ." ". $suffixes;
+    }
+
     public function show($id){
         $userDetial = User::where('id',$id)->first();
         if(!$userDetial){
@@ -457,6 +502,15 @@ class UserController extends Controller
                 }
             }
 
+            if($userDetial->group){
+                if($userDetial->group->group_type === 'volume'){
+                    $GraphData = UserGraph::where('user_id',$userDetial->id)->get();
+                    $up = $GraphData->sum('tx');
+                    $down = $GraphData->sum('rx');
+                    $usage = $userDetial->max_usage - $GraphData->sum('total');
+                    $total = $userDetial->max_usage;
+                }
+            }
             return  response()->json([
                 'status' => true,
                 'user' => [
@@ -483,6 +537,7 @@ class UserController extends Controller
                     'creator_detial' => ($userDetial->creator_name ? ['name' => $userDetial->creator_name->name ,'id' =>$userDetial->creator_name->id] : [] ) ,
                     'password' => $userDetial->password,
                     'group' => ($userDetial->group ? $userDetial->group->name : '---'),
+                    'group_type' => ($userDetial->group ? $userDetial->group->group_type : '---'),
                     'group_id' => $userDetial->group_id,
                     'is_enabled' => $userDetial->is_enabled ,
                     'created_at' => Jalalian::forge($userDetial->created_at)->__toString(),
@@ -492,17 +547,48 @@ class UserController extends Controller
                 'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             ]);
         }
+
+        $left_usage = 0;
+        $up = 0;
+        $down = 0;
+        $usage = 0;
+        $total = 0;
+
+        if($userDetial->group){
+            if($userDetial->group->group_type === 'volume'){
+                $GraphData = UserGraph::where('user_id',$userDetial->id)->get();
+                $up = $GraphData->sum('tx');
+                $down = $GraphData->sum('rx');
+                $usage = $GraphData->sum('total');
+                $left_usage = $userDetial->max_usage - $usage;
+
+                $total = $userDetial->max_usage;
+            }
+        }
+
+
         return  response()->json([
             'status' => true,
             'user' => [
                 'id' => $userDetial->id,
                 'name' => $userDetial->name,
+                'down' => $down,
+                'down_format' => $this->formatBytes($down,2),
+                'left_usage' => $left_usage,
+                'left_usage_format' =>  $this->formatBytes($left_usage,2),
+                'up' => $up,
+                'up_format' => $this->formatBytes($up,2),
+                'usage' => $usage,
+                'usage_format' => $this->formatBytes($usage,2),
+                'total' => $total,
+                'total_format' => $this->formatBytes($total,2),
                 'username' => $userDetial->username,
                 'creator' => $userDetial->creator,
                 'multi_login' => $userDetial->multi_login,
                 'creator_detial' => ($userDetial->creator_name ? ['name' => $userDetial->creator_name->name ,'id' =>$userDetial->creator_name->id] : [] ) ,
                 'password' => $userDetial->password,
                 'group' => ($userDetial->group ? $userDetial->group->name : '---'),
+                'group_type' => ($userDetial->group ? $userDetial->group->group_type : '---'),
                 'group_id' => $userDetial->group_id,
                 'expire_type' => $userDetial->expire_type,
                 'expire_value' => $userDetial->expire_value,
@@ -744,5 +830,42 @@ class UserController extends Controller
         ]);
     }
 
+
+    public function getUserBandwith(Request $request){
+
+        $data = new RadAcct;
+        if($request->SearchText){
+            $data = $data->where('username',$request->SearchText);
+        }
+        $data = $data->selectRaw('sum(acctoutputoctets) as download_sum, sum(acctinputoctets) as upload_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')
+        ->where('acctstoptime','!=','NULL');
+
+
+
+
+        return new UserGraphsResource($data->groupBy('username')->orderBy('total_sum','DESC')->paginate(1000));
+    }
+
+    public function buy_volume(Request $request,$id){
+        $user = User::where('id',$id)->first();
+        if(!$user){
+            return response()->json([
+                'status' => false,
+                'message' => 'کاربر یافت نشد!'
+            ],403);
+        }
+
+        SaveActivityUser::send($user->id,auth()->user()->id,'buy_new_volume',['new' => $request->volume,'last' => $this->formatBytes($user->max_usage,2)]);
+
+
+        $user->max_usage += @round((((int) $request->volume *1024) * 1024) * 1024 ) ;
+        $user->save();
+
+        return response()->json([
+            'status' => false,
+            'message' => 'حجم مورد نظر با موفقیت اضافه شد!'
+        ]);
+
+    }
 
 }
