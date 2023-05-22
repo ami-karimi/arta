@@ -503,13 +503,13 @@ class UserController extends Controller
             }
 
             if($userDetial->group){
-                if($userDetial->group->group_type === 'volume'){
+
                     $GraphData = UserGraph::where('user_id',$userDetial->id)->get();
                     $up = $GraphData->sum('tx');
                     $down = $GraphData->sum('rx');
                     $usage = $userDetial->max_usage - $GraphData->sum('total');
                     $total = $userDetial->max_usage;
-                }
+
             }
             return  response()->json([
                 'status' => true,
