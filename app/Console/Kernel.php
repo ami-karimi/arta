@@ -42,7 +42,7 @@ class Kernel extends ConsoleKernel
 
             RadAcct::where('username',$item->username)->where('acctstoptime','!=','NULL')->delete();
 
-        })->everyTenMinutes()->emailOutputOnFailure('takfashomal@gmail.com');;
+        })->everyMinute()->emailOutputOnFailure('takfashomal@gmail.com');;
     }
 
     /**
