@@ -344,6 +344,10 @@ class UserController extends Controller
         }elseif($findGroup->group_type == 'volume'){
             UserGraph::where('user_id',$find->id)->delete();
             $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 );
+            $find->expire_value = 1;
+            $find->expire_type = 'no_expire';
+            $find->expire_date = NULL;
+            $find->expire_set = 0;
         }
         $find->creator = auth()->user()->id;
 
