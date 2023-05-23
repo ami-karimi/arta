@@ -36,8 +36,8 @@ class AgentDetailResource extends JsonResource
             return [
                 'id' => $item->id,
                 'name' => $item->name,
-                'price' => $item->price_reseler,
-                'price_for' => ($findS ? $findS->price : $item->price_reseler),
+                'reseler_price' => $item->price_reseler,
+                'price_for_reseler' => ($findS ? $findS->price : $item->price_reseler),
             ];
         });
 
