@@ -434,6 +434,9 @@ class UserController extends Controller
            $findUser->expire_date = NULL;
         }elseif($findUser->group->group_type == 'volume'){
             UserGraph::where('user_id',$findUser->id)->delete();
+            $findUser->expire_set = 0;
+            $findUser->first_login = NULL;
+            $findUser->expire_date = NULL;
         }
 
 

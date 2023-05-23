@@ -71,7 +71,7 @@ class AgentUserCollection extends ResourceCollection
             'groups' => Groups::select('name','id','price_reseler')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             'credit' => $incom,
-            'map_price' => $priceList,
+            'map_price' => $map_price,
             'data' => $this->collection->map(function($item){
                 $v2ray_user = false;
                 $usage = 0;

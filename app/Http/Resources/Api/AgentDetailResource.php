@@ -51,7 +51,7 @@ class AgentDetailResource extends JsonResource
 
 
         return [
-            'price_lists' => $priceList,
+            'price_lists' => $map_price,
             'detail' => [
                 'id' => $this->id,
                 'name' => $this->name,
