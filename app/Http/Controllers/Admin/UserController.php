@@ -167,14 +167,22 @@ class UserController extends Controller
             if ($findGroup->expire_type !== 'no_expire') {
                 if ($findGroup->expire_type == 'minutes') {
                     $req_all['exp_val_minute'] = $findGroup->expire_value;
+
                 } elseif ($findGroup->expire_type == 'month') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                    $req_all['max_usage']  = @round(60000000000  * $findGroup->expire_value) * $findGroup->multi_login;
                 } elseif ($findGroup->expire_type == 'days') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                    $req_all['max_usage']  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
+
                 } elseif ($findGroup->expire_type == 'hours') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                    $req_all['max_usage']  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
                 } elseif ($findGroup->expire_type == 'year') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                    $req_all['max_usage']  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
                 }
             }
 
@@ -316,14 +324,18 @@ class UserController extends Controller
             if($findGroup->expire_type !== 'no_expire'){
                 if($findGroup->expire_type == 'minutes'){
                     $exp_val_minute = $findGroup->expire_value;
-                }elseif($findGroup->expire_type == 'month'){
-                    $exp_val_minute = floor($findGroup->expire_value * 43800);
-                }elseif($findGroup->expire_type == 'days'){
-                    $exp_val_minute = floor($findGroup->expire_value * 1440);
-                }elseif($findGroup->expire_type == 'hours'){
-                    $exp_val_minute = floor($findGroup->expire_value * 60);
-                }elseif($findGroup->expire_type == 'year'){
-                    $exp_val_minute = floor($findGroup->expire_value * 525600);
+                }elseif ($findGroup->expire_type == 'month') {
+                    $find->exp_val_minute = floor($findGroup->expire_value * 43800);
+                    $find->max_usage  = @round(60000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                } elseif ($findGroup->expire_type == 'days') {
+                    $find->exp_val_minute = floor($findGroup->expire_value * 1440);
+                    $find->max_usage  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $find->exp_val_minute = floor($findGroup->expire_value * 60);
+                    $find->max_usage  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                } elseif ($findGroup->expire_type == 'year') {
+                    $find->exp_val_minute = floor($findGroup->expire_value * 525600);
+                    $find->max_usage  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
                 }
             }
 
@@ -427,13 +439,15 @@ class UserController extends Controller
             }
         }
 
+        UserGraph::where('user_id',$findUser->id)->delete();
+
 
         if($findUser->service_group !== 'v2ray' && $findUser->group->group_type !== 'volume'){
-           $findUser->expire_set = 0;
+
+            $findUser->expire_set = 0;
            $findUser->first_login = NULL;
            $findUser->expire_date = NULL;
         }elseif($findUser->group->group_type == 'volume'){
-            UserGraph::where('user_id',$findUser->id)->delete();
             $findUser->expire_set = 0;
             $findUser->first_login = NULL;
             $findUser->expire_date = NULL;

@@ -321,13 +321,19 @@ class UserController extends Controller
                 $find->exp_val_minute = $findGroup->expire_value;
             } elseif ($findGroup->expire_type == 'month') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 43800);
+                $find->max_usage  = @round(60000000000  * $findGroup->expire_value) * $findGroup->multi_login;
             } elseif ($findGroup->expire_type == 'days') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 1440);
+                $find->max_usage  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
             } elseif ($findGroup->expire_type == 'hours') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 60);
+                $find->max_usage  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
             } elseif ($findGroup->expire_type == 'year') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 525600);
+                $find->max_usage  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
             }
+            $find->multi_login = $findGroup->multi_login;
+
         }
 
         if($find->group_id !== $findGroup->id){
@@ -341,8 +347,8 @@ class UserController extends Controller
             $find->expire_type = $findGroup->expire_type;
             $find->expire_date = NULL;
             $find->expire_set = 0;
+
         }elseif($findGroup->group_type == 'volume'){
-            UserGraph::where('user_id',$find->id)->delete();
             $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 );
             $find->expire_value = 1;
             $find->expire_type = 'no_expire';
@@ -350,6 +356,7 @@ class UserController extends Controller
             $find->expire_set = 0;
         }
         $find->creator = auth()->user()->id;
+        UserGraph::where('user_id',$find->id)->delete();
 
         $find->save();
         $new =  new Financial;
