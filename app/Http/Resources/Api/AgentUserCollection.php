@@ -57,8 +57,8 @@ class AgentUserCollection extends ResourceCollection
             return [
                 'group_id' => $item->id,
                 'name' => $item->name,
-                'price' => $item->price_reseler,
-                'price_for' => ($findS ? $findS->price : $item->price_reseler),
+                'price_for_reseler' => $item->price_reseler,
+                'reseler_price' => ($findS ? $findS->price : $item->price_reseler),
             ];
         });
 
