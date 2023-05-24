@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Financial;
 use App\Models\RadAcct;
+use App\Models\UserGraph;
 use Illuminate\Http\Request;
 use App\Http\Resources\Api\AdminCollection;
 use App\Http\Resources\Api\UserCollection;
@@ -22,7 +23,7 @@ use Carbon\Carbon;
 class AdminsController extends Controller
 {
 
-    public function getDashboard(){
+    public function getDashboard(Request $request){
         $total_month = 0;
         $total_last_month = 0;
         $total_day = 0;
@@ -36,11 +37,65 @@ class AdminsController extends Controller
 
 
 
+        $chart_data = [];
+        $chart_data[] = [
+             'label' => 'دانلود',
+             'backgroundColor' => '#000eff',
+             'data' => [],
+            ];
+
+        $chart_data[] = [
+            'label' => 'آپلود',
+            'backgroundColor' => '#ffd500',
+            'data' => [],
+        ];
+
+
+        $end = 6;
+        if(!$request->chart_type || $request->chart_type == 'week') {
+            $start_day = Jalalian::now()->getFirstDayOfWeek();
+            $start_day_G = Jalalian::now()->getFirstDayOfWeek()->toCarbon();
+        }elseif($request->chart_type == 'month'){
+            $start_day = Jalalian::now()->getFirstDayOfMonth();
+            $start_day_G = Jalalian::now()->getFirstDayOfWeek()->toCarbon();
+            $end = Jalalian::now()->getMonthDays();
+        }
+
+        $Gdays = [];
+
+        $Gdays[] = $start_day_G->format('Y-m-d');
+        for ($i=0; $i < $end; $i++) {
+           $Gdays[] =  $start_day_G->addDays()->format('Y-m-d');
+            $Jdays[] =  Jalalian::forge($start_day->toCarbon())->addDays($i)->format('Y-m-d');
+        }
+
+
+        $sumAllDownload = 0;
+        $sumAllUpload = 0;
+        $sumAllDuplex = 0;
+        foreach ($Gdays as $date){
+            $data = UserGraph::where('date',$date)->get();
+            $sumUpload = $data->sum('tx');
+            $sumDownload = $data->sum('rx');
+            $chart_data[0]['data'][] = $sumDownload;
+            $chart_data[1]['data'][] = $sumUpload;
+
+            $sumAllDownload += $sumDownload;
+            $sumAllUpload += $sumUpload;
+            $sumAllDuplex += $sumDownload + $sumUpload;
+        }
+
+
         return response()->json([
            'total_month'  => $total_month,
            'total_day'  => $total_day,
            'total_last_month'  => 0,
            'total_online'  => $AllOnlineCount,
+           'data' => $Jdays,
+           'chart_data' => $chart_data,
+            'sum_download' => $sumAllDownload,
+            'sum_upload' => $sumAllUpload,
+            'sum_total' => $sumAllDuplex,
         ]);
     }
 

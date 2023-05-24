@@ -33,6 +33,14 @@ class AgentDetailResource extends JsonResource
         $listGroup = Groups::all();
         $map_price = $listGroup->map(function($item){
             $findS = PriceReseler::where('group_id',$item->id)->where('reseler_id',$this->id)->first();
+            if(auth()->user()->role == 'admin'){
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'price' => $item->price_reseler,
+                    'price_for' => ($findS ? $findS->price : $item->price_reseler),
+                ];
+            }
             return [
                 'id' => $item->id,
                 'name' => $item->name,

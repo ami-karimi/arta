@@ -307,10 +307,12 @@ class UserController extends Controller
         if($findSellectPrice){
             $price = (int) $findSellectPrice->price;
         }
+        /*
         $priceList = Helper::GetReselerGroupList('one',$findGroup->id,auth()->user()->id);
         if($priceList){
             $price = (int) $priceList['reseler_price'];
         }
+        */
 
         if($incom < $price ){
             return response()->json(['status' => false,'message' => 'موجودی شما برای پرداخت '.number_format($price).' تومان کافی نمیباشد!'],403);
@@ -397,10 +399,12 @@ class UserController extends Controller
             $price = (int) $findSellectPrice->price;
         }
 
+        /*
         $priceList = Helper::GetReselerGroupList('one',$findGroup->id,auth()->user()->id);
         if($priceList){
             $price = (int) $priceList['reseler_price'];
         }
+        */
 
         $userNameList = [];
         if($request->group_account){
