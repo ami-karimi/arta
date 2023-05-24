@@ -853,8 +853,7 @@ class UserController extends Controller
         if($request->SearchText){
             $data = $data->where('username',$request->SearchText);
         }
-        $data = $data->selectRaw('SUM(acctoutputoctets) as download_sum, SUM(acctinputoctets) as upload_sum, SUM(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')
-        ->where('acctstoptime','!=',NULL);
+        $data = $data->where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid');
 
 
 

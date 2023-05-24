@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->call(function () {
-            $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as download_sum, sum(acctinputoctets) as upload_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
+            $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
             foreach ($data as $item){
                 $findUser = User::where('username',$item->username)->first();
@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
                     if ($findOrCreateTotals) {
                         $findOrCreateTotals->rx += $item->download_sum;
                         $findOrCreateTotals->tx += $item->upload_sum;
-                        $findOrCreateTotals->total += $item->download_sum + $item->upload_sum;
+                        $findOrCreateTotals->total += $item->total_sum;
                         $findOrCreateTotals->save();
                     } else {
                         UserGraph::create([
@@ -37,13 +37,14 @@ class Kernel extends ConsoleKernel
                             'total' => $item->download_sum + $item->upload_sum,
                         ]);
                     }
+                    RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
+
                 }
-                RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
 
             }
 
 
-        })->everyMinute();
+        })->everyFiveMinutes();
     }
 
     /**
