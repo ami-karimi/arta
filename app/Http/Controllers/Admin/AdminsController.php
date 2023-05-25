@@ -110,7 +110,7 @@ class AdminsController extends Controller
 
         $cl_us = [];
 
-        $usageUser = UserGraph::selectRaw('SUM(total) as total_usage')->groupBy('user_id')->orderBy('total_usage')->limit(20)->get();
+        $usageUser = UserGraph::selectRaw('SUM(total) as total_usage,user_id')->groupBy('user_id')->orderBy('total_usage')->limit(20)->get();
         foreach ($usageUser as $row){
             $user = User::where('id',$row->user_id)->first();
             if($user) {
