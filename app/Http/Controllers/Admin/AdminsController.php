@@ -23,6 +23,28 @@ use Carbon\Carbon;
 class AdminsController extends Controller
 {
 
+    public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
+    {
+        $base = log($size, 1024);
+
+        if($format == 1) {
+            $suffixes = ['بایت', 'کلوبایت', 'مگابایت', 'گیگابایت', 'ترابایت']; # Persian
+        } elseif ($format == 2) {
+            $suffixes = ["B", "KB", "MB", "GB", "TB"];
+        } else {
+            $suffixes = ['B', 'K', 'M', 'G', 'T'];
+        }
+
+        if($size <= 0) return "0 ".$suffixes[1];
+
+        $result = pow(1024, $base - floor($base));
+        $result = round($result, $precision);
+        $suffixes = $suffixes[floor($base)];
+
+        return $result ." ". $suffixes;
+    }
+
+
     public function getDashboard(Request $request){
         $total_month = 0;
         $total_last_month = 0;
@@ -86,6 +108,20 @@ class AdminsController extends Controller
         }
 
 
+        $cl_us = [];
+
+        $usageUser = UserGraph::selectRaw('SUM(total) as total_usage')->groupBy('user_id')->orderBy('total_usage')->limit(20)->get();
+        foreach ($usageUser as $row){
+            $user = User::where('id',$row->user_id)->first();
+            if($user) {
+                $cl_us[] = [
+                    'user_id' => $user->id,
+                    'username' => $user->username,
+                    'sum' => $this->formatBytes($row->total_usage)
+                ];
+           }
+        }
+
         return response()->json([
            'total_month'  => $total_month,
            'total_day'  => $total_day,
@@ -96,6 +132,7 @@ class AdminsController extends Controller
             'sum_download' => $sumAllDownload,
             'sum_upload' => $sumAllUpload,
             'sum_total' => $sumAllDuplex,
+            'cl_us' => $cl_us,
         ]);
     }
 
