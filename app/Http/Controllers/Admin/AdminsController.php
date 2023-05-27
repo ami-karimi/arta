@@ -79,7 +79,7 @@ class AdminsController extends Controller
             $start_day_G = Jalalian::now()->getFirstDayOfWeek()->toCarbon();
         }elseif($request->chart_type == 'month'){
             $start_day = Jalalian::now()->getFirstDayOfMonth();
-            $start_day_G = Jalalian::now()->getFirstDayOfWeek()->toCarbon();
+            $start_day_G = Jalalian::now()->getFirstDayOfMonth()->toCarbon();
             $end = Jalalian::now()->getMonthDays();
         }
 
