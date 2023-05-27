@@ -133,7 +133,6 @@ class AdminsController extends Controller
             'sum_upload' => $sumAllUpload,
             'sum_total' => $sumAllDuplex,
             'cl_us' => $cl_us,
-            'Gdays' => $Gdays
         ]);
     }
 
