@@ -87,7 +87,7 @@ class AdminsController extends Controller
 
         $Gdays[] = $start_day_G->format('Y-m-d');
         for ($i=0; $i < $end; $i++) {
-           $Gdays[] =  $start_day_G->addDays()->format('Y-m-d');
+           $Gdays[] =  $start_day_G->addDays(1)->format('Y-m-d');
             $Jdays[] =  Jalalian::forge($start_day->toCarbon())->addDays($i)->format('Y-m-d');
         }
 
