@@ -150,7 +150,7 @@ sql {
 
 	#  Set the maximum query duration and connection timeout
 	#  for rlm_sql_mysql.
-#	query_timeout = 5
+#	query_timeout = 15
 
 	#  As of version 3.0, the "pool" section has replaced the
 	#  following configuration items:
