@@ -19,6 +19,7 @@ use App\Utility\V2rayApi;
 use App\Http\Resources\Api\V2rayServersStatusCollection;
 use App\Models\Ras;
 use Carbon\Carbon;
+use App\Utility\Mikrotik;
 
 class AdminsController extends Controller
 {
@@ -51,6 +52,17 @@ class AdminsController extends Controller
         $total_day = 0;
         $total_online = 0;
 
+        /*
+        $API        = new Mikrotik();
+        $API->debug = false;
+        $API->connect('s1.arta20.xyz', 'admin', 'Amir@###1401');
+        $API->write('/interface/getall');
+
+        $READ = $API->read(false);
+        $ARRAY = $API->parseResponse($READ);
+
+        $API->disconnect();
+        */
 
         $AllOnlineCount = RadAcct::where('acctstoptime',NULL)->get()->count();
 
