@@ -78,4 +78,23 @@ class MonitorigController extends Controller
 
         return response()->json($servers);
     }
+
+
+    public function KillUser($server,$user){
+        $API        = new Mikrotik();
+        $API->debug = false;
+        if($API->connect($server, 'admin', 'Amir@###1401')){
+            $BRIDGEINFO = $API->comm('/ip/hotspot/user/active/print', array(
+                ".proplist" => ".id",
+                "?name" => "$user"
+            ));
+
+            $API->comm('/ip/hotspot/active/remove', false, array(
+                ".id"=>$BRIDGEINFO[0]['.id'],
+            ));
+            return true;
+        }
+
+        return false;
+    }
 }

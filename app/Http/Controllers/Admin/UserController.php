@@ -23,6 +23,7 @@ use App\Models\RadAcct;
 use App\Models\Ras;
 use Carbon\Carbon;
 use App\Utility\V2rayApi;
+use App\Http\Controllers\Admin\MonitorigController;
 
 class UserController extends Controller
 {
@@ -831,19 +832,28 @@ class UserController extends Controller
     public function kill_user(Request $request){
         $find = RadAcct::where('radacctid',$request->radacctid)->first();
         if(!$find){
+
             return response()->json([
                 'status' => false,
                 'message' => 'نشست یافت نشد!'
             ],403);
         }
 
+        $monitor = new MonitorigController() ;
+        if($monitor->KillUser($find->nasipaddress,$find->username)) {
+            $find->acctstoptime = Carbon::now('Asia/Tehran');
+            $find->save();
+            return response()->json([
+                'status' => false,
+                'message' => 'عملیات با موفقیت انجام شد!'
+            ]);
+        }
 
-        $find->acctstoptime = Carbon::now('Asia/Tehran');
-        $find->save();
         return response()->json([
             'status' => false,
-            'message' => 'عملیات با موفقیت انجام شد!'
-        ]);
+            'message' => 'متاسفانه نتوانستیم این کار را انجام دهیم!'
+        ],403);
+
     }
 
 
