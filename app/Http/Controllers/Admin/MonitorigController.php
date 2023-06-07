@@ -89,7 +89,7 @@ class MonitorigController extends Controller
                 "?name" => "$user"
             ));
 
-            $API->comm('/ppp/active/remove', false, array(
+            $API->comm('/ppp/active/remove',  array(
                 ".id"=>$BRIDGEINFO[0]['.id'],
             ));
             return true;
