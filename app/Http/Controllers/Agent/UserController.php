@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Agent;
 
+use App\Http\Controllers\Admin\MonitorigController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\AcctSavedCollection;
 use App\Http\Resources\Api\AgentUserCollection;
@@ -630,13 +631,20 @@ class UserController extends Controller
                 'message' => 'نشست یافت نشد!'
             ],403);
         }
-
-        $find->acctstoptime = Carbon::now('Asia/Tehran');
-        $find->save();
+        $monitor = new MonitorigController() ;
+        if($monitor->KillUser($find->nasipaddress,$find->username)) {
+            $find->acctstoptime = Carbon::now('Asia/Tehran');
+            $find->save();
+            return response()->json([
+                'status' => false,
+                'message' => 'عملیات با موفقیت انجام شد!'
+            ]);
+        }
         return response()->json([
             'status' => false,
-            'message' => 'عملیات با موفقیت انجام شد!'
-        ]);
+            'message' => 'متاسفانه نتوانستیم این کار را انجام دهیم!'
+        ],403);
+
     }
 
     public function buy_volume(Request $request,$id){
