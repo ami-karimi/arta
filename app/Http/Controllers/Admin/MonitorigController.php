@@ -84,12 +84,12 @@ class MonitorigController extends Controller
         $API        = new Mikrotik();
         $API->debug = false;
         if($API->connect($server, 'admin', 'Amir@###1401')){
-            $BRIDGEINFO = $API->comm('/ip/hotspot/user/active/print', array(
+            $BRIDGEINFO = $API->comm('/ppp/user/active/print', array(
                 ".proplist" => ".id",
                 "?name" => "$user"
             ));
 
-            $API->comm('/ip/hotspot/active/remove', false, array(
+            $API->comm('/ppp/active/remove', false, array(
                 ".id"=>$BRIDGEINFO[0]['.id'],
             ));
             return true;
