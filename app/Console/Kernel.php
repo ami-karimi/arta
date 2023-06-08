@@ -3,8 +3,10 @@
 namespace App\Console;
 
 use App\Models\RadAcct;
+use App\Models\Ras;
 use App\Models\User;
 use App\Models\UserGraph;
+use App\Utility\Mikrotik;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -45,6 +47,30 @@ class Kernel extends ConsoleKernel
 
 
         })->everyFiveMinutes();
+        $schedule->call(function () {
+            $API        = new Mikrotik();
+            $API->debug = false;
+            $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
+            $user_list = [];
+            foreach ($Servers as $sr) {
+                if ($API->connect($sr->ipaddress, 'admin', 'Amir@###1401')) {
+
+                    $BRIDGEINFO = $API->comm('/ppp/active/print', array(
+                        "?encoding" => "",
+                        "?service" => "ovpn"
+                    ));
+
+                    foreach ($BRIDGEINFO as $user) {
+                        $user_list[] = $user;
+                        $API->comm('/ppp/active/remove', array(
+                            ".id" => $user['.id'],
+                        ));
+                    }
+
+                }
+            }
+
+        })->everyTenMinutes();
     }
 
     /**
