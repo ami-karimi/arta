@@ -21,7 +21,7 @@ class AdminNotificationCollection extends ResourceCollection
             'data' => $this->collection->map(function($item){
             return [
                'id' => $item->id,
-               'from' => ($item->sender ? ['id' => $item->sender->id,'role' => $item->sender->role,'name' => ($item->sender->name ? $item->sender->name : $item->sender->username )] : false),
+               'from' => ($item->sender ? ['id' => $item->sender->id,'role' => $item->sender->role,'name' => ($item->sender->name !== "" ? $item->sender->name : $item->sender->username )] : false),
                'content' => $item->content,
                'url' => $item->url,
                'for' => ($item->foruser ? $item->foruser->name : '---'),
