@@ -30,6 +30,7 @@ class RasResources extends ResourceCollection
                     'is_enabled' => $item->is_enabled,
                     'created_at' => $item->created_at,
                     'secret' => $item->secret,
+                    'unlimited' => $item->unlimited,
                     'name' => $item->name,
                     'online_count' => $item->getUsersOnline()->count()
 

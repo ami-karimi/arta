@@ -69,7 +69,10 @@ Route::middleware(['auth:api'])->group(function () {
         });
 
         Route::get('/getDashboard', [\App\Http\Controllers\Admin\AdminsController::class, 'getDashboard']);
+        Route::prefix('wireguard')->group(function () {
+            Route::get('/index', [\App\Http\Controllers\Admin\WireGuardController::class, 'index']);
 
+        });
         Route::prefix('monitor')->group(function () {
             Route::get('/index', [\App\Http\Controllers\Admin\MonitorigController::class, 'index']);
             Route::get('/ether/{ip}', [\App\Http\Controllers\Admin\MonitorigController::class, 'ether']);

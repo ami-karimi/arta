@@ -24,6 +24,7 @@ use App\Models\Ras;
 use Carbon\Carbon;
 use App\Utility\V2rayApi;
 use App\Http\Controllers\Admin\MonitorigController;
+use App\Utility\WireGuard;
 
 class UserController extends Controller
 {
@@ -70,7 +71,9 @@ class UserController extends Controller
         return new UserCollection($user->orderBy('id','DESC')->paginate(50));
     }
     public function create(StoreSingleUserRequest $request){
-
+        if($request->account_type){
+            return $this->CreateWireGuardAccount($request);
+        }
         if($request->service_group == 'v2ray'){
             $req_all = $request->all();
             $findUsername = User::where('username',$request->username)->first();
@@ -201,10 +204,106 @@ class UserController extends Controller
 
             User::create($req_all);
 
+            if($request->type_service == 'wireguard'){
+                $create_wr =  new WireGuard(32,$req_all['username']);
+                $status =   $create_wr->Run();
+            }
+
         }
 
         return response()->json(['status' => true, 'message' => 'کاربر با موفقیت اضافه شد!']);
 
+    }
+    public function CreateWireGuardAccount(Request $request){
+        $userNameList = [];
+
+        if(!$request->server_id){
+            response()->json(['status' => false, 'message' => 'لطفا سرور مقصد را انتخاب نمایید'],403);
+        }
+        $type = 'single';
+        if(strpos($request->username,'{')) {
+
+
+            $type = 'group';
+            $pos = strpos($request->username,'{');
+            $pos2 = strlen($request->username);
+            $rem = substr($request->username,$pos,$pos2);
+            $replace = str_replace(['{','}'],'',substr($request->username,$pos,$pos2));
+            $exp_count = explode('-',$replace);
+            $start = (int) $exp_count[0];
+            $end = (int) $exp_count[1] + 1;
+            $userNames = str_replace($rem,'',$request->username);
+        }else{
+            array_push($userNameList,['username' => $request->username,'password' => $request->password]);
+        }
+
+        if($type == 'group'){
+            for ($i= $start; $i < $end;$i++){
+                $buildUsername = $userNames.$i;
+                $findUsername = User::where('username',$buildUsername)->first();
+                if($findUsername){
+                    return response()->json(['status' => false,'نام کاربری '.$buildUsername.' موجود میباشد!']);
+                }
+                $password = $request->password;
+                if($request->random_password){
+                    $password = substr(rand(0,99999),0,(int) $request->random_password_num);
+                }
+
+                array_push($userNameList,['username' => $buildUsername ,'password'  => $password]);
+            }
+        }
+        foreach ($userNameList as $row) {
+            $req_all = $request->all();
+            $req_all['username'] = $row['username'];
+            $req_all['password'] = $row['password'];
+            $req_all['groups'] = $request->username;
+            $req_all['creator'] = $request->creator;
+
+            AcctSaved::create($req_all);
+
+            $findGroup = Groups::where('id', $request->group_id)->first();
+            if ($findGroup->expire_type !== 'no_expire') {
+                if ($findGroup->expire_type == 'minutes') {
+                    $req_all['exp_val_minute'] = $findGroup->expire_value;
+
+                } elseif ($findGroup->expire_type == 'month') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                    $req_all['max_usage']  = @round(60000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                } elseif ($findGroup->expire_type == 'days') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                    $req_all['max_usage']  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                    $req_all['max_usage']  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                } elseif ($findGroup->expire_type == 'year') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                    $req_all['max_usage']  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                }
+            }
+
+            $req_all['multi_login'] = 1;
+            $req_all['service_group'] = 'wireguard';
+
+            if($findGroup->group_type == 'expire') {
+                $req_all['expire_value'] = $findGroup->expire_value;
+                $req_all['expire_type'] = $findGroup->expire_type;
+                $req_all['expire_set'] = 0;
+            }
+            if($findGroup->group_type == 'volume') {
+                $req_all['multi_login'] = 1;
+                $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+            }
+
+                User::create($req_all);
+                $create_wr =  new WireGuard($request->server_id,$req_all['username']);
+                $create_wr->Run();
+        }
+
+
+        return response()->json(['status' => true, 'message' => 'کاربر با موفقیت اضافه شد!']);
     }
     public function edit(EditSingleUserRequest $request,$id){
         $find = User::where('id',$id)->first();
