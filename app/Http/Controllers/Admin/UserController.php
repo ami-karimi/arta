@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use App\Utility\V2rayApi;
 use App\Http\Controllers\Admin\MonitorigController;
 use App\Utility\WireGuard;
+use App\Models\WireGuardUsers;
 
 class UserController extends Controller
 {
@@ -297,9 +298,23 @@ class UserController extends Controller
                 $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
             }
 
-                User::create($req_all);
-                $create_wr =  new WireGuard($request->server_id,$req_all['username']);
-                $create_wr->Run();
+                $user = User::create($req_all);
+              if($user) {
+                $create_wr = new WireGuard($request->server_id, $req_all['username']);
+
+                    $user_wi = $create_wr->Run();
+                  if($user_wi['status']) {
+                      $saved = new  WireGuardUsers();
+                      $saved->profile_name = $user_wi['config_file'];
+                      $saved->user_id = $user->id;
+                      $saved->server_id = $request->server_id;
+                      $saved->public_key = $user_wi['client_public_key'];
+                      $saved->user_ip = $user_wi['ip_address'];
+                      $saved->save();
+                      exec('qrencode -t png -o /var/www/html/arta/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/configs/".$user_wi['config_file'].".conf");
+
+                }
+            }
         }
 
 

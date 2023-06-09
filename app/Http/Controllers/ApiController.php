@@ -11,10 +11,12 @@ use App\Utility\Mikrotik;
 class ApiController extends Controller
 {
     public function index(){
+        /*
         $create_wr =  new WireGuard(32,'test');
         $status =   $create_wr->Run();
 
         print_r($status);
+        */
 
 
 
