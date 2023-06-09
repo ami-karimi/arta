@@ -8,6 +8,7 @@ use App\Http\Resources\Api\AcctSavedCollection;
 use App\Http\Resources\Api\UserGraphsResource;
 use App\Http\Resources\Api\UserCollection;
 use App\Http\Resources\Api\ActivityCollection;
+use App\Http\Resources\WireGuardConfigCollection;
 use App\Models\Activitys;
 use App\Models\User;
 use App\Models\RadPostAuth;
@@ -604,6 +605,7 @@ class UserController extends Controller
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!']);
         }
 
+        /*
         if($userDetial->service_group == 'v2ray'){
 
             $findServer = false;
@@ -643,11 +645,13 @@ class UserController extends Controller
                     $total = $userDetial->max_usage;
 
             }
+
             return  response()->json([
                 'status' => true,
                 'user' => [
                     'id' => $userDetial->id,
                     'server_detial' => ($userDetial->v2ray_server ? $userDetial->v2ray_server : false),
+                    'wireguard' => $wireGuardConfigs,
                     'left_usage' => $left_usage,
                     'down' => $down,
                     'up' => $up,
@@ -679,6 +683,7 @@ class UserController extends Controller
                 'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             ]);
         }
+        */
 
         $left_usage = 0;
         $up = 0;
@@ -697,11 +702,15 @@ class UserController extends Controller
 
         }
 
-
+        $wireGuardConfigs = [];
+        if($userDetial->service_group === 'wireguard'){
+            $wireGuardConfigs =   new WireGuardConfigCollection(WireGuardUsers::where('user_id',$userDetial->id)->get());
+        }
         return  response()->json([
             'status' => true,
             'user' => [
                 'id' => $userDetial->id,
+                'wireguard' => $wireGuardConfigs,
                 'name' => $userDetial->name,
                 'down' => $down,
                 'down_format' => $this->formatBytes($down,2),
@@ -722,6 +731,7 @@ class UserController extends Controller
                 'group_type' => ($userDetial->group ? $userDetial->group->group_type : '---'),
                 'group_id' => $userDetial->group_id,
                 'expire_type' => $userDetial->expire_type,
+                'service_group' => $userDetial->service_group,
                 'expire_value' => $userDetial->expire_value,
                 'expire_date' => ($userDetial->expire_date !== NULL ? Jalalian::forge($userDetial->expire_date)->__toString() : '---'),
                 'left_time' => ($userDetial->expire_date !== NULL ? Carbon::now()->diffInDays($userDetial->expire_date, false) : '---'),

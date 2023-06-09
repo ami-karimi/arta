@@ -11,4 +11,9 @@ class WireGuardUsers extends Model
 
     protected $guarded = ['id'];
     protected $table = 'wireguard_users';
+
+    public function server()
+    {
+        return $this->hasOne(Ras::class,'id','server_id');
+    }
 }

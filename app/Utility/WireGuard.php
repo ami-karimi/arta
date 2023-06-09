@@ -38,6 +38,24 @@ class WireGuard
         $this->config_file = $this->username."-".date('Ymd');
     }
 
+    public function getUser($public_key){
+        $checkInterface = $this->getInterface();
+
+        if(!$checkInterface['status']){
+            return $checkInterface;
+        }
+
+        $BRIDGEINFO_Peers = $this->ROS->comm('/interface/wireguard/peers/print', array(
+            '?interface' => 'ROS_WG_USERS',
+            '?public-key' => $public_key,
+        ));
+        if(count($BRIDGEINFO_Peers)){
+            return ['status' => true,'user' => $BRIDGEINFO_Peers[0]];
+        }
+
+        return ['status' => false,'message' => 'Not Find User'];
+    }
+
     public function Run(){
         $checkInterface = $this->getInterface();
 
@@ -64,6 +82,7 @@ class WireGuard
     }
 
 
+
     public function getInterface(){
         $API        = new Mikrotik();
         $API->debug = false;
@@ -75,7 +94,11 @@ class WireGuard
             if(count($BRIDGEINFO)) {
                 $this->server_pub_key = $BRIDGEINFO[0]['public-key'];
                 $this->server_port = $BRIDGEINFO[0]['listen-port'];
-                $newCount = count($BRIDGEINFO);
+                $BRIDGEINFO_Peers = $API->comm('/interface/wireguard/peers/print', array(
+                    '?interface' => 'ROS_WG_USERS',
+                ));
+
+                $newCount = count($BRIDGEINFO_Peers);
                 $newIp = "12.11.10.".$newCount+2 ;
                 $this->ip_address = $newIp;
                 $this->ROS = $API;
@@ -90,7 +113,7 @@ class WireGuard
     public function CreatePear(){
         return $this->ROS->comm('/interface/wireguard/peers/add', array(
             'interface' => 'ROS_WG_USERS',
-            'allowed-address' => '0.0.0.0/0',
+            'allowed-address' => $this->ip_address."/32",
             'public-key' => $this->client_public_key,
         ));
     }
@@ -99,7 +122,7 @@ class WireGuard
         $fp = fopen(public_path()."/configs/".$this->config_file.".conf","wb");
         $content = "[Interface] \n";
         $content .= "PrivateKey = ".$this->client_private_key;
-        $content .= "\nAddress = ".$this->ip_address;
+        $content .= "\nAddress = ".$this->ip_address."/32";
         $content .= "\nDNS = 8.8.8.8";
         $content .= "\n[Peer]";
         $content .= "\nPublicKey = ".$this->server_pub_key."=";

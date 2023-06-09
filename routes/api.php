@@ -25,9 +25,12 @@ Route::get('/login', function(){
     return \response()->json(['status' => false,'message' => '403 forbidden Login'],403);
 });
 
+Route::get('/download/{image}', [\App\Http\Controllers\Admin\WireGuardController::class, 'download']);
 
 
 Route::middleware(['auth:api'])->group(function () {
+
+
 
       // User Controller
        Route::prefix('user')->group(function () {
