@@ -104,6 +104,7 @@ class WireGuard
         $content .= "\n[Peer]";
         $content .= "\nPublicKey = ".$this->server_pub_key."=";
         $content .= "\nAllowedIPs = 0.0.0.0/0";
+        $content .= "\nListenPort = 110";
         $content .= "\nEndpoint = ".$this->server->ipaddress.":".$this->server_port;
         $content .= "\nPersistentKeepalive = 10";
         fwrite($fp,$content);
