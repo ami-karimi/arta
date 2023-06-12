@@ -79,6 +79,9 @@ class SaveActivityUser
        if($type == 'by_volume_v2ray'){
            self::by_volume_v2ray();
        }
+       if($type == 'change_wg_server'){
+           self::change_wg_server();
+       }
    }
 
    public static function ChangeStatusAccount(){
@@ -222,6 +225,14 @@ class SaveActivityUser
    }
    public static function buy_new_volume(){
        $content = vsprintf('مقدار حجم %s گیگ اضافه خریداری شد. مانده قبلی: %s گیگ',[self::$data['new'],self::$data['last']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+   public static function change_wg_server(){
+       $content = vsprintf('کانفیگ کاربر از سرور (%s) حذف شد و بر روی سرور (%s) قرار گرفت.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
            'by' => auth()->user()->id,
            'user_id' => self::$user_id,

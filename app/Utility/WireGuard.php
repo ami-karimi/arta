@@ -38,6 +38,63 @@ class WireGuard
         $this->config_file = $this->username."-".date('Ymd');
     }
 
+    public function removeConfig($public_key){
+        $checkInterface = $this->getInterface();
+        if(!$checkInterface['status']){
+            return $checkInterface;
+        }
+
+        $findUser  = $this->ROS->comm('/interface/wireguard/peers/print', array(
+            '?interface' => 'ROS_WG_USERS',
+            '?public-key' => $public_key,
+        ));
+        if(!count($findUser)){
+            return ['status' => false,'message' => 'User Not Find'];
+        }
+
+        $re =  $this->ROS->comm("/interface/wireguard/peers/remove", array(
+            '.id' => $findUser[0]['.id'],
+        ));
+
+        return ['status' => true,'re' => $re];
+
+    }
+
+    public function getAllPears(){
+        $checkInterface = $this->getInterface();
+        if(!$checkInterface['status']){
+            return $checkInterface;
+        }
+
+        $findUser  = $this->ROS->comm('/interface/wireguard/peers/print', array(
+            '?interface' => 'ROS_WG_USERS',
+        ));
+
+        return ['status'=> true,'peers' => $findUser];
+    }
+
+    public function ChangeConfigStatus($public_key,$status ){
+        $checkInterface = $this->getInterface();
+        if(!$checkInterface['status']){
+            return $checkInterface;
+        }
+
+        $findUser  = $this->ROS->comm('/interface/wireguard/peers/print', array(
+            '?interface' => 'ROS_WG_USERS',
+            '?public-key' => $public_key,
+        ));
+        if(!count($findUser)){
+            return ['status' => false,'message' => 'User Not Find'];
+        }
+
+         $re =  $this->ROS->comm("/interface/wireguard/peers/set", array(
+            '.id' => $findUser[0]['.id'],
+            'disabled' => ($status ? 'no' : 'yes'),
+        ));
+
+        return ['status' => true,'re' => $status];
+
+    }
     public function getUser($public_key){
         $checkInterface = $this->getInterface();
 
@@ -94,20 +151,35 @@ class WireGuard
             if(count($BRIDGEINFO)) {
                 $this->server_pub_key = $BRIDGEINFO[0]['public-key'];
                 $this->server_port = $BRIDGEINFO[0]['listen-port'];
-                $BRIDGEINFO_Peers = $API->comm('/interface/wireguard/peers/print', array(
-                    '?interface' => 'ROS_WG_USERS',
-                ));
-
-                $newCount = count($BRIDGEINFO_Peers);
-                $newIp = "12.11.10.".$newCount+2 ;
-                $this->ip_address = $newIp;
                 $this->ROS = $API;
+
+                $newIp = $this->findIpaddress();
+                $this->ip_address = $newIp;
                 return ['status' => true];
             }
             return ['status' => false, 'message' => 'Not Can Get Wireguard Interface'];
         }
 
         return ['status' => false, 'message' => 'Not Can Connect To Server'];
+    }
+
+    public function findIpaddress(){
+        $to = 253;
+        $AllIp = [];
+        for ($i = 2; $i < 255;$i++){
+            $AllIp[] = "12.11.10." . $i;
+        }
+        foreach ($AllIp as $ip) {
+            $BRIDGEINFO = $this->ROS->comm('/interface/wireguard/peers/print', array(
+                '?interface' => 'ROS_WG_USERS',
+                '?allowed-address' => $ip . "/32",
+            ));
+            if (!count($BRIDGEINFO)) {
+                return $ip;
+            }
+        }
+
+        return false;
     }
 
     public function CreatePear(){

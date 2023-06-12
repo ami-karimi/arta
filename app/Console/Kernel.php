@@ -7,6 +7,8 @@ use App\Models\Ras;
 use App\Models\User;
 use App\Models\UserGraph;
 use App\Utility\Mikrotik;
+use App\Utility\WireGuard;
+use App\Models\WireGuardUsers;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -18,6 +20,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+
         $schedule->call(function () {
             $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
@@ -71,6 +74,36 @@ class Kernel extends ConsoleKernel
             }
 
         })->everyTenMinutes();
+        $schedule->call(function () {
+            $ras = Ras::where('unlimited',1)->where('is_enabled',1)->get();
+
+            foreach ($ras as $server){
+                $mik = new WireGuard($server->id,'null');
+                $peers = $mik->getAllPears();
+                if($peers['status']){
+                    $peers = $peers['peers'];
+                    foreach ($peers as $peer){
+                        $findWireIn = WireGuardUsers::where('user_ip',str_replace('/32','',$peer['allowed-address']))->where('server_id',$server->id)->first();
+                        if($findWireIn){
+                            if($findWireIn->user->expire_set == 0 && isset($peer['last-handshake'])){
+                                $findWireIn->user->expire_set = 1;
+                                $findWireIn->user->first_login = Carbon::now();
+                                $findWireIn->user->expire_date = Carbon::now()->addMinutes($findWireIn->user->exp_val_minute);
+                                $findWireIn->user->save();
+                            }
+                            if($findWireIn->user->expire_set == 1){
+                                if(strtotime($findWireIn->user->expire_data) <= time()){
+                                    $mik->ChangeConfigStatus($findWireIn->public_key,1);
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        })->everyFourHours();
+
+
     }
 
     /**

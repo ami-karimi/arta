@@ -74,6 +74,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('/getDashboard', [\App\Http\Controllers\Admin\AdminsController::class, 'getDashboard']);
         Route::prefix('wireguard')->group(function () {
             Route::get('/index', [\App\Http\Controllers\Admin\WireGuardController::class, 'index']);
+            Route::post('/update_wg/{id}', [\App\Http\Controllers\Admin\WireGuardController::class, 'update']);
+            Route::delete('/delete/{id}', [\App\Http\Controllers\Admin\WireGuardController::class, 'delete']);
 
         });
         Route::prefix('monitor')->group(function () {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use http\Env\Request;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSingleUserRequest extends FormRequest
@@ -21,7 +22,13 @@ class StoreSingleUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        if($this->request->get('for_user')){
+            return [
+                'server_id' => 'required'
+            ];
+        }
         return [
+
             'username' => 'required|unique:users|max:20|regex:/^[a-zA-Z0-9{}-]+$/u',
             'password' => 'required',
             'group_id' => 'required',

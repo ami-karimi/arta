@@ -16,4 +16,10 @@ class WireGuardUsers extends Model
     {
         return $this->hasOne(Ras::class,'id','server_id');
     }
+
+
+    public function user()
+    {
+        return $this->hasOne(User::class,'id','user_id');
+    }
 }

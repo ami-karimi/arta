@@ -206,10 +206,7 @@ class UserController extends Controller
 
             User::create($req_all);
 
-            if($request->type_service == 'wireguard'){
-                $create_wr =  new WireGuard(32,$req_all['username']);
-                $status =   $create_wr->Run();
-            }
+
 
         }
 
@@ -217,6 +214,29 @@ class UserController extends Controller
 
     }
     public function CreateWireGuardAccount(Request $request){
+
+        if($request->for_user){
+            $user = User::where('id',$request->for_user)->first();
+            if(!$user){
+                return  response()->json(['status' => true,'message' => 'کاربر یافت نشد!'],403);
+            }
+            $create_wr = new WireGuard($request->server_id, $user->username.rand(1,5));
+
+            $user_wi = $create_wr->Run();
+            if($user_wi['status']) {
+                $saved = new  WireGuardUsers();
+                $saved->profile_name = $user_wi['config_file'];
+                $saved->user_id = $user->id;
+                $saved->server_id = $request->server_id;
+                $saved->public_key = $user_wi['client_public_key'];
+                $saved->user_ip = $user_wi['ip_address'];
+                $saved->save();
+                exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
+
+            }
+
+            return  response()->json(['status' => true,'message' => 'کانفیگ با موفقیت ایجاد شد']);
+        }
         $userNameList = [];
 
         if(!$request->server_id){
@@ -503,9 +523,20 @@ class UserController extends Controller
             $expire_date = Carbon::parse($find->first_login)->addMinutes($exp_val_minute)->toDateTimeString();
         }
 
+
         if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
             $find->is_enabled = ($request->is_enabled === true ? 1 : 0);
             SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => $find->is_enabled]);
+            if($find->service_group == 'wireguard'){
+                $AllConfig = WireGuardUsers::where('user_id',$find->id)->get();
+                foreach ($AllConfig as $row){
+                    $wireGuard = new WireGuard($row->server_id,$row->profile_name);
+                    $wireGuard->ChangeConfigStatus($row->public_key, ($request->is_enabled == true ? 1 : 0));
+                    $row->is_enabled = ($request->is_enabled === true ? 1 : 0);
+                    $row->save();
+                }
+
+            }
             if($login){
                 $login->update($find->port_v2ray,['enable' => $request->is_enabled]);
             }
@@ -703,10 +734,22 @@ class UserController extends Controller
         }
 
         $wireGuardConfigs = [];
-        if($userDetial->service_group === 'wireguard'){
+        if($userDetial->service_group == 'wireguard'){
             $wireGuardConfigs =   new WireGuardConfigCollection(WireGuardUsers::where('user_id',$userDetial->id)->get());
         }
+
+        $servers = [];
+        $groups = Groups::select('name','id');
+        if($userDetial->service_group == 'wireguard'){
+            $value = "وایرگارد";
+            $groups->where('name','like','%'.$value.'%');
+            $groups->where('group_type',$userDetial->group->group_type);
+
+            $servers = Ras::select(['name','ipaddress','server_location','l2tp_address','id'])->where('unlimited',($userDetial->group->group_type == 'volume' ? 0 : 1))->get();
+        }
+
         return  response()->json([
+            'servers' => $servers,
             'status' => true,
             'user' => [
                 'id' => $userDetial->id,
@@ -739,7 +782,7 @@ class UserController extends Controller
                 'is_enabled' => $userDetial->is_enabled ,
                 'created_at' => Jalalian::forge($userDetial->created_at)->__toString(),
             ],
-            'groups' => Groups::select('name','id')->get(),
+            'groups' => $groups->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
         ]);
     }
