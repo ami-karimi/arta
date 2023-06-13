@@ -169,6 +169,13 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::get('/view/{id}', [\App\Http\Controllers\Agent\AgentsController::class, 'view']);
                 Route::post('/save_custom_price/{id}', [\App\Http\Controllers\Agent\AgentsController::class, 'save_custom_price']);
             });
+            Route::prefix('wireguard')->group(function () {
+                Route::get('/index', [\App\Http\Controllers\Agent\WireGuardController::class, 'index']);
+                Route::post('/update_wg/{id}', [\App\Http\Controllers\Agent\WireGuardController::class, 'update']);
+                Route::delete('/delete/{id}', [\App\Http\Controllers\Agent\WireGuardController::class, 'delete']);
+
+            });
+
 
             Route::prefix('financial')->group(function () {
                 Route::get('/list', [\App\Http\Controllers\Agent\FinancialController::class, 'index']);
