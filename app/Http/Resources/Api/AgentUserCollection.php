@@ -51,7 +51,7 @@ class AgentUserCollection extends ResourceCollection
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
 
 
-        $listGroup = Groups::all();
+        $listGroup = Groups::where('name','not like','%وایرگارد%')->get();
         $map_price = $listGroup->map(function($item){
             $findS = PriceReseler::where('group_id',$item->id)->where('reseler_id',auth()->user()->id)->first();
             return [
@@ -68,7 +68,7 @@ class AgentUserCollection extends ResourceCollection
 
 
         return [
-            'groups' => Groups::select('name','id','price_reseler')->get(),
+            'groups' => Groups::select('name','id','price_reseler')->where('name','not like','%وایرگارد%')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             'credit' => $incom,
             'map_price' => $map_price,

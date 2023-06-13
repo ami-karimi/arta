@@ -8,6 +8,7 @@ use App\Http\Resources\Api\AcctSavedCollection;
 use App\Http\Resources\Api\AgentUserCollection;
 use App\Http\Resources\Api\ActivityCollection;
 use App\Http\Resources\Api\AdminActivityCollection;
+use App\Http\Resources\WireGuardConfigCollection;
 use App\Models\AcctSaved;
 use App\Models\Financial;
 use App\Models\Groups;
@@ -16,8 +17,10 @@ use App\Models\RadAcct;
 use App\Models\Ras;
 use App\Models\User;
 use App\Models\UserGraph;
+use App\Models\WireGuardUsers;
 use App\Utility\Helper;
 use App\Utility\V2rayApi;
+use App\Utility\WireGuard;
 use Carbon\Carbon;
 use http\Client\Response;
 use Illuminate\Http\Request;
@@ -219,9 +222,26 @@ class UserController extends Controller
 
         }
 
+        $wireGuardConfigs = [];
+        if($userDetial->service_group == 'wireguard'){
+            $wireGuardConfigs =   new WireGuardConfigCollection(WireGuardUsers::where('user_id',$userDetial->id)->get());
+        }
+
+        $servers = [];
+        $groups = Groups::select('name','id');
+        if($userDetial->service_group == 'wireguard'){
+            $value = "وایرگارد";
+            $groups->where('name','like','%'.$value.'%');
+            $groups->where('group_type',$userDetial->group->group_type);
+
+            $servers = Ras::select(['name','ipaddress','server_location','l2tp_address','id'])->where('unlimited',($userDetial->group->group_type == 'volume' ? 0 : 1))->get();
+        }
+
         return  response()->json([
             'status' => true,
+            'servers' => $servers,
             'user' => [
+                'wireguard' => $wireGuardConfigs,
                 'id' => $userDetial->id,
                 'name' => $userDetial->name,
                 'down' => $down,
@@ -247,6 +267,8 @@ class UserController extends Controller
                 'status' => ($userDetial->isOnline ? 'online': 'offline'),
                 'is_enabled' => $userDetial->is_enabled ,
                 'created_at' => Jalalian::forge($userDetial->created_at)->__toString(),
+                'service_group' => $userDetial->service_group,
+
             ],
             'groups' => Groups::select('name','id')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
@@ -399,7 +421,11 @@ class UserController extends Controller
         if($findSellectPrice){
             $price = (int) $findSellectPrice->price;
         }
-
+        if($request->account_type) {
+            if(!$request->server_id){
+                return response()->json(['status' => false,'message' => "لطفا سرور را انتخاب نمایید!"],403);
+            }
+        }
         /*
         $priceList = Helper::GetReselerGroupList('one',$findGroup->id,auth()->user()->id);
         if($priceList){
@@ -494,7 +520,35 @@ class UserController extends Controller
 
             $req_all['creator'] = auth()->user()->id;
 
+            $create = true;
+
+
+
+
+
             $user = User::create($req_all);
+            if($request->account_type) {
+                $user->service_group = "wireguard";
+                $user->save();
+                if ($user) {
+                    $create_wr = new WireGuard($request->server_id, $row['username']);
+
+                    $user_wi = $create_wr->Run();
+                    if ($user_wi['status']) {
+                        $saved = new  WireGuardUsers();
+                        $saved->profile_name = $user_wi['config_file'];
+                        $saved->user_id = $user->id;
+                        $saved->server_id = $request->server_id;
+                        $saved->public_key = $user_wi['client_public_key'];
+                        $saved->user_ip = $user_wi['ip_address'];
+                        $saved->save();
+                        exec('qrencode -t png -o /var/www/html/arta/public/configs/' . $user_wi['config_file'] . ".png -r /var/www/html/arta/public/configs/" . $user_wi['config_file'] . ".conf");
+                    }else{
+                        $user->delete();
+                         return response()->json(['status' => false,'message' => 'متاسفانه نتوانستیم کاربر درخواستی را در سرور مورد نظر ایجاد کنیم !'],403);
+                    }
+                }
+            }
 
             $req_all['username'] = $row['username'];
             $req_all['password'] = $row['password'];
@@ -516,6 +570,135 @@ class UserController extends Controller
         return response()->json(['status' => false,'message' => "اکانت با موفقیت ایجاد شد!"]);
 
     }
+    public function CreateWireGuardAccount(Request $request){
+
+        if($request->for_user){
+            $user = User::where('id',$request->for_user)->first();
+            if(!$user){
+                return  response()->json(['status' => true,'message' => 'کاربر یافت نشد!'],403);
+            }
+            $create_wr = new WireGuard($request->server_id, $user->username.rand(1,5));
+
+            $user_wi = $create_wr->Run();
+            if($user_wi['status']) {
+                $saved = new  WireGuardUsers();
+                $saved->profile_name = $user_wi['config_file'];
+                $saved->user_id = $user->id;
+                $saved->server_id = $request->server_id;
+                $saved->public_key = $user_wi['client_public_key'];
+                $saved->user_ip = $user_wi['ip_address'];
+                $saved->save();
+                exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
+
+            }
+
+            return  response()->json(['status' => true,'message' => 'کانفیگ با موفقیت ایجاد شد']);
+        }
+        $userNameList = [];
+
+        if(!$request->server_id){
+            response()->json(['status' => false, 'message' => 'لطفا سرور مقصد را انتخاب نمایید'],403);
+        }
+        $type = 'single';
+        if(strpos($request->username,'{')) {
+
+
+            $type = 'group';
+            $pos = strpos($request->username,'{');
+            $pos2 = strlen($request->username);
+            $rem = substr($request->username,$pos,$pos2);
+            $replace = str_replace(['{','}'],'',substr($request->username,$pos,$pos2));
+            $exp_count = explode('-',$replace);
+            $start = (int) $exp_count[0];
+            $end = (int) $exp_count[1] + 1;
+            $userNames = str_replace($rem,'',$request->username);
+        }else{
+            array_push($userNameList,['username' => $request->username,'password' => $request->password]);
+        }
+
+        if($type == 'group'){
+            for ($i= $start; $i < $end;$i++){
+                $buildUsername = $userNames.$i;
+                $findUsername = User::where('username',$buildUsername)->first();
+                if($findUsername){
+                    return response()->json(['status' => false,'نام کاربری '.$buildUsername.' موجود میباشد!']);
+                }
+                $password = $request->password;
+                if($request->random_password){
+                    $password = substr(rand(0,99999),0,(int) $request->random_password_num);
+                }
+
+                array_push($userNameList,['username' => $buildUsername ,'password'  => $password]);
+            }
+        }
+        foreach ($userNameList as $row) {
+            $req_all = $request->all();
+            $req_all['username'] = $row['username'];
+            $req_all['password'] = $row['password'];
+            $req_all['groups'] = $request->username;
+            $req_all['creator'] = $request->creator;
+
+            AcctSaved::create($req_all);
+
+            $findGroup = Groups::where('id', $request->group_id)->first();
+            if ($findGroup->expire_type !== 'no_expire') {
+                if ($findGroup->expire_type == 'minutes') {
+                    $req_all['exp_val_minute'] = $findGroup->expire_value;
+
+                } elseif ($findGroup->expire_type == 'month') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                    $req_all['max_usage']  = @round(60000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                } elseif ($findGroup->expire_type == 'days') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                    $req_all['max_usage']  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                    $req_all['max_usage']  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                } elseif ($findGroup->expire_type == 'year') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                    $req_all['max_usage']  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                }
+            }
+
+            $req_all['multi_login'] = 1;
+            $req_all['service_group'] = 'wireguard';
+
+            if($findGroup->group_type == 'expire') {
+                $req_all['expire_value'] = $findGroup->expire_value;
+                $req_all['expire_type'] = $findGroup->expire_type;
+                $req_all['expire_set'] = 0;
+            }
+            if($findGroup->group_type == 'volume') {
+                $req_all['multi_login'] = 1;
+                $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+            }
+
+            $user = User::create($req_all);
+            if($user) {
+                $create_wr = new WireGuard($request->server_id, $req_all['username']);
+
+                $user_wi = $create_wr->Run();
+                if($user_wi['status']) {
+                    $saved = new  WireGuardUsers();
+                    $saved->profile_name = $user_wi['config_file'];
+                    $saved->user_id = $user->id;
+                    $saved->server_id = $request->server_id;
+                    $saved->public_key = $user_wi['client_public_key'];
+                    $saved->user_ip = $user_wi['ip_address'];
+                    $saved->save();
+                    exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
+
+                }
+            }
+        }
+
+
+        return response()->json(['status' => true, 'message' => 'کاربر با موفقیت اضافه شد!']);
+    }
+
     public function edit(Request $request,$id){
         $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
         if(!$find){
