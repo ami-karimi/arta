@@ -65,6 +65,7 @@ class Kernel extends ConsoleKernel
 
                     foreach ($BRIDGEINFO as $user) {
                         $user_list[] = $user;
+                        RadAcct::where('username',$user['name'])->delete();
                         $API->comm('/ppp/active/remove', array(
                             ".id" => $user['.id'],
                         ));
