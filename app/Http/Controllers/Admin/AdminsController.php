@@ -122,7 +122,11 @@ class AdminsController extends Controller
 
         $cl_us = [];
 
-        $usageUser = UserGraph::selectRaw('SUM(total) as total_usage,user_id')->groupBy('user_id')->orderBy('total_usage','DESC')->limit(40)->get();
+        $usageUser = UserGraph::selectRaw('SUM(total) as total_usage,user_id')->whereHas('user',function($query) {
+            return $query->where('is_enabled',1);
+        })->groupBy('user_id')->orderBy('total_usage','DESC')->limit(40)->get();
+
+
         foreach ($usageUser as $row){
             $user = User::where('id',$row->user_id)->first();
             if($user) {
@@ -134,7 +138,25 @@ class AdminsController extends Controller
            }
         }
 
+        $userEndBandwidth = UserGraph::selectRaw('CAST(SUM(total) as  UNSIGNED) as total_usage,user_id')->groupBy('user_id')->EndBandwidth()->orderBy('total_usage','DESC')->limit(40)->get();
+
+        $EndBandwithList = [];
+        foreach ($userEndBandwidth as $row){
+            $user = User::where('id',$row->user_id)->first();
+            if($user) {
+                $EndBandwithList[] = [
+                    'user_id' => $user->id,
+                    'username' => $user->username,
+                    'sum' => $this->formatBytes($row->total_usage),
+                    'max_usage' => $this->formatBytes($user->max_usage),
+                    'group' => ($user->group ? $user->group->name : '---')
+                ];
+            }
+        }
+
+
         return response()->json([
+           'endBandwidth' => $EndBandwithList,
            'total_month'  => $total_month,
            'total_day'  => $total_day,
            'total_last_month'  => 0,
