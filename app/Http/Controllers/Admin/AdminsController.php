@@ -138,9 +138,7 @@ class AdminsController extends Controller
            }
         }
 
-        $userEndBandwidth = UserGraph::selectRaw('CAST(SUM(total) as  UNSIGNED) as total_usage,user_id')->groupBy('user_id')->whereHas('user',function($query){
-            $query->select(['id','username','max_usage','is_enabled'])->havingRaw('max_usage <= ?',['total_usage'])->where('is_enabled',1);
-        })->orderBy('total_usage','DESC')->limit(40)->get();
+        $userEndBandwidth = UserGraph::selectRaw('CAST(SUM(total) as  UNSIGNED) as total_usage,user_id')->groupBy('user_id')->EndBandwidth()->orderBy('total_usage','DESC')->limit(40)->get();
 
         $EndBandwithList = [];
         foreach ($userEndBandwidth as $row){
