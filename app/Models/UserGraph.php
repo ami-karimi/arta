@@ -20,6 +20,6 @@ class UserGraph extends Model
     }
 
     public function scopeEndBandwidth(Builder $query){
-        $query->join('users','users.id','=','user_graph.user_id')->where('users.is_enabled',1)->where("users.max_usage","<=","total_usage");
+        $query->join('users','users.id','=','user_graph.user_id')->where('users.is_enabled',1)->where("users.max_usage <= SUM(user_graph.total)");
     }
 }
