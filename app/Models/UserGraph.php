@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-
+use Illuminate\Support\Facades\DB;
 
 class UserGraph extends Model
 {
@@ -21,7 +21,7 @@ class UserGraph extends Model
 
     public function scopeEndBandwidth(Builder $query){
         $query->whereHas('user',function($query){
-            $query->select(['max_usage'])->where('is_enabled',1)->having("max_usage","<=","SUM(total)");
+            $query->select(['max_usage'])->where('is_enabled',1)->having(DB::raw("max_usage"),"<=",DB::raw("SUM(total)"));
         });
     }
 }
