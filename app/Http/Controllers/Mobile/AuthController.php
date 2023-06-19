@@ -85,4 +85,9 @@ class AuthController extends Controller
         ]);
 
     }
+
+    public function get_servers(Request $request){
+        return response()->json(['error' => false,'result' => []
+        ]);
+    }
 }
