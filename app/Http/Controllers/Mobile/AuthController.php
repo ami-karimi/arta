@@ -38,7 +38,7 @@ class AuthController extends Controller
             }
 
             return  response()->json([
-               'success' => true,
+               'error' => false,
                'result' =>  [
                   'token' => $ts->token,
                   'email' => $findUser->username,
