@@ -54,4 +54,36 @@ class AuthController extends Controller
 
 
     }
+
+    public function is_valid_token(Request $request){
+        if(!$request->token){
+            return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
+        }
+        $token = new Tokens();
+        $check = $token->checkToken($token);
+        if(!$check){
+            return response()->json(['error' => true, 'result' => 'توکن نامعتبر میباشد '],403);
+        }
+        $findUser = User::where('username',$check->user_id)->first();
+        if(!$findUser){
+            return response()->json(['error' => true, 'result' => 'کاربر یافت تشد! '],403);
+        }
+        if(!$findUser->is_enabled){
+            return response()->json(['error' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+        }
+        $expire_date = $findUser->expire_date ;
+
+        return  response()->json([
+            'error' => false,
+            'result' =>  [
+                'token' => $check->token,
+                'email' => $findUser->username,
+                'password' => $findUser->password,
+                'isPremium' => 0,
+                'subscriptionEndDate' => Jalalian::forge($expire_date)->__toString(),
+                'left_day' => Carbon::now()->diffInDays($expire_date, false),
+            ]
+        ]);
+
+    }
 }
