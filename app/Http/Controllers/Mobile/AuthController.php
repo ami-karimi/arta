@@ -63,7 +63,7 @@ class AuthController extends Controller
         if(!$check){
             return response()->json(['error' => true, 'result' => 'توکن نامعتبر میباشد '],403);
         }
-        $findUser = User::where('username',$check->user_id)->first();
+        $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
             return response()->json(['error' => true, 'result' => 'کاربر یافت تشد! '],403);
         }

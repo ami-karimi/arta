@@ -25,7 +25,9 @@ class  Tokens {
     public function checkToken($token){
         $find = MobileToken::where('token',$token)->first();
         if($find){
-
+         if($find->expire_time <= time()){
+             return false;
+         }
 
          return $find;
         }
