@@ -27,6 +27,11 @@ Route::get('/login', function(){
 
 Route::get('/download/{image}', [\App\Http\Controllers\Admin\WireGuardController::class, 'download']);
 
+Route::prefix('mobile')->group(function () {
+    Route::post('/sign-in', [\App\Http\Controllers\Mobile\AuthController::class, 'sign_in'])->name('sign_in');
+
+
+});
 
 Route::middleware(['auth:api'])->group(function () {
 
