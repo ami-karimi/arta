@@ -59,7 +59,7 @@ class AuthController extends Controller
             return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
         }
         $token = new Tokens();
-        $check = $token->checkToken($token);
+        $check = $token->checkToken($request->token);
         if(!$check){
             return response()->json(['error' => true, 'result' => 'توکن نامعتبر میباشد '],403);
         }
