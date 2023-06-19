@@ -58,7 +58,6 @@ class AuthController extends Controller
         if(!$request->token){
             return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
         }
-        echo $request->token;
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
