@@ -183,6 +183,7 @@ HAhnCawZ3hux5U89FGJmTEusXpNqq4XjOvc9gGyuJUwZwgH7X6Iy
 -----END RSA PRIVATE KEY-----
 
 </key>",
+            'id' => 1,
             'ip' => '185.126.15.66',
             'premium' => 0,
             'load' => 100,
