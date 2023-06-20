@@ -95,19 +95,15 @@ class AuthController extends Controller
             'config'=> "
 client
 dev tun
-proto tcp-client
+proto tcp
 persist-key
 persist-tun
-tls-client
-remote-cert-tls server
-verb 4
-auth-nocache
-mute 10
+nobind
+verb 3
 remote s1.arta20.xyz
 port 110
 auth SHA1
 cipher AES-256-CBC
-redirect-gateway def1
 auth-user-pass
 <ca>
 -----BEGIN CERTIFICATE-----
