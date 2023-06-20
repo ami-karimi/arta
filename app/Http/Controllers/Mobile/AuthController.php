@@ -179,11 +179,6 @@ HAhnCawZ3hux5U89FGJmTEusXpNqq4XjOvc9gGyuJUwZwgH7X6Iy
 -----END RSA PRIVATE KEY-----
 
 </key>
-
-<auth-user-pass>
-amirtld
-1020
-</auth-user-pass>
 ",
             'id' => 1,
             'ip' => '185.126.15.66',
