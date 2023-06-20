@@ -191,7 +191,7 @@ HAhnCawZ3hux5U89FGJmTEusXpNqq4XjOvc9gGyuJUwZwgH7X6Iy
 
 
         ];
-        return response()->json(['error' => false,'result' => []
+        return response()->json(['error' => false,'result' => $servers
         ]);
     }
 }
