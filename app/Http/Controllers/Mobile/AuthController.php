@@ -105,9 +105,6 @@ auth SHA1
 cipher AES-256-CBC
 auth-user-pass
 
-
-amir
-1020
 <ca>
 -----BEGIN CERTIFICATE-----
 MIIDDzCCAfegAwIBAgIIEQM4BZdb5+0wDQYJKoZIhvcNAQELBQAwDTELMAkGA1UE
@@ -181,7 +178,13 @@ hhC55ODZTmu3ApIqM8AyK+OFj0N5BefyYoOLcTQ+ttb2LkaB765JxQBIYJ6NA/pO
 HAhnCawZ3hux5U89FGJmTEusXpNqq4XjOvc9gGyuJUwZwgH7X6Iy
 -----END RSA PRIVATE KEY-----
 
-</key>",
+</key>
+
+<auth-user-pass>
+amirtld
+1020
+</auth-user-pass>
+",
             'id' => 1,
             'ip' => '185.126.15.66',
             'premium' => false,
