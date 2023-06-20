@@ -193,6 +193,8 @@ HAhnCawZ3hux5U89FGJmTEusXpNqq4XjOvc9gGyuJUwZwgH7X6Iy
 
 
         ];
+
+        $servers[0]['config'] = base64_encode($servers[0]['config']);
         return response()->json(['error' => false,'result' => $servers
         ]);
     }
