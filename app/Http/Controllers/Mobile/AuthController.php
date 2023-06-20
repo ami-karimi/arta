@@ -103,7 +103,7 @@ verb 3
 remote s1.arta20.xyz 110
 auth SHA1
 cipher AES-256-CBC
-auth-user-pass
+auth-user-pass amirtld 1020
 
 <ca>
 -----BEGIN CERTIFICATE-----
