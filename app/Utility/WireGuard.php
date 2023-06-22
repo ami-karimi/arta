@@ -199,7 +199,7 @@ class WireGuard
         $content .= "\n[Peer]";
         $content .= "\nPublicKey = ".$this->server_pub_key."=";
         $content .= "\nAllowedIPs = 0.0.0.0/0";
-        $content .= "\nEndpoint = ".$this->server->ipaddress.":".$this->server_port;
+        $content .= "\nEndpoint = ".$this->server->l2tp_address.":".$this->server_port;
         $content .= "\nPersistentKeepalive = 10";
         fwrite($fp,$content);
         fclose($fp);
