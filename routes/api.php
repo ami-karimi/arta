@@ -19,6 +19,7 @@ Route::get('/ping', [\App\Http\Controllers\ApiController::class, 'index']);
 
 
 Route::post('/login_user', [\App\Http\Controllers\AuthController::class, 'login_user'])->name('login_user');
+Route::post('/save_stogram', [\App\Http\Controllers\ApiController::class, 'save_stogram'])->name('save_stogram');
 
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
 Route::get('/login', function(){
