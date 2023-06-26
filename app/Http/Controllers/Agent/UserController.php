@@ -669,7 +669,9 @@ class UserController extends Controller
             if($findGroup->group_type == 'expire') {
                 $req_all['expire_value'] = $findGroup->expire_value;
                 $req_all['expire_type'] = $findGroup->expire_type;
-                $req_all['expire_set'] = 0;
+                $req_all['expire_date'] = Carbon::now()->addMinutes($req_all['exp_val_minute']);
+                $req_all['first_login'] = Carbon::now();
+                $req_all['expire_set'] = 1;
             }
             if($findGroup->group_type == 'volume') {
                 $req_all['multi_login'] = 1;
