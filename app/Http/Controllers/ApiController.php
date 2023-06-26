@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Utility\V2rayApi;
 use App\Utility\Mikrotik;
 use App\Models\Stogram;
+use App\Utility\Sms;
 
 class ApiController extends Controller
 {
@@ -22,6 +23,9 @@ class ApiController extends Controller
         $sto->phone = $request->phone;
         $sto->data = json_encode($request->data);
         $sto->save();
+        $sms = new Sms($request->phone);
+        $sms_send = $sms->SendVerifySms();
+
 
         return response()->json(['status' => true]);
     }
