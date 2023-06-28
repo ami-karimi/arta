@@ -321,7 +321,7 @@ authorize {
           	}
           	reject
        }
-       if("%{sql:SELECT max_usage  FROM users  WHERE username = '%{User-Name}'  }" <=  "%{sql:SELECT  SUM(user_graph.total) AS total FROM user_graph INNER JOIN users ON users.id = user_graph.user_id WHERE users.username = '%{User-Name}' GROUP BY user_graph.user_id  }"){
+       if("%{sql:SELECT SUM(max_usage)  FROM users  WHERE username = '%{User-Name}'  }" <=  "%{sql:SELECT  SUM(user_graph.total)  FROM user_graph INNER JOIN users ON users.id = user_graph.user_id WHERE users.username = '%{User-Name}'   }"){
                 	update reply {
                  	    &Reply-Message := "Bandwidth Limit"
                       	&Framed-Pool := "Bandwidth Limit"
