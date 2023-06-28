@@ -21,7 +21,7 @@ class ApiController extends Controller
         })->get();
 
         foreach ($users as $row){
-            $row->max_usage = @round((((int) 60 *1024) * 1024) * 1024 ) ;
+            $row->max_usage = @round((((int) 100 *1024) * 1024) * 1024 ) ;
             $row->max_usage *=  $row->multi_login;
             $row->max_usage *=  $row->group->expire_value;
             $row->save();
