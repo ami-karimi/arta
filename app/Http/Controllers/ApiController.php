@@ -17,11 +17,13 @@ class ApiController extends Controller
 {
     public function index(){
         $users = User::whereHas('group',function($query){
-            $query->where('group_type','volume');
+            $query->where('group_type','expire');
         })->get();
 
         foreach ($users as $row){
-
+            $row->max_usage = @round((((int) 60 *1024) * 1024) * 1024 ) ;
+            $row->max_usage *=  $row->multi_login;
+            $row->save();
         }
 
         echo count($users);
