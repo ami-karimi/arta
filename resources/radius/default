@@ -322,7 +322,7 @@ authorize {
           	reject
        }
 
-       if("%{sql:SELECT SUM(user_graph.total) AS total FROM user_graph INNER JOIN users ON users.id = user_graph.user_id WHERE users.username = '%{User-Name}' AND total  > users.max_usage }"){
+       if("%{sql:SELECT SUM(user_graph.total) AS total FROM user_graph INNER JOIN users ON users.id = user_graph.user_id WHERE users.username = '%{User-Name}' AND total  > users.max_usage }" == "NULL"){
                 	update reply {
                  	    &Reply-Message := "Bandwidth Limit"
                       	&Framed-Pool := "Bandwidth Limit"
