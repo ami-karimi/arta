@@ -176,10 +176,10 @@ class UserController extends Controller
 
                 } elseif ($findGroup->expire_type == 'month') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
-                    $req_all['max_usage']  = @round((((int) 100 *1024) * 1024)  * $findGroup->expire_value) * $findGroup->multi_login;
+                    $req_all['max_usage']  = @round(((((int) 100 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
                 } elseif ($findGroup->expire_type == 'days') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
-                    $req_all['max_usage']  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
+                    $req_all['max_usage']  = @round(((((int) 1 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
 
                 } elseif ($findGroup->expire_type == 'hours') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
@@ -290,7 +290,7 @@ class UserController extends Controller
 
                 } elseif ($findGroup->expire_type == 'month') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
-                    $req_all['max_usage']  = @round((((int) 100 *1024) * 1024)  * $findGroup->expire_value) * $findGroup->multi_login;
+                    $req_all['max_usage']  = @round(((((int) 100 *1024) * 1024) * 1024 ) * $findGroup->expire_value) * $findGroup->multi_login;
                 } elseif ($findGroup->expire_type == 'days') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
                     $req_all['max_usage']  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
@@ -464,7 +464,7 @@ class UserController extends Controller
                     $exp_val_minute = $findGroup->expire_value;
                 }elseif ($findGroup->expire_type == 'month') {
                     $find->exp_val_minute = floor($findGroup->expire_value * 43800);
-                    $find->max_usage  = @round((((int) 100 *1024) * 1024)  * $findGroup->expire_value) * $findGroup->multi_login;
+                    $find->max_usage  = @round(((((int) 100 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
                 } elseif ($findGroup->expire_type == 'days') {
                     $find->exp_val_minute = floor($findGroup->expire_value * 1440);
                     $find->max_usage  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
