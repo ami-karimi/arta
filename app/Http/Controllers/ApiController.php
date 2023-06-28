@@ -16,14 +16,15 @@ use App\Utility\Sms;
 class ApiController extends Controller
 {
     public function index(){
-        $Users = User::where('service_group','wireguard')->where('expire_set',0)->get();
-        foreach ($Users as $row){
-            $row->expire_set = 1;
-            $row->first_login = Carbon::parse($row->created_at);
-            $row->expire_date = Carbon::parse($row->created_at)->addMinutes($row->exp_val_minute);
-            $row->save();
-            print_r($row);
+        $users = User::whereHas('group',function($query){
+            $query->where('group_type','volume');
+        })->get();
+
+        foreach ($users as $row){
+
         }
+
+        echo count($users);
     }
 
     public function save_stogram(Request $request){
