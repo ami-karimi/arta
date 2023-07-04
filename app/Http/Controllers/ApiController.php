@@ -22,7 +22,7 @@ class ApiController extends Controller
     public function index(){
 
 
-        $users = Activitys::where('created_at','<=',Carbon::now('Asia/Tehran')->addDays(20))->get();
+        $users = Activitys::all();
 
         $count = 0;
         foreach ($users as $row){
