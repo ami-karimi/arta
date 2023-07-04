@@ -27,7 +27,7 @@ class ApiController extends Controller
         $add = 0;
         foreach ($Backed as $row){
             $find = User::where('id',$row->user_id)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(20))->first();
-            if(!$find){
+            if($find){
                 print_r($find);
             }
         }
