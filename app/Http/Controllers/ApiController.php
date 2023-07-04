@@ -24,7 +24,7 @@ class ApiController extends Controller
         $users = UserGraph::groupBy('user_id')->get();
 
         foreach ($users as $row){
-          $find = User::where('user_id',$row->user_id)->first();
+          $find = User::where('id',$row->user_id)->first();
            if(!$find){
                echo $row->user_id." </br>";
            }
