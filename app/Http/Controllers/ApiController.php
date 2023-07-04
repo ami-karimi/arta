@@ -25,7 +25,7 @@ class ApiController extends Controller
 
         $add = 0;
         foreach ($Backed as $row){
-            $find = User::where('id',$row->id)->first();
+            $find = User::where('id',$row['id'])->first();
             if(!$find){
                 User::create($row);
                 $add++;
