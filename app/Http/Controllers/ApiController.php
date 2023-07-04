@@ -22,7 +22,7 @@ class ApiController extends Controller
 
         $users = User::where('service_group','l2tp_cisco')->whereHas('group',function($query) {
             $query->where('group_type','expire');
-        })->all();
+        })->get();
 
         foreach ($users as $row){
             $row->max_usage = @round((((int) 100 *1024) * 1024) * 1024 ) ;
