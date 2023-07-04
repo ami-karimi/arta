@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RadPostAuth;
 use App\Models\Ras;
 use App\Models\WireGuardUsers;
 use App\Utility\WireGuard;
@@ -28,18 +29,20 @@ class ApiController extends Controller
         foreach ($users as $row){
           $find = User::where('username',$row->username)->first();
            if(!$find){
-               User::create([
-                  'username' => $row->username,
-                  'password' =>  $row->password,
-                  'expire_date' => Carbon::parse($row->created_at)->addMinutes(43800),
-                  'first_login' => Carbon::parse($row->created_at),
-                  'expire_set' => 1,
-                  'creator' =>  $row->creator,
-                  'max_usage' => @round((((int) 100 *1024) * 1024) * 1024 ),
-                  'multi_login' => 2,
-                  'expire_type' => 'month',
-                  'expire_value' => 1,
-               ]);
+               $user = new User();
+               $user->username = $row->username;
+               $user->password = $row->password;
+               if(RadPostAuth::where('username',$row->password)->first()) {
+                   $user->expire_date = Carbon::parse($row->created_at)->addMinutes(43800);
+                   $user->first_login = Carbon::parse($row->created_at);
+                   $user->expire_set = 1;
+               }
+               $user->creator =  $row->creator;
+               $user->max_usage =  @round((((int) 100 *1024) * 1024) * 1024 );
+               $user->multi_login = 2;
+               $user->expire_type = 'month';
+               $user->expire_value = 1;
+               $user->Save();
                $count++;
            }
         }
