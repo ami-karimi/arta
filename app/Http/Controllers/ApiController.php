@@ -22,7 +22,7 @@ class ApiController extends Controller
     public function index(){
 
 
-        $users = Activitys::all();
+        $users = AcctSaved::where('created_at','<=',Carbon::now('Asia/Tehran')->subDays(20))->get();
 
         $count = 0;
         foreach ($users as $row){
