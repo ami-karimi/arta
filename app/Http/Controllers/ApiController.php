@@ -33,11 +33,10 @@ class ApiController extends Controller
                $user->username = $row->username;
                $user->group_id = 1;
                $user->password = $row->password;
-               if(RadPostAuth::where('username',$row->password)->first()) {
                    $user->expire_date = Carbon::parse($row->created_at)->addMinutes(43800);
                    $user->first_login = Carbon::parse($row->created_at);
                    $user->expire_set = 1;
-               }
+
                $user->creator =  $row->creator;
                $user->max_usage =  @round((((int) 100 *1024) * 1024) * 1024 );
                $user->multi_login = 2;
