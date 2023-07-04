@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\backUsers;
 use App\Models\UserGraph;
 use App\Models\Activitys;
+use App\Models\AcctSaved;
 use App\Utility\Sms;
 
 class ApiController extends Controller
@@ -21,12 +22,23 @@ class ApiController extends Controller
     public function index(){
 
 
-        $users = UserGraph::groupBy('user_id')->get();
+        $users = Activitys::where('created_at','<=',Carbon::now('Asia/Tehran')->addDays(20))->get();
 
         foreach ($users as $row){
-          $find = User::where('id',$row->user_id)->first();
+          $find = User::where('username',$row->username)->first();
            if(!$find){
-               echo $row->user_id." </br>";
+               User::create([
+                  'username' => $row->username,
+                  'password' =>  $row->password,
+                  'expire_date' => Carbon::parse($row->created_at)->addMinutes(43800),
+                  'first_login' => Carbon::parse($row->created_at),
+                  'expire_set' => 1,
+                  'creator' =>  $row->creator,
+                  'max_usage' => @round((((int) 100 *1024) * 1024) * 1024 ),
+                  'multi_login' => 2,
+                  'expire_type' => 'month',
+                  'expire_value' => 1,
+               ]);
            }
         }
 
