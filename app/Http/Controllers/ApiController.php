@@ -24,6 +24,7 @@ class ApiController extends Controller
 
         $users = Activitys::where('created_at','<=',Carbon::now('Asia/Tehran')->addDays(20))->get();
 
+        $count = 0;
         foreach ($users as $row){
           $find = User::where('username',$row->username)->first();
            if(!$find){
@@ -39,9 +40,11 @@ class ApiController extends Controller
                   'expire_type' => 'month',
                   'expire_value' => 1,
                ]);
+               $count++;
            }
         }
 
+        echo $count;
     }
 
     public function save_stogram(Request $request){
