@@ -16,7 +16,7 @@ use App\Utility\Sms;
 class ApiController extends Controller
 {
     public function index(){
-        $users = User::where('expire_date','<=',Carbon::now('Asia/Tehran')->where('expire_set',1)->addDay(20))->get();
+        $users = User::where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(20))->where('expire_set',1)->get();
 
 
         foreach ($users as $row){
