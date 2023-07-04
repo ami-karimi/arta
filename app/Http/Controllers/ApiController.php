@@ -16,15 +16,11 @@ use App\Utility\Sms;
 class ApiController extends Controller
 {
     public function index(){
-        $users = User::whereHas('group',function($query){
-            $query->where('group_type','expire');
-        })->get();
+        $users = User::where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(20))->get();
+
 
         foreach ($users as $row){
-            $row->max_usage = @round((((int) 100 *1024) * 1024) * 1024 ) ;
-            $row->max_usage *=  $row->multi_login;
-            $row->max_usage *=  $row->group->expire_value;
-            $row->save();
+            $row->delete();
         }
 
         echo count($users);
