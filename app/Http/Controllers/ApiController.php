@@ -20,18 +20,14 @@ class ApiController extends Controller
     public function index(){
 
 
-        $Backed = Activitys::where('content','اکانت شارژ شد!')->where('created_at','<=',Carbon::now('Asia/Tehran')->addDay(22))->get();
+        $users = User::where('service_group','l2tp_cisco')->whereHas('group',function($query) {
+            $query->where('group_type','expire');
+        })->all();
 
-
-
-        $add = 0;
-        foreach ($Backed as $row){
-            $find = User::where('id',$row->user_id)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(1))->first();
-            if($find){
-                $find->expire_date = Carbon::parse($row->created_at)->addMinutes($find->exp_val_minute);
-                $find->first_login = Carbon::parse($row->created_at);
-                $find->save();
-            }
+        foreach ($users as $row){
+            $row->max_usage = @round((((int) 100 *1024) * 1024) * 1024 ) ;
+            $row->max_usage *= $row->multi_login;
+            $row->save();
         }
 
     }
