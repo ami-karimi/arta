@@ -19,7 +19,7 @@ class ApiController extends Controller
     public function index(){
 
 
-        $Backed = backUsers::all();
+        $Backed = backUsers::all()->toArray();
 
 
 
