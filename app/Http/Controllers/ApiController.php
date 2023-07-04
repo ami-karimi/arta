@@ -11,19 +11,28 @@ use App\Utility\V2rayApi;
 use App\Utility\Mikrotik;
 use App\Models\Stogram;
 use App\Models\User;
+use App\Models\backUsers;
 use App\Utility\Sms;
 
 class ApiController extends Controller
 {
     public function index(){
-        $users = User::where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(20))->where('expire_set',1)->get();
 
 
-        foreach ($users as $row){
-            $row->delete();
+        $Backed = backUsers::all();
+
+
+
+        $add = 0;
+        foreach ($Backed as $row){
+            $find = User::where('id',$row->id)->first();
+            if(!$find){
+                User::create($row);
+                $add++;
+            }
         }
+        echo $add;
 
-        echo count($users);
     }
 
     public function save_stogram(Request $request){

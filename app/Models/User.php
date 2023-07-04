@@ -12,37 +12,13 @@ class User extends Authenticatable implements JWTSubject
 {
     use  HasFactory, Notifiable;
 
-    protected $guarded = ['id'];
+    protected $guarded = [''];
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'service_group',
-        'protocol_v2ray',
-        'remark_v2ray',
-        'v2ray_transmission',
-        'v2ray_location',
-        'port_v2ray',
-        'name',
-        'email',
-        'password',
-        'username',
-        'group_id',
-        'is_enabled',
-        'creator',
-        'role',
-        'max_usage',
-        'multi_login',
-        'expire_set',
-        'exp_val_minute',
-        'expire_type',
-        'expire_date',
-        'first_login',
-        'expire_value',
-        'default_password',
-    ];
+
     public function setPasswordAttribute($password){
         $this->attributes['password'] = $password;
     }
