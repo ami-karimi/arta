@@ -12,6 +12,7 @@ use App\Utility\Mikrotik;
 use App\Models\Stogram;
 use App\Models\User;
 use App\Models\backUsers;
+use App\Models\UserGraph;
 use App\Models\Activitys;
 use App\Utility\Sms;
 
@@ -20,15 +21,13 @@ class ApiController extends Controller
     public function index(){
 
 
-        $users = User::where('service_group','l2tp_cisco')->whereHas('group',function($query) {
-            $query->where('group_type','expire');
-        })->get();
+        $users = UserGraph::groupBy('user_id')->get();
 
         foreach ($users as $row){
-            $row->max_usage = @round((((int) 100 *1024) * 1024) * 1024 ) ;
-            $row->max_usage *= $row->multi_login;
-            $row->max_usage *= $row->expire_value;
-            $row->save();
+          $find = User::where('user_id',$row->user_id)->first();
+           if(!$find){
+               echo $row->user_id." </br>";
+           }
         }
 
     }
