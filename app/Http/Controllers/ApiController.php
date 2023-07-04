@@ -12,6 +12,7 @@ use App\Utility\Mikrotik;
 use App\Models\Stogram;
 use App\Models\User;
 use App\Models\backUsers;
+use App\Models\Activitys;
 use App\Utility\Sms;
 
 class ApiController extends Controller
@@ -19,19 +20,17 @@ class ApiController extends Controller
     public function index(){
 
 
-        $Backed = backUsers::all()->toArray();
+        $Backed = Activitys::where('content','اکانت شارژ شد!')->where('created_at','<=',Carbon::now('Asia/Tehran')->addDay(22))->get();
 
 
 
         $add = 0;
         foreach ($Backed as $row){
-            $find = User::where('id',$row['id'])->first();
+            $find = User::where('id',$row->user_id)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(20))->first();
             if(!$find){
-                User::create($row);
-                $add++;
+                print_r($find);
             }
         }
-        echo $add;
 
     }
 
