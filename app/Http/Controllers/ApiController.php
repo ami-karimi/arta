@@ -23,7 +23,7 @@ class ApiController extends Controller
     public function index(){
 
 
-        $users = AcctSaved::where('created_at','<=',Carbon::now('Asia/Tehran')->subDays(20))->get();
+        $users = AcctSaved::where('created_at','<=',Carbon::now('Asia/Tehran')->addDays(20))->get();
 
         $count = 0;
         foreach ($users as $row){
@@ -31,6 +31,7 @@ class ApiController extends Controller
            if(!$find){
                $user = new User();
                $user->username = $row->username;
+               $user->group_id = 1;
                $user->password = $row->password;
                if(RadPostAuth::where('username',$row->password)->first()) {
                    $user->expire_date = Carbon::parse($row->created_at)->addMinutes(43800);
