@@ -878,5 +878,59 @@ class UserController extends Controller
 
     }
 
+    public function buy_day(Request $request,$id){
+        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        if(!$find){
+            return response()->json([
+                'message' => 'کاربر یافت نشد!'
+            ],404);
+        }
+        if($request->day < 2 || $request->day > 30){
+            return response()->json([
+                'message' => 'خطای 401!'
+            ],403);
+        }
+        if($find->group->group_type !== 'expire'){
+            return response()->json([
+                'message' => 'خطای 402!'
+            ],403);
+        }
+        $price = 3700;
+        $total_price = (int) $request->day * $price;
+        $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
+        $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
+        $incom  = $icom_user - $minus_income;
+        if($incom <= $total_price ){
+            return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
+        }
+
+        if($find->expire_set) {
+            $find->expire_date = Carbon::parse($find->expire_date)->addDays((int)$request->day);
+        }
+        if(!$find->expire_set){
+            $find->exp_val_minute += floor((int)$request->day * 1440);
+        }
+
+        $find->save();
+
+
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $total_price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت خرید مقدار '.$request->day.' روز اضافه برای  '.$find->username;
+        $new->creator = 2;
+        $new->for = auth()->user()->id;
+        $new->save();
+        SaveActivityUser::send($find->id,auth()->user()->id,'buy_day_for_account',['new' => $request->day,'total' => floor($find->exp_val_minute / 1440) ]);
+
+
+
+
+
+
+        return response()->json(['status' => false,'message' => "با موفقیت مقدار روز ".$request->day." به اکانت اضافه شد."]);
+    }
+
 
 }

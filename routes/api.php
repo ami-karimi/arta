@@ -131,6 +131,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/user_bandwidths', [\App\Http\Controllers\Admin\UserController::class, 'getUserBandwith']);
 
             Route::POST('/buy_volume/{id}', [\App\Http\Controllers\Admin\UserController::class, 'buy_volume']);
+            Route::POST('/buy_day/{id}', [\App\Http\Controllers\Admin\UserController::class, 'buy_day']);
 
         });
 
@@ -204,6 +205,7 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::POST('/AcctSavedView', [\App\Http\Controllers\Agent\UserController::class, 'AcctSavedView']);
                 Route::POST('/kill_user', [\App\Http\Controllers\Agent\UserController::class, 'kill_user']);
                 Route::POST('/buy_volume/{id}', [\App\Http\Controllers\Agent\UserController::class, 'buy_volume']);
+                Route::POST('/buy_day/{id}', [\App\Http\Controllers\Agent\UserController::class, 'buy_day']);
 
             });
             Route::prefix('radius')->group(function () {

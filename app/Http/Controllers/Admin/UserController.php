@@ -10,6 +10,7 @@ use App\Http\Resources\Api\UserCollection;
 use App\Http\Resources\Api\ActivityCollection;
 use App\Http\Resources\WireGuardConfigCollection;
 use App\Models\Activitys;
+use App\Models\Financial;
 use App\Models\User;
 use App\Models\RadPostAuth;
 use App\Models\Groups;
@@ -1086,5 +1087,58 @@ class UserController extends Controller
         ]);
 
     }
+
+    public function buy_day(Request $request,$id){
+        $find = User::where('id',$id)->first();
+        if(!$find){
+            return response()->json([
+                'message' => 'کاربر یافت نشد!'
+            ],404);
+        }
+
+        $creator_id = $find->creator;
+
+        if($request->day < 2 || $request->day > 30){
+            return response()->json([
+                'message' => 'خطای 401!'
+            ],403);
+        }
+        if($find->group->group_type !== 'expire'){
+            return response()->json([
+                'message' => 'خطای 402!'
+            ],403);
+        }
+        $price = 3700;
+        $total_price = (int) $request->day * $price;
+
+
+        if($find->expire_set) {
+            $find->expire_date = Carbon::parse($find->expire_date)->addDays((int)$request->day);
+        }
+        if(!$find->expire_set){
+            $find->exp_val_minute += floor((int)$request->day * 1440);
+        }
+
+        $find->save();
+
+
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $total_price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت خرید مقدار '.$request->day.' روز اضافه برای  '.$find->username." (توسط مدیر )";
+        $new->creator = 2;
+        $new->for = $creator_id;
+        $new->save();
+        SaveActivityUser::send($find->id,$creator_id,'buy_day_for_account',['new' => $request->day,'total' => floor($find->exp_val_minute / 1440) ]);
+
+
+
+
+
+
+        return response()->json(['status' => false,'message' => "با موفقیت مقدار روز ".$request->day." به اکانت اضافه شد."]);
+    }
+
 
 }

@@ -22,6 +22,10 @@ class SaveActivityUser
            self::change_group();
 
        }
+       if($type == 'buy_day_for_account'){
+           self::buy_day_for_account();
+
+       }
        if($type == 'change_owner'){
            self::ChangeOwner();
 
@@ -244,6 +248,14 @@ class SaveActivityUser
    }
    public static function add_left_day(){
        $content = vsprintf('مقدار %s روز باقیمانده به دور بعد انتقال یافت.',[self::$data['day']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+   public static function buy_day_for_account(){
+       $content = vsprintf('مقدار (%s) روز به انقضا اضافه شد. میزان روز مجاز استفاده کل : (%s روز)',[self::$data['new'],self::$data['total']]);
        Activitys::create([
            'by' => auth()->user()->id,
            'user_id' => self::$user_id,
