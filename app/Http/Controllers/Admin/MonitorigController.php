@@ -51,7 +51,7 @@ class MonitorigController extends Controller
 
             $API->write('/interface/monitor-traffic',false);
             $API->write("?interface=" .$etherName, false);
-            $API->write("=once=" .'true');
+            $API->write("=once");
             $READ = $API->read(false);
             $etherData = $API->parseResponse($READ);
 
