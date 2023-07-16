@@ -60,8 +60,8 @@ class MonitorigController extends Controller
                 'status' => true,
                 'result' => [
                     'ether' => $etherData,
-                    'rx_byte' => $this->formatBytes($etherData[0]['rx-bits-per-second'],2),
-                    'tx_byte' => $this->formatBytes($etherData[0]['tx-bits-per-second'],2),
+                    'rx_byte' => (isset($etherData[0]) ? $this->formatBytes($etherData[0]['rx-bits-per-second'],2) : 0),
+                    'tx_byte' => (isset($etherData[0]) ?  $this->formatBytes($etherData[0]['tx-bits-per-second'],2) : 0),
                 ]
             ];
             $API->disconnect();
