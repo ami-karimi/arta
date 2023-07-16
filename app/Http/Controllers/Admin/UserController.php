@@ -593,6 +593,22 @@ class UserController extends Controller
 
         if($findUser->service_group !== 'v2ray' && $findUser->group->group_type !== 'volume'){
 
+            if ($findUser->group->expire_type == 'minutes') {
+                $findUser->exp_val_minute = $findUser->group->expire_value;
+            } elseif ($findUser->group->expire_type == 'month') {
+                $findUser->exp_val_minute = floor($findUser->group->expire_value * 43800);
+                $findUser->max_usage  = @round(((((int) 100 *1024) * 1024) * 1024 )  * $findUser->group->expire_value) * $findUser->group->multi_login;
+            } elseif ($findUser->group->expire_type == 'days') {
+                $findUser->exp_val_minute = floor($findUser->group->expire_value * 1440);
+                $findUser->max_usage  = @round(1999999999.9999998  * $findUser->group->expire_value) * $findUser->group->multi_login;
+            } elseif ($findUser->group->expire_type == 'hours') {
+                $findUser->exp_val_minute = floor($findUser->group->expire_value * 60);
+                $findUser->max_usage  = @round(400000000  * $findUser->group->expire_value) * $findUser->group->multi_login;
+            } elseif ($findUser->group->expire_type == 'year') {
+                $findUser->exp_val_minute = floor($findUser->group->expire_value * 525600);
+                $findUser->max_usage  = @round(90000000000  * $findUser->group->expire_value) * $findUser->group->multi_login;
+            }
+
             $findUser->expire_set = 0;
            $findUser->first_login = NULL;
            $findUser->expire_date = NULL;
@@ -600,8 +616,16 @@ class UserController extends Controller
             $findUser->expire_set = 0;
             $findUser->first_login = NULL;
             $findUser->expire_date = NULL;
+            $findUser->multi_login = 5;
         }
 
+        if($findUser->expire_date !== NULL) {
+            $last_time_s = (int) Carbon::now()->diffInDays($findUser->expire_date, false);
+            if ($last_time_s > 0) {
+                $findUser->exp_val_minute += floor($last_time_s * 1440);
+                SaveActivityUser::send($findUser->id,auth()->user()->id,'add_left_day',['day' => $last_time_s]);
+            }
+        }
 
 
         SaveActivityUser::send($findUser->id,auth()->user()->id,'re_charge');

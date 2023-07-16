@@ -361,6 +361,14 @@ class UserController extends Controller
 
         }
 
+        if($find->expire_date !== NULL) {
+            $last_time_s = (int) Carbon::now()->diffInDays($find->expire_date, false);
+            if ($last_time_s > 0) {
+                $find->exp_val_minute += floor($last_time_s * 1440);
+                SaveActivityUser::send($find->id,auth()->user()->id,'add_left_day',['day' => $last_time_s]);
+            }
+        }
+
         if($find->group_id !== $findGroup->id){
             SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new'=> $findGroup->name]);
         }
@@ -378,6 +386,7 @@ class UserController extends Controller
             $find->expire_value = 1;
             $find->expire_type = 'no_expire';
             $find->expire_date = NULL;
+            $find->multi_login = 5;
             $find->expire_set = 0;
         }
         $find->creator = auth()->user()->id;

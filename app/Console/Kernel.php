@@ -76,7 +76,8 @@ class Kernel extends ConsoleKernel
 
         })->everyTenMinutes();
         $schedule->call(function () {
-            $ras = Ras::where('unlimited',1)->where('is_enabled',1)->get();
+            /*
+            $ras = WireGuardUsers::where('unlimited',1)->where('is_enabled',1)->get();
 
             foreach ($ras as $server){
                 $mik = new WireGuard($server->id,'null');
@@ -111,6 +112,7 @@ class Kernel extends ConsoleKernel
                 }
 
             }
+            */
         })->everyTwoHours();
 
 

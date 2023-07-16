@@ -82,6 +82,9 @@ class SaveActivityUser
        if($type == 'change_wg_server'){
            self::change_wg_server();
        }
+       if($type == 'add_left_day'){
+           self::add_left_day();
+       }
    }
 
    public static function ChangeStatusAccount(){
@@ -233,6 +236,14 @@ class SaveActivityUser
    }
    public static function change_wg_server(){
        $content = vsprintf('کانفیگ کاربر از سرور (%s) حذف شد و بر روی سرور (%s) قرار گرفت.',[self::$data['last'],self::$data['new']]);
+       Activitys::create([
+           'by' => auth()->user()->id,
+           'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+   public static function add_left_day(){
+       $content = vsprintf('مقدار %s روز باقیمانده به دور بعد انتقال یافت.',[self::$data['day']]);
        Activitys::create([
            'by' => auth()->user()->id,
            'user_id' => self::$user_id,
