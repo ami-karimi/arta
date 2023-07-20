@@ -21,6 +21,7 @@ use App\Utility\Sms;
 class ApiController extends Controller
 {
     public function index(){
+        /*
         $users = User::where('service_group','wireguard')->where('expire_date',null)->get();
         foreach ($users as $user){
             if($user->expire_date == null){
@@ -51,6 +52,7 @@ class ApiController extends Controller
                 $user->save();
             }
         }
+        */
     }
 
     public function save_stogram(Request $request){
