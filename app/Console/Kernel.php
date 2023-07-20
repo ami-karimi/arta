@@ -87,7 +87,7 @@ class Kernel extends ConsoleKernel
                     $peers = $mik->getUser($row->wg->public_key);
 
                     if($peers['status']){
-                       $status =  $mik->ChangeConfigStatus($row->wg->public_key,1);
+                       $status =  $mik->ChangeConfigStatus($row->wg->public_key,0);
                        if($status['status']) {
                            SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
                            $row->expired = 1;
