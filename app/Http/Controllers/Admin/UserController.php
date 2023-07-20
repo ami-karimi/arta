@@ -71,6 +71,10 @@ class UserController extends Controller
             }
         }
 
+        if($request->type_service){
+            $user->where('service_group',$request->type_service);
+        }
+
         return new UserCollection($user->orderBy('id','DESC')->paginate(50));
     }
     public function create(StoreSingleUserRequest $request){
@@ -610,9 +614,32 @@ class UserController extends Controller
                 $findUser->max_usage  = @round(90000000000  * $findUser->group->expire_value) * $findUser->group->multi_login;
             }
 
-            $findUser->expire_set = 0;
-           $findUser->first_login = NULL;
-           $findUser->expire_date = NULL;
+            if($findUser->service_group !== 'wireguard') {
+                $findUser->expire_set = 0;
+                $findUser->first_login = NULL;
+                $findUser->expire_date = NULL;
+                $findUser->expired = 0;
+            }
+            if($findUser->service_group == 'wireguard') {
+
+                $findUser->expire_value = $findUser->group->expire_value;
+                $findUser->expire_type = $findUser->group->expire_type;
+                $findUser->expire_date = Carbon::now()->addMinutes($findUser->exp_val_minute);
+                $findUser->first_login = Carbon::now();
+                $findUser->expire_set = 1;
+                $findUser->expired = 0;
+                if($findUser->wg){
+                    $mik = new WireGuard($findUser->wg->server_id,'null');
+                    $peers = $mik->getUser($findUser->wg->public_key);
+                    if($peers['status']){
+                        $status =  $mik->ChangeConfigStatus($findUser->wg->public_key,1);
+                        if($status['status']) {
+                            SaveActivityUser::send($findUser->id, auth()->user()->id, 'active_status', ['status' => 0]);
+                        }
+                    }
+                }
+
+            }
         }elseif($findUser->group->group_type == 'volume'){
             $findUser->expire_set = 0;
             $findUser->first_login = NULL;

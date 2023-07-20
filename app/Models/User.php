@@ -73,6 +73,8 @@ class User extends Authenticatable implements JWTSubject
     function v2ray_server(){
         return $this->hasOne(Ras::class,'id','v2ray_location');
     }
-
+    function wg(){
+        return $this->hasOne(WireGuardUsers::class,'user_id','id');
+    }
 
 }

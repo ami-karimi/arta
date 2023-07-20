@@ -68,6 +68,10 @@ class UserController extends Controller
             }
         }
 
+        if(in_array(['l2tp_cisco','wireguard'],$request->type_service)){
+            $user->where('service_group',$request->type_service);
+        }
+
         return new AgentUserCollection($user->orderBy('id','DESC')->paginate(50));
     }
     public function group_deactive(Request $request){
@@ -376,10 +380,37 @@ class UserController extends Controller
         $find->first_login = NULL;
 
         if($findGroup->group_type == 'expire') {
-            $find->expire_value = $findGroup->expire_value;
-            $find->expire_type = $findGroup->expire_type;
-            $find->expire_date = NULL;
-            $find->expire_set = 0;
+            if($find->service_group !== 'wireguard') {
+                $find->expire_value = $findGroup->expire_value;
+                $find->expire_type = $findGroup->expire_type;
+                $find->expire_date = NULL;
+                $find->expire_set = 0;
+            }elseif($findGroup->service_group == 'wireguard') {
+
+                $find->expire_value = $findGroup->expire_value;
+                $find->expire_type = $findGroup->expire_type;
+                $find->expire_date = Carbon::now()->addMinutes($find->exp_val_minute);
+                $find->first_login = Carbon::now();
+                $find->expire_set = 1;
+                $find->expired = 0;
+                if($find->wg){
+                    $mik = new WireGuard($find->wg->server_id,'null');
+                    $peers = $mik->getUser($find->wg->public_key);
+                    if($peers['status']){
+                        $status =  $mik->ChangeConfigStatus($find->wg->public_key,1);
+                        if($status['status']) {
+                            SaveActivityUser::send($find->id, auth()->user()->id, 'active_status', ['status' => 0]);
+                        } else{
+                         return response()->json(['status' => false,'message' => "امکان شارژ این اکانت وجود ندارد با مدیریت تماس بگیرید!"],403);
+                       }
+                    }else{
+                        return response()->json(['status' => false,'message' => "امکان شارژ این اکانت وجود ندارد با مدیریت تماس بگیرید!"],403);
+
+                    }
+                }
+
+            }
+
 
         }elseif($findGroup->group_type == 'volume'){
             $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 );
@@ -403,7 +434,7 @@ class UserController extends Controller
         $new->save();
 
         SaveActivityUser::send($find->id,auth()->user()->id,'re_charge');
-        return response()->json(['status' => false,'message' => "اکانت با موفقیت شارژ شد!"]);
+        return response()->json(['status' => true,'message' => "اکانت با موفقیت شارژ شد!"]);
     }
     public function create(Request $request){
 

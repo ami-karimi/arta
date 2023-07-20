@@ -7,6 +7,7 @@ use App\Models\Ras;
 use App\Models\User;
 use App\Models\UserGraph;
 use App\Utility\Mikrotik;
+use App\Utility\SaveActivityUser;
 use App\Utility\WireGuard;
 use App\Models\WireGuardUsers;
 use Carbon\Carbon;
@@ -76,44 +77,26 @@ class Kernel extends ConsoleKernel
 
         })->everyTenMinutes();
         $schedule->call(function () {
-            /*
-            $ras = WireGuardUsers::where('unlimited',1)->where('is_enabled',1)->get();
 
-            foreach ($ras as $server){
-                $mik = new WireGuard($server->id,'null');
-                $peers = $mik->getAllPears();
-                if($peers['status']){
-                    $peers = $peers['peers'];
-                    foreach ($peers as $peer){
-                        $findWireIn = WireGuardUsers::where('user_ip',str_replace('/32','',$peer['allowed-address']))->where('server_id',$server->id)->first();
-                        if($findWireIn){
-                            $full = $peer['rx'] + $peer['tx'];
-                            if($peer['rx'] || $peer['tx']) {
-                                $findWireIn->rx = $peer['rx'];
-                                $findWireIn->tx = $peer['tx'];
-                                $findWireIn->save();
-                            }
+            $now = Carbon::now()->format('Y-m-d');
+            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
 
-                            if($findWireIn->user->expire_set == 0 && isset($peer['last-handshake']) ||
-                                $findWireIn->user->expire_set == 0 && $full > 0
-                            ){
-                                $findWireIn->user->expire_set = 1;
-                                $findWireIn->user->first_login = Carbon::now();
-                                $findWireIn->user->expire_date = Carbon::now()->addMinutes($findWireIn->user->exp_val_minute);
-                                $findWireIn->user->save();
-                            }
-                            if($findWireIn->user->expire_set == 1){
-                                if(strtotime($findWireIn->user->expire_data) <= time()){
-                                    $mik->ChangeConfigStatus($findWireIn->public_key,1);
-                                }
-                            }
-                        }
+            foreach ($findWgExpired as $row){
+                if($row->wg){
+                    $mik = new WireGuard($row->wg->server_id,'null');
+                    $peers = $mik->getUser($row->wg->public_key);
+
+                    if($peers['status']){
+                       $status =  $mik->ChangeConfigStatus($row->wg->public_key,1);
+                       if($status['status']) {
+                           SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
+                           $row->expired = 1;
+                           $row->save();
+                       }
                     }
                 }
-
             }
-            */
-        })->everyTwoHours();
+        })->everyMinute();
 
 
     }

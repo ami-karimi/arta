@@ -52,6 +52,7 @@ class WireGuardController extends Controller
                 $server_id = $request->server_id;
                 $find->profile_name = $user_wi['config_file'];
                 $find->user_id = $find->user->id;
+                $find->server_id = $server_id;
                 $find->public_key = $user_wi['client_public_key'];
                 $public_key = $user_wi['client_public_key'];
                 $find->user_ip = $user_wi['ip_address'];
