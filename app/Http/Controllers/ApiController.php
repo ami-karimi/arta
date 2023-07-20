@@ -21,7 +21,7 @@ use App\Utility\Sms;
 class ApiController extends Controller
 {
     public function index(){
-        $users = User::where('service_group','wireguard')->whereNull('expire_date')->get();
+        $users = User::where('service_group','wireguard')->where('expire_date',null)->get();
         foreach ($users as $user){
             if($user->expire_date == null){
                 $req_all = [];
