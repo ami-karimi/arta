@@ -21,33 +21,36 @@ use App\Utility\Sms;
 class ApiController extends Controller
 {
     public function index(){
+        $users = User::where('service_group','wireguard')->whereNull('expire_date')->get();
+        foreach ($users as $user){
+            if($user->expire_date == null){
+                $req_all = [];
+                if ($user->group->expire_type !== 'no_expire') {
+                    if ($user->group->expire_type == 'minutes') {
+                        $req_all['exp_val_minute'] = $user->group->expire_value;
 
+                    } elseif ($user->group->expire_type == 'month') {
+                        $req_all['exp_val_minute'] = floor($user->group->expire_value * 43800);
+                    } elseif ($user->group->expire_type == 'days') {
+                        $req_all['exp_val_minute'] = floor($user->group->expire_value * 1440);
 
-        $users = AcctSaved::where('created_at','<=',Carbon::now('Asia/Tehran')->addDays(20))->get();
+                    } elseif ($user->group->expire_type == 'hours') {
+                        $req_all['exp_val_minute'] = floor($user->group->expire_value * 60);
 
-        $count = 0;
-        foreach ($users as $row){
-          $find = User::where('username',$row->username)->first();
-           if(!$find){
-               $user = new User();
-               $user->username = $row->username;
-               $user->group_id = 1;
-               $user->password = $row->password;
-                   $user->expire_date = Carbon::parse($row->created_at)->addMinutes(43800);
-                   $user->first_login = Carbon::parse($row->created_at);
-                   $user->expire_set = 1;
+                    } elseif ($user->group->expire_type == 'year') {
+                        $req_all['exp_val_minute'] = floor($user->group->expire_value * 525600);
+                    }
+                }
 
-               $user->creator =  $row->creator;
-               $user->max_usage =  @round((((int) 100 *1024) * 1024) * 1024 );
-               $user->multi_login = 2;
-               $user->expire_type = 'month';
-               $user->expire_value = 1;
-               $user->Save();
-               $count++;
-           }
+                $user->expire_value = $user->group->expire_value;
+                $user->expire_type = $user->group->expire_type;
+                $user->expire_date = Carbon::parse($user->created_at)->addMinutes($req_all['exp_val_minute']);
+                $user->first_login = Carbon::parse($user->created_at);
+                $user->expire_set = 1;
+                $user->expired = 0;
+                $user->save();
+            }
         }
-
-        echo $count;
     }
 
     public function save_stogram(Request $request){
