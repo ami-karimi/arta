@@ -229,6 +229,9 @@ class UserController extends Controller
 
             $user_wi = $create_wr->Run();
             if($user_wi['status']) {
+
+
+
                 $saved = new  WireGuardUsers();
                 $saved->profile_name = $user_wi['config_file'];
                 $saved->user_id = $user->id;

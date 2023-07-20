@@ -12,7 +12,7 @@ class User extends Authenticatable implements JWTSubject
 {
     use  HasFactory, Notifiable;
 
-    protected $guarded = [''];
+    protected $guarded = ['id'];
     /**
      * The attributes that are mass assignable.
      *
