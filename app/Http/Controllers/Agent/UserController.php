@@ -69,7 +69,7 @@ class UserController extends Controller
         }
 
         if($request->type_service) {
-            if (in_array(['l2tp_cisco', 'wireguard'], $request->type_service)) {
+            if (in_array($request->type_service, ['l2tp_cisco', 'wireguard'])) {
                 $user->where('service_group', $request->type_service);
             }
         }
