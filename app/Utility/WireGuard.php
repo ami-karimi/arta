@@ -59,6 +59,21 @@ class WireGuard
         return ['status' => true,'re' => $re];
 
     }
+    public function addQuee($data = []){
+        $checkInterface = $this->getInterface();
+        if(!$checkInterface['status']){
+            return $checkInterface;
+        }
+
+        $add  = $this->ROS->comm('/queue/simple/add', array(
+            'name' => $data['name'],
+            'target' => $data['ip'],
+            'max-limit' =>"80M/10M",
+        ));
+
+        return ['status' => true,'re' => $add];
+
+    }
 
     public function getAllPears(){
         $checkInterface = $this->getInterface();
@@ -122,6 +137,7 @@ class WireGuard
 
          $this->CreatePear();
 
+        $this->addQuee(['ip' => $this->ip_address,'name' => $this->config_file]);
         $this->CreateUserConfig();
 
 
