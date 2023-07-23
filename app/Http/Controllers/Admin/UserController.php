@@ -869,6 +869,8 @@ class UserController extends Controller
                         }
                     }
                 }
+                UserGraph::where('user_id',$user_id)->delete();
+
                 $find->delete();
             }
         }
