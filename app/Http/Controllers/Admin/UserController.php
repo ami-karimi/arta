@@ -69,6 +69,9 @@ class UserController extends Controller
             if($request->expire_date == 'expire_5day'){
                 $user->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(5));
             }
+            if($request->expire_date == 'expire_20day'){
+                $user->where('expire_date','<=',Carbon::now('Asia/Tehran')->subDays(20));
+            }
         }
 
         if($request->type_service){
