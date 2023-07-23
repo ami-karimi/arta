@@ -70,7 +70,7 @@ class UserController extends Controller
                 $user->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(5))->where('expire_date','>=',Carbon::now('Asia/Tehran')->subDays(5));
             }
             if($request->expire_date == 'expire_20day'){
-                $user->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->subDays(20));
+                $user->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->subDays(45));
             }
             if($request->expire_date == 'not_use'){
                 $user->where('expire_set',0);
@@ -861,6 +861,20 @@ class UserController extends Controller
     }
     public function groupdelete(Request $request){
 
+        if($request->type == 'delete_20'){
+            $list = User::where('expire_set',1)->where('service_group','l2tp_cisco')->where('expire_date','<=',Carbon::now('Asia/Tehran')->subDays(45))->get();
+            foreach ($list as $user){
+                RadPostAuth::where('username',$user->username)->delete();
+                Activitys::where('user_id',$user->id)->delete();
+                UserGraph::where('user_id',$user->id)->delete();
+                $user->delete();
+
+            }
+            return response()->json([
+                'status' => true,
+                'message' => 'کاربران  با موفقیت حذف شدند!'
+            ]);
+        }
         foreach ($request->user_ids as $user_id){
             $find = User::where('id',$user_id)->first();
             if($find){
