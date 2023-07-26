@@ -670,7 +670,7 @@ class UserController extends Controller
             $req_all['username'] = $row['username'];
             $req_all['password'] = $row['password'];
             $req_all['groups'] = $request->username;
-            $req_all['creator'] = $request->creator;
+            $req_all['creator'] = auth()->user()->id;
 
             AcctSaved::create($req_all);
 
