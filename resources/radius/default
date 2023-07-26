@@ -149,7 +149,7 @@ listen {
 	#
 	#  See clients.conf for the configuration of "per_socket_clients".
 	#
-	clients = per_socket_clients
+#	clients = per_socket_clients
 
 	#
 	#  Connection limiting for sockets with "proto = tcp".
@@ -182,7 +182,7 @@ listen {
 	      #
 	      #  We STRONGLY RECOMMEND that you set an idle timeout.
 	      #
-	      idle_timeout = 60
+	      idle_timeout = 30
 	}
 
 }
@@ -197,7 +197,7 @@ listen {
 	port = 0
 	type = acct
 #	interface = eth0
-	clients = per_socket_clients
+#	clients = per_socket_clients
 
 	limit {
 		#  The number of packets received can be rate limited via the
@@ -221,13 +221,13 @@ listen {
 		#  more than the normal accounting load, and you can be sure that
 		#  the server will never get overloaded
 		#
-		max_pps = 0
+#		max_pps = 0
 
 		# Only for "proto = tcp". These are ignored for "udp" sockets.
 		#
-		idle_timeout = 0
-		lifetime = 0
-		max_connections = 0
+#		idle_timeout = 0
+#		lifetime = 0
+#		max_connections = 0
 	}
 }
 
@@ -794,7 +794,7 @@ post-auth {
 	#  Un-comment the following if you want to modify the user's object
 	#  in LDAP after a successful login.
 	#
- 	ldap
+ 	#ldap
 
 	# For Exec-Program and Exec-Program-Wait
 	exec
