@@ -707,9 +707,9 @@ accounting {
 	#  three lines.  Otherwise, the server will not respond to the
 	#  accounting request, and the NAS will retransmit.
 	#
-#	if (noop) {
-#		ok
-#	}
+	if (noop) {
+		ok
+	}
 
 	#  Cisco VoIP specific bulk accounting
 #	pgsql-voip
