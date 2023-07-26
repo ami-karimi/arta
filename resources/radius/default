@@ -448,7 +448,7 @@ authorize {
 
 	#
 	#  The ldap module reads passwords from the LDAP database.
-	#-ldap
+	-ldap
 	#
 	#  Enforce daily limits on time spent logged in.
 #	daily
