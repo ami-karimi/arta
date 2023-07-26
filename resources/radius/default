@@ -149,7 +149,7 @@ listen {
 	#
 	#  See clients.conf for the configuration of "per_socket_clients".
 	#
-	clients = per_socket_clients
+	#clients = per_socket_clients
 
 	#
 	#  Connection limiting for sockets with "proto = tcp".
@@ -197,7 +197,7 @@ listen {
 	port = 0
 	type = acct
 #	interface = eth0
-	clients = per_socket_clients
+	#clients = per_socket_clients
 
 	limit {
 		#  The number of packets received can be rate limited via the
