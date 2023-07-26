@@ -393,7 +393,7 @@ class UserController extends Controller
                 $find->expire_type = $findGroup->expire_type;
                 $find->expire_date = NULL;
                 $find->expire_set = 0;
-            }elseif($findGroup->service_group == 'wireguard') {
+            }elseif($find->service_group == 'wireguard') {
 
                 $find->expire_value = $findGroup->expire_value;
                 $find->expire_type = $findGroup->expire_type;
@@ -480,7 +480,9 @@ class UserController extends Controller
             $price = (int) $priceList['reseler_price'];
         }
         */
-
+        if($request->account_type){
+            return $this->CreateWireGuardAccount($request,$price);
+        }
         $userNameList = [];
         if($request->group_account){
             if(!(int) $request->from){
@@ -582,6 +584,7 @@ class UserController extends Controller
             $user = User::create($req_all);
             if($request->account_type) {
                 $user->service_group = "wireguard";
+
                 $user->save();
                 if ($user) {
                     $create_wr = new WireGuard($request->server_id, $row['username']);
@@ -623,30 +626,8 @@ class UserController extends Controller
         return response()->json(['status' => false,'message' => "اکانت با موفقیت ایجاد شد!"]);
 
     }
-    public function CreateWireGuardAccount(Request $request){
+    public function CreateWireGuardAccount(Request $request,$price = 0){
 
-        if($request->for_user){
-            $user = User::where('id',$request->for_user)->first();
-            if(!$user){
-                return  response()->json(['status' => true,'message' => 'کاربر یافت نشد!'],403);
-            }
-            $create_wr = new WireGuard($request->server_id, $user->username.rand(1,5));
-
-            $user_wi = $create_wr->Run();
-            if($user_wi['status']) {
-                $saved = new  WireGuardUsers();
-                $saved->profile_name = $user_wi['config_file'];
-                $saved->user_id = $user->id;
-                $saved->server_id = $request->server_id;
-                $saved->public_key = $user_wi['client_public_key'];
-                $saved->user_ip = $user_wi['ip_address'];
-                $saved->save();
-                exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
-
-            }
-
-            return  response()->json(['status' => true,'message' => 'کانفیگ با موفقیت ایجاد شد']);
-        }
         $userNameList = [];
 
         if(!$request->server_id){
@@ -750,6 +731,14 @@ class UserController extends Controller
             }
         }
 
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت ایجاد اکانت '.$req_all['username'];
+        $new->creator = 2;
+        $new->for = auth()->user()->id;
+        $new->save();
 
         return response()->json(['status' => true, 'message' => 'کاربر با موفقیت اضافه شد!']);
     }

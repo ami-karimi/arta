@@ -35,7 +35,7 @@ class WireGuard
         $this->client_private_key = \base64_encode(\sodium_crypto_kx_secretkey($keypair));
         $this->client_public_key = base64_encode(\sodium_crypto_kx_publickey($keypair));
 
-        $this->config_file = $this->username."-".date('Ymd');
+        $this->config_file = str_replace(' ','',$this->username).strtotime(date('Ymd'));
     }
 
     public function removeConfig($public_key){
