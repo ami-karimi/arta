@@ -338,10 +338,27 @@ class UserController extends Controller
         }
 
         $price = $findGroup->price_reseler;
-        $findSellectPrice =  PriceReseler::where('group_id',$findGroup->id)->where('reseler_id',auth()->user()->id)->first();
+
+
+        $findSellectPrice = Helper::GetReselerGroupList('one',$findGroup->id,auth()->user()->id);
         if($findSellectPrice){
-            $price = (int) $findSellectPrice->price;
+            $price = (int) $findSellectPrice['reseler_price'];
         }
+        $creator_price = 0;
+        $income = 0;
+
+        if(auth()->user()->creator){
+            $income = Helper::getIncome(auth()->user()->creator);
+            $creator_price = Helper::GetReselerGroupList('one',$findGroup->id,auth()->user()->creator)['reseler_price'];
+
+            if($income <  $creator_price){
+                return response()->json([
+                    'message' => 'به دلیل نداشتن موجودی مدیر پنل امکان انجام عملیات وجود ندارد!'
+                ],403);
+            }
+        }
+
+
         /*
         $priceList = Helper::GetReselerGroupList('one',$findGroup->id,auth()->user()->id);
         if($priceList){
@@ -431,6 +448,7 @@ class UserController extends Controller
         $find->creator = auth()->user()->id;
         UserGraph::where('user_id',$find->id)->delete();
 
+
         $find->save();
         $new =  new Financial;
         $new->type = 'minus';
@@ -440,6 +458,17 @@ class UserController extends Controller
         $new->creator = 2;
         $new->for = auth()->user()->id;
         $new->save();
+
+        if(auth()->user()->creator){
+            $new =  new Financial;
+            $new->type = 'minus';
+            $new->price = $creator_price;
+            $new->approved = 1;
+            $new->description = 'کسر بابت شارژ اکانت توسط زیر نماینده :'.auth()->user()->id."( ".auth()->user()->name." )"." اکانت : ".$find->username;
+            $new->creator = 2;
+            $new->for = auth()->user()->creator;
+            $new->save();
+        }
 
         SaveActivityUser::send($find->id,auth()->user()->id,'re_charge');
         return response()->json(['status' => true,'message' => "اکانت با موفقیت شارژ شد!"]);
@@ -465,10 +494,22 @@ class UserController extends Controller
 
         $price = $findGroup->price_reseler;
 
-        $findSellectPrice =  PriceReseler::where('group_id',$findGroup->id)->where('reseler_id',auth()->user()->id)->first();
+        $findSellectPrice = Helper::GetReselerGroupList('one',$request->group_id,auth()->user()->id);
         if($findSellectPrice){
-            $price = (int) $findSellectPrice->price;
+            $price = (int) $findSellectPrice['reseler_price'];
         }
+        $creator_price = 0;
+        if(auth()->user()->creator){
+            $income = Helper::getIncome(auth()->user()->creator);
+            $creator_price = Helper::GetReselerGroupList('one',$request->group_id,auth()->user()->creator)['reseler_price'];
+
+            if($income <  $creator_price){
+                return response()->json([
+                    'message' => 'به دلیل نداشتن موجودی مدیر پنل امکان انجام عملیات وجود ندارد!'
+                ],403);
+            }
+        }
+
         if($request->account_type) {
             if(!$request->server_id){
                 return response()->json(['status' => false,'message' => "لطفا سرور را انتخاب نمایید!"],403);
@@ -481,7 +522,7 @@ class UserController extends Controller
         }
         */
         if($request->account_type){
-            return $this->CreateWireGuardAccount($request,$price);
+            return $this->CreateWireGuardAccount($request,$price,$creator_price);
         }
         $userNameList = [];
         if($request->group_account){
@@ -499,6 +540,16 @@ class UserController extends Controller
             $start  = (int) $request->from;
             $end  = (int) $request->to + 1;
             $price *= $countAll;
+            $creator_price *= $countAll;
+
+            if(auth()->user()->creator){
+                if($income <  $creator_price){
+                    return response()->json([
+                        'message' => 'به دلیل نداشتن موجودی مدیر پنل امکان انجام عملیات وجود ندارد!'
+                    ],403);
+                }
+            }
+
             $userNames = $request->username;
             for ($i= $start; $i < $end;$i++) {
                 $buildUsername = $userNames . $i;
@@ -582,29 +633,6 @@ class UserController extends Controller
 
 
             $user = User::create($req_all);
-            if($request->account_type) {
-                $user->service_group = "wireguard";
-
-                $user->save();
-                if ($user) {
-                    $create_wr = new WireGuard($request->server_id, $row['username']);
-
-                    $user_wi = $create_wr->Run();
-                    if ($user_wi['status']) {
-                        $saved = new  WireGuardUsers();
-                        $saved->profile_name = $user_wi['config_file'];
-                        $saved->user_id = $user->id;
-                        $saved->server_id = $request->server_id;
-                        $saved->public_key = $user_wi['client_public_key'];
-                        $saved->user_ip = $user_wi['ip_address'];
-                        $saved->save();
-                        exec('qrencode -t png -o /var/www/html/arta/public/configs/' . $user_wi['config_file'] . ".png -r /var/www/html/arta/public/configs/" . $user_wi['config_file'] . ".conf");
-                    }else{
-                        $user->delete();
-                         return response()->json(['status' => false,'message' => 'متاسفانه نتوانستیم کاربر درخواستی را در سرور مورد نظر ایجاد کنیم !'],403);
-                    }
-                }
-            }
 
             $req_all['username'] = $row['username'];
             $req_all['password'] = $row['password'];
@@ -623,10 +651,24 @@ class UserController extends Controller
         $new->for = auth()->user()->id;
         $new->save();
 
+        if(auth()->user()->creator){
+
+
+            $new =  new Financial;
+            $new->type = 'minus';
+            $new->price = $creator_price;
+            $new->approved = 1;
+            $new->description = 'کسر بابت ایجاد اکانت زیر نماینده به شناسه:  '.auth()->user()->id." ( ".auth()->user()->name." ) "." اکانت ".$req_all['username'];
+            $new->creator = 2;
+            $new->for = auth()->user()->creator;
+            $new->save();
+        }
+
+
         return response()->json(['status' => false,'message' => "اکانت با موفقیت ایجاد شد!"]);
 
     }
-    public function CreateWireGuardAccount(Request $request,$price = 0){
+    public function CreateWireGuardAccount(Request $request,$price = 0,$cr_price = 0){
 
         $userNameList = [];
 
@@ -731,6 +773,7 @@ class UserController extends Controller
             }
         }
 
+
         $new =  new Financial;
         $new->type = 'minus';
         $new->price = $price;
@@ -739,6 +782,19 @@ class UserController extends Controller
         $new->creator = 2;
         $new->for = auth()->user()->id;
         $new->save();
+
+        if(auth()->user()->creator){
+
+
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $cr_price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت ایجاد اکانت زیر نماینده به شناسه:  '.auth()->user()->id." ( ".auth()->user()->name." ) "." اکانت ".$req_all['username'];
+        $new->creator = 2;
+        $new->for = auth()->user()->creator;
+        $new->save();
+        }
 
         return response()->json(['status' => true, 'message' => 'کاربر با موفقیت اضافه شد!']);
     }
@@ -882,13 +938,25 @@ class UserController extends Controller
             ],404);
         }
         $price = 2300;
+        $sub_sm = 1200;
         $total_price = (int) $request->volume * $price;
+        $total_sub_price = (int) $request->volume * $sub_sm;
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
         $incom  = $icom_user - $minus_income;
         if($incom <= $total_price ){
             return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
         }
+
+        if(auth()->user()->creator){
+            $income = Helper::getIncome(auth()->user()->creator);
+            if($income <  $total_sub_price){
+                return response()->json([
+                    'message' => 'به دلیل نداشتن موجودی مدیر پنل امکان انجام عملیات وجود ندارد!'
+                ],403);
+            }
+        }
+
         $new =  new Financial;
         $new->type = 'minus';
         $new->price = $total_price;
@@ -897,6 +965,16 @@ class UserController extends Controller
         $new->creator = 2;
         $new->for = auth()->user()->id;
         $new->save();
+        if(auth()->user()->creator) {
+            $new = new Financial;
+            $new->type = 'minus';
+            $new->price = $total_sub_price;
+            $new->approved = 1;
+            $new->description = 'بابت خرید حجم اضافه '.$request->volume.' گیگ توسط  زیر نماینده '.auth()->user()->id." "."(".auth()->user()->name.")"." برای کاربر ".$find->username;
+            $new->creator = 2;
+            $new->for = auth()->user()->creator;
+            $new->save();
+        }
         SaveActivityUser::send($find->id,auth()->user()->id,'buy_new_volume',['new' => $request->volume,'last' => $this->formatBytes($find->max_usage,2)]);
 
         $find->max_usage += @round((((int) $request->volume *1024) * 1024) * 1024 ) ;
@@ -924,13 +1002,24 @@ class UserController extends Controller
             ],403);
         }
         $price = 3700;
+        $sub_price = 2500;
         $total_price = (int) $request->day * $price;
+        $total_sub_price = (int) $request->day * $sub_price;
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
         $incom  = $icom_user - $minus_income;
         if($incom <= $total_price ){
             return response()->json(['status' => false,'message' => 'موجودی شما کافی نمیباشد!'],403);
         }
+        if(auth()->user()->creator){
+            $income = Helper::getIncome(auth()->user()->creator);
+            if($income <  $total_sub_price){
+                return response()->json([
+                    'message' => 'به دلیل نداشتن موجودی مدیر پنل امکان انجام عملیات وجود ندارد!'
+                ],403);
+            }
+        }
+
 
         if($find->expire_set) {
             $find->expire_date = Carbon::parse($find->expire_date)->addDays((int)$request->day);
@@ -950,6 +1039,17 @@ class UserController extends Controller
         $new->creator = 2;
         $new->for = auth()->user()->id;
         $new->save();
+
+        if(auth()->user()->creator){
+            $new =  new Financial;
+            $new->type = 'minus';
+            $new->price = $total_sub_price;
+            $new->approved = 1;
+            $new->description = 'کسر بابت خرید روز اضافه توسط زیر نماینده به میزان '.$request->day." روز توسط نماینده به شناسه ".auth()->user()->id." (".auth()->user()->name." )"." برای کاربر ".$find->username;
+            $new->creator = 2;
+            $new->for = auth()->user()->creator;
+            $new->save();
+        }
         SaveActivityUser::send($find->id,auth()->user()->id,'buy_day_for_account',['new' => $request->day,'total' => floor($find->exp_val_minute / 1440) ]);
 
 

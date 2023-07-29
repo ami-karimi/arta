@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Api\AgentDetailResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'user' => $findUser,
+            'can_agent' => (!$findUser->creator ? true : false),
             'authorisation' => [
                 'token' => $token,
                 'type' => 'bearer',
@@ -95,8 +97,12 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
+        if($request->user()->role == 'agent'){
+            return new AgentDetailResource(auth()->user());
+        }
         return response()->json([
             'data' => $request->user(),
+            'can_agent' =>  (!auth()->user()->creator ? true : false)
         ]);
     }
 

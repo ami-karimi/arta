@@ -9,7 +9,7 @@ use App\Http\Resources\Api\GroupsCollection;
 use App\Http\Requests\StoreGroupRequest;
 class GroupsController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
 
         return new GroupsCollection(Groups::orderBy('id','DESC')->paginate(10));
 

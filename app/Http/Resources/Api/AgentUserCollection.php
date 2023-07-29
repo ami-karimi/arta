@@ -64,14 +64,16 @@ class AgentUserCollection extends ResourceCollection
 
 
         $incom  = $icom_user - $minus_income;
-        $priceList = Helper::GetReselerGroupList('list',false,auth()->user()->id);
+        $priceList = array_filter(Helper::GetReselerGroupList('list',false,auth()->user()->id),function($item){
+            return $item['status'] == true;
+        });
 
 
         return [
             'groups' => Groups::select('name','id','price_reseler')->where('name','not like','%وایرگارد%')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             'credit' => $incom,
-            'map_price' => $map_price,
+            'map_price' => $priceList,
             'data' => $this->collection->map(function($item){
                 $v2ray_user = false;
                 $usage = 0;

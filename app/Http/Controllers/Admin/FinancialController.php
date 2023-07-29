@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\FinancialCollection;
 use App\Http\Resources\Api\AdminFinancialCollection;
 use App\Models\Groups;
+use App\Models\ReselerMeta;
 use App\Models\User;
+use App\Utility\Helper;
 use Illuminate\Http\Request;
 use App\Http\Requests\AddFinancialRequest;
 use App\Models\Financial;
@@ -148,7 +150,7 @@ class FinancialController extends Controller
                     'for' => $new->for,
                     'description' => $request->description,
                 ]);
-                
+
             }else{
                 SendNotificationAdmin::send('admin', 'reject_financial_admin', [
                     'id' => $new->id,
@@ -174,7 +176,87 @@ class FinancialController extends Controller
             'message'=> 'با موفقیت ثبت شد!'
             ]);
     }
-    public function save_custom_price(Request $request,$id){
+
+    public function save_custom_price(Request $request,$group_id){
+
+        $agent = User::where('id',$request->agent_id)->first();
+        if(!$agent){
+            return response()->json(['message' => 'نماینده مورد نظر یافت نشد!']);
+
+        }
+
+
+        $findGroup = Helper::GetReselerGroupList('one',$group_id,$agent->id);
+
+        if(!$findGroup){
+            return response()->json(['message' => 'گروه مورد نظر یافت نشد!']);
+        }
+
+
+        if(!$agent->creator) {
+            ReselerMeta::updateOrCreate([
+                'reseler_id' => $agent->id,
+                'key' => 'reseler_price_' . $findGroup['id'],
+            ],
+                [
+                    'reseler_id' => $agent->id,
+                    'key' => 'reseler_price_' . $findGroup['id'],
+                    'value' => $request->item['reseler_price'],
+                ]);
+
+
+            ReselerMeta::updateOrCreate([
+                'reseler_id' => $agent->id,
+                'key' => 'disabled_group_' . $findGroup['id'],
+            ],
+                [
+                    'reseler_id' => $agent->id,
+                    'key' => 'disabled_group_' . $findGroup['id'],
+                    'value' => $request->item['status'],
+                ]);
+
+
+            ReselerMeta::updateOrCreate([
+                'reseler_id' => $agent->id,
+                'key' => 'price_for_reseler_' . $findGroup['id'],
+            ],
+                [
+                    'reseler_id' => $agent->id,
+                    'key' => 'price_for_reseler_' . $findGroup['id'],
+                    'value' => $request->item['price_for_reseler'],
+                ]);
+        }else{
+            ReselerMeta::updateOrCreate([
+                'reseler_id' => $agent->creator,
+                'key' => 'price_for_reseler_' . $findGroup['id']."_for_".$agent->id,
+            ],
+                [
+                    'reseler_id' => $agent->creator,
+                    'key' =>  'price_for_reseler_' . $findGroup['id']."_for_".$agent->id,
+                    'value' => $request->item['reseler_price'],
+                ]);
+
+            ReselerMeta::updateOrCreate([
+                'reseler_id' => $agent->creator,
+                'key' => 'disabled_group_'.$findGroup['id']."_for_".$agent->id,
+            ],
+                [
+                    'reseler_id' => $agent->creator,
+                    'key' => 'disabled_group_'.$findGroup['id']."_for_".$agent->id,
+                    'value' => $request->item['status'],
+                ]);
+
+
+        }
+
+
+
+        return response()->json([
+            'data' => $findGroup,
+            'message' => 'بروزرسانی گروه '.$findGroup['name']." با موفقیت انجام شد.",
+        ]);
+
+        /*
         $find_admin = User::where('id',$id)->first();
         if(!$find_admin){
             return response()->json([
@@ -207,6 +289,7 @@ class FinancialController extends Controller
             'status' => true,
             'message'=> 'بروزرسانی با موفقت انجام شد!'
         ]);
+        */
     }
 
 }

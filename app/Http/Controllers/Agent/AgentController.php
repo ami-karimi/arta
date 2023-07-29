@@ -15,8 +15,12 @@ class AgentController extends Controller
     }
 
     public function GetGroups(){
+        $ar = Helper::GetReselerGroupList('list',false,auth()->user()->id );
         return response()->json([
-               'data' => Helper::GetReselerGroupList(),
+               'can_agent' => (auth()->user()->creator ? false : true),
+               'data' => array_filter($ar,function($item){
+                   return $item['status'] == true;
+               }),
             ]);
     }
     public function edit(Request $request,$group_id){

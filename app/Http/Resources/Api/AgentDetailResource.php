@@ -55,11 +55,14 @@ class AgentDetailResource extends JsonResource
         $incom  =  $icom_user - $minus_income;
 
 
-        $priceList = Helper::GetReselerGroupList('list',false,$this->id);
+        $priceList = array_filter(Helper::GetReselerGroupList('list',false,$this->id),function($item){
+            return $item['status'] == true;
+        });
 
 
         return [
-            'price_lists' => $map_price,
+            'price_lists' => $priceList,
+            'can_agent' => (!$this->creator ? true : false),
             'detail' => [
                 'id' => $this->id,
                 'name' => $this->name,

@@ -7,6 +7,7 @@ use App\Http\Resources\Api\AgentDetailResource;
 use App\Models\Groups;
 use App\Models\PriceReseler;
 use App\Models\ReselerMeta;
+use App\Utility\Helper;
 use App\Utility\SendNotificationAdmin;
 use Illuminate\Http\Request;
 use App\Http\Resources\Api\AgentsCollection;
@@ -101,7 +102,50 @@ class AgentsController extends Controller
         return  new AgentDetailResource($agent);
     }
 
-    public function save_custom_price($id,Request $request){
+    public function save_custom_price($group_id,Request $request){
+
+        $agent = User::where('id',$request->agent_id)->first();
+        if(!$agent){
+            return response()->json(['message' => 'نماینده مورد نظر یافت نشد!']);
+
+        }
+
+
+        $findGroup = Helper::GetReselerGroupList('one',$group_id,$agent->id);
+
+        if(!$findGroup){
+            return response()->json(['message' => 'گروه مورد نظر یافت نشد!']);
+        }
+
+        ReselerMeta::updateOrCreate([
+            'reseler_id' => $agent->creator_name->id,
+            'key' => 'disabled_group_'.$findGroup['id']."_for_".$request->agent_id,
+        ],
+            [
+                'reseler_id' => $agent->creator_name->id,
+                'key' => 'disabled_group_'.$findGroup['id']."_for_".$request->agent_id,
+                'value' => $request->item['status'],
+            ]);
+
+
+        ReselerMeta::updateOrCreate([
+            'reseler_id' => $agent->creator_name->id,
+            'key' => 'price_for_reseler_'.$findGroup['id']."_for_".$request->agent_id,
+        ],
+            [
+                'reseler_id' =>$agent->creator_name->id,
+                'key' => 'price_for_reseler_'.$findGroup['id']."_for_".$request->agent_id,
+                'value' => $request->item['price_for_reseler'],
+            ]);
+
+
+
+        return response()->json([
+            'data' => $findGroup,
+            'message' => 'بروزرسانی گروه '.$findGroup['name']." با موفقیت انجام شد.",
+        ]);
+
+        /*
         $find_admin = User::where('id',$id)->where('creator',auth()->user()->id)->first();
         if(!$find_admin){
             return response()->json([
@@ -129,5 +173,7 @@ class AgentsController extends Controller
             'status' => true,
             'message'=> 'بروزرسانی با موفقت انجام شد!'
         ]);
+
+        */
     }
 }

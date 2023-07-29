@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\FinancialCollection;
 use App\Models\Financial;
 use App\Models\User;
+use App\Utility\Helper;
 use Illuminate\Http\Request;
 use App\Utility\SendNotificationAdmin;
 
@@ -18,8 +19,9 @@ class FinancialController extends Controller
                 return response()->json(['message' =>  '403',403]);
             }
         }
+
         $perpage = ($request->per_page && $request->per_page < 100 ? (int)  $request->per_page : 4);
-        $financial =  Financial::where('for',($request->for_agent ? $request->for_agent :  auth()->user()->id))->orWhere('creator',($request->for_agent ? $request->for_agent :  auth()->user()->id));
+        $financial =  Financial::where('for', auth()->user()->id)->orWhere('creator', auth()->user()->id);
         if($request->approved){
            if($request->approved == 'approved'){
                $financial->where('approved',1);
@@ -87,7 +89,7 @@ class FinancialController extends Controller
         $save = new Financial();
 
         $save->creator = auth()->user()->id;
-        $save->for = auth()->user()->id;
+        $save->for = (auth()->user()->creator ? auth()->user()->creator : auth()->user()->id);
         $save->description = $request->description;
         $save->type = 'plus';
         $save->approved = 0;
@@ -165,6 +167,22 @@ class FinancialController extends Controller
         }
         if($save->for_user->role == 'user') {
             $save->approved =  ($request->approved === 'true' ? 1 : 0);
+        }
+        if($save->creator_by->creator == auth()->user()->id){
+            $save->approved =  ($request->approved === 'true' ? 1 : 0);
+            if($save->approved){
+
+
+                $new =  new Financial;
+                $new->type = 'plus';
+                $new->price = $request->price;
+                $new->approved = 1;
+                $new->description = 'افزایش موجودی تایید فاکتور به شناسه :'.$save->id;
+                $new->creator = 2;
+                $new->for = $save->creator_by->id;
+                $new->save();
+
+            }
         }
         $save->price = $request->price;
         if($attachment) {
