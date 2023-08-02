@@ -303,6 +303,10 @@ authorize {
 
 	##Edit by Mitul
 
+
+	update reply {
+         	&Port-Limit := 1
+    	}
 	  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
        	update reply {
     	    &Reply-Message := "Account Has Expired"
