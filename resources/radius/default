@@ -302,7 +302,7 @@ authorize {
 	preprocess
 
 	##Edit by Mitul
-	 # "%{sql:UPDATE  radacct SET acctstoptime = date_add(now(),interval +1 MINUTE) WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
+	  "%{sql:UPDATE  radacct SET acctstoptime = date_add(now(),interval +1 MINUTE) WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
 
 	  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
        	update reply {
@@ -314,13 +314,13 @@ authorize {
       }
 
 
-    #    if("%{sql:SELECT multi_login  FROM users  WHERE users.username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) }"){
-      #   	update reply {
-      #    	    &Reply-Message := "Maximum Online"
-       #        	&Framed-Pool := "Maximum Online"
-     #     	}
-         # 	reject
-    #   }
+        if("%{sql:SELECT multi_login  FROM users  WHERE users.username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) }"){
+         	update reply {
+          	    &Reply-Message := "Maximum Online"
+              	&Framed-Pool := "Maximum Online"
+          	}
+          	reject
+       }
 
 
      #  if("%{sql:SELECT ((SELECT max_usage FROM users WHERE username = '%{User-Name}' ) - SUM(total)) > 0   FROM user_graph INNER JOIN users ON users.id = user_graph.user_id WHERE users.username = '%{User-Name}'}" == 0){
@@ -879,7 +879,7 @@ post-auth {
 
      if("%{sql:SELECT exp_val_minute,expire_value,expire_type FROM users WHERE username = '%{User-Name}' AND expire_set = 0  AND  expire_type != 'no_expire' }"){
      	"%{sql:UPDATE users SET expire_date = date_add(now(),interval +exp_val_minute MINUTE) ,first_login = FROM_UNIXTIME(%{integer:Event-Timestamp}), expire_set = 1 WHERE username = '%{User-Name}'}"
-       }
+     }
 
 
 
