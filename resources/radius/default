@@ -490,7 +490,7 @@ authorize {
 	#  This permits you to do DB queries, for example.  If the modules
 	#  listed here return "fail", then NO response is sent.
 	#
-	status_server = yes
+	#status_server = yes
 	#Autz-Type Status-Server {
 	#   -sql
 #	}
