@@ -28,10 +28,13 @@ use App\Utility\V2rayApi;
 use App\Http\Controllers\Admin\MonitorigController;
 use App\Utility\WireGuard;
 use App\Models\WireGuardUsers;
+use App\Utility\SmsSend;
 
 class UserController extends Controller
 {
     public function index(Request $request){
+
+
 
         $user =  User::where('role','user');
         if($request->SearchText){
