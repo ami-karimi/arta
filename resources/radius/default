@@ -491,8 +491,8 @@ authorize {
 	#  listed here return "fail", then NO response is sent.
 	#
 	status_server = yes
-	Autz-Type Status-Server {
-	   -sql
+	Auth-Type Status-Server {
+	   sql
 	}
 
 
