@@ -243,7 +243,7 @@ class Helper
                     $enable = (boolean) $RsMtFull['disabled_group_' . $row->id."_for_".$for];
                 }
 
-                if($user->creator !== auth()->user()->id  && auth()->user()->creator || $user->id == auth()->user()->creator  ){
+                if($user->creator !== auth()->user()->id  && auth()->user()->creator && $user->creator || auth()->user()->role == 'admin' &&  $user->creator ){
                     $reseler_price  = $re_sell_price;
                 }
             }
