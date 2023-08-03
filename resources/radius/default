@@ -455,7 +455,6 @@ authorize {
 #	daily
 
 	#
-	rediscounter
 
    expiration{
 	  userlock = 1
