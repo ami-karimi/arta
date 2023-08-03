@@ -304,9 +304,6 @@ authorize {
 	##Edit by Mitul
 
 
-	update reply {
-         	&Port-Limit := 1
-    	}
 	  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
        	update reply {
     	    &Reply-Message := "Account Has Expired"
@@ -458,6 +455,8 @@ authorize {
 #	daily
 
 	#
+	rediscounter
+
    expiration{
 	  userlock = 1
     }
@@ -737,11 +736,11 @@ accounting {
 #  or rlm_sql module can handle this.
 #  The rlm_sql module is *much* faster
 session {
-#	radutmp
+	radutmp
 
 	#
 	#  See "Simultaneous Use Checking Queries" in mods-available/sql
-   -sql
+   sql
 }
 
 
