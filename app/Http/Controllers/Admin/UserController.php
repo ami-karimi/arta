@@ -844,6 +844,7 @@ class UserController extends Controller
                 'username' => $userDetial->username,
                 'creator' => $userDetial->creator,
                 'multi_login' => $userDetial->multi_login,
+                'phonenumber' => $userDetial->phonenumber,
                 'creator_detial' => ($userDetial->creator_name ? ['name' => $userDetial->creator_name->name ,'id' =>$userDetial->creator_name->id] : [] ) ,
                 'password' => $userDetial->password,
                 'group' => ($userDetial->group ? $userDetial->group->name : '---'),
