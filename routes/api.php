@@ -45,6 +45,7 @@ Route::middleware(['auth:api'])->group(function () {
 
           Route::get('/detial', [\App\Http\Controllers\User\UserController::class, 'index']);
           Route::POST('/edit_password', [\App\Http\Controllers\User\UserController::class, 'edit_password']);
+          Route::POST('/edit_detial', [\App\Http\Controllers\User\UserController::class, 'edit_detial']);
           Route::get('/auth_log', [\App\Http\Controllers\User\UserController::class, 'auth_log']);
           Route::get('/get_servers', [\App\Http\Controllers\User\UserController::class, 'get_servers']);
           Route::get('/get_groups', [\App\Http\Controllers\User\UserController::class, 'get_groups']);

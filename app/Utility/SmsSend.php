@@ -21,10 +21,10 @@ class SmsSend {
 
    }
 
-   public  function SendSmsExpire(){
+   public  function SendSmsExpire($left = 1){
 
        $this->pattern_code = $this->expire_pattent;
-       $this->inputData = array('day_left' => "1");
+       $this->inputData = array('day_left' => $left);
        return $this->Send();
    }
 
@@ -50,12 +50,7 @@ class SmsSend {
        $response2 = curl_exec($handler);
 
        $response2 = json_decode($response2);
-       var_dump($response2);
-       //$res_code = $response2[0];
-       //$res_data = $response2[1];
-
-
-       //return $res_data;
+       return $response2;
    }
 
 

@@ -203,6 +203,7 @@ class UserController extends Controller
                'total_format' => $this->formatBytes($total,2),
                'username' => $findUser->username,
                'service_group' => $findUser->service_group,
+               'phonenumber' => $findUser->phonenumber,
                'password' => $findUser->password,
                'name' => $findUser->name,
                'is_enabled'=> $findUser->is_enabled,
@@ -249,6 +250,23 @@ class UserController extends Controller
        $findUser->password = $request->password;
        $findUser->save();
        return response()->json(['status' => false,'message' => 'کله عبور با موفقیت بروزرسانی شد!']);
+   }
+   public function edit_detial(Request $request){
+       $findUser = User::where('id',auth()->user()->id)->first();
+       if(!$findUser){
+           return response()->json(['status' => false,'message' => 'حساب کاربری یافت نشد!'],403);
+       }
+       if($request->phonenumber){
+           if(!preg_match('/^(09){1}[0-9]{9}+$/', $request->phonenumber)){
+               return response()->json(['message' => 'لطفا یک شماره تماس معتبر وارد نمایید همراه با 0 باشد!'],403);
+           }
+           $findUser->phonenumber = $request->phonenumber;
+       }
+       if($request->name){
+           $findUser->name = $request->name;
+       }
+       $findUser->save();
+       return response()->json(['status' => false,'message' => 'اطلاعات کاربری با موفقیت بروزرسانی شد!']);
    }
    public function auth_log(Request $request){
        $radLog =  new RadPostAuth();

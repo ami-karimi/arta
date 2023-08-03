@@ -365,6 +365,11 @@ class UserController extends Controller
         if(!$find){
             return;
         }
+        if($request->phonenumber){
+            if(!preg_match('/^(09){1}[0-9]{9}+$/', $request->phonenumber)){
+                return response()->json(['message' => 'لطفا یک شماره تماس معتبر وارد نمایید همراه با 0 باشد!'],403);
+            }
+        }
         $lst_name = $find->creator_name->name;
         $change_owner = false;
         if($request->creator !== $find->creator){
@@ -571,6 +576,10 @@ class UserController extends Controller
         }
         if($request->multi_login !== $find->multi_login){
             SaveActivityUser::send($find->id,auth()->user()->id,'change_multi_login',['last' => $find->multi_login,'new' => $request->multi_login]);
+        }
+
+        if($request->phonenumber){
+            $find->phonenumber = $request->phonenumber;
         }
 
 

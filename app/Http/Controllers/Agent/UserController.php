@@ -198,6 +198,7 @@ class UserController extends Controller
                     'v2ray_transmission' => $userDetial->v2ray_transmission,
                     'port_v2ray' => $userDetial->port_v2ray,
                     'remark_v2ray' => $userDetial->remark_v2ray,
+                    'phonenumber' => $userDetial->phonenumber,
                     'protocol_v2ray' => $userDetial->protocol_v2ray,
                     'v2ray_id' => $userDetial->v2ray_id,
                     'v2ray_u_id' => $userDetial->v2ray_u_id,
@@ -261,6 +262,8 @@ class UserController extends Controller
                 'left_usage' => $left_usage,
                 'left_usage_format' =>  $this->formatBytes($left_usage,2),
                 'up' => $up,
+                'phonenumber' => $userDetial->phonenumber,
+
                 'up_format' => $this->formatBytes($up,2),
                 'usage' => $usage,
                 'usage_format' => $this->formatBytes($usage,2),
@@ -816,7 +819,11 @@ class UserController extends Controller
                 'message' => 'کلمه عبور کاربر حداقل بایستی 4 کاراکتر باشد!'
             ],403);
         }
-
+        if($request->phonenumber){
+            if(!preg_match('/^(09){1}[0-9]{9}+$/', $request->phonenumber)){
+                return response()->json(['message' => 'لطفا یک شماره تماس معتبر وارد نمایید همراه با 0 باشد!'],403);
+            }
+        }
         $login = false;
         if($find->service_group == 'v2ray'){
             $login = new V2rayApi($find->v2ray_server->ipaddress,$find->v2ray_server->port_v2ray,$find->v2ray_server->username_v2ray,$find->v2ray_server->password_v2ray);
@@ -868,6 +875,9 @@ class UserController extends Controller
 
         if($request->name){
             $find->name = $request->name;
+        }
+        if($request->phonenumber){
+            $find->phonenumber = $request->phonenumber;
         }
         if($request->username !== $find->username){
             $findElse = User::where('username',$request->username)->where('id','!=',$find->id)->first();

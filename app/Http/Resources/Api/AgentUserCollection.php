@@ -110,6 +110,7 @@ class AgentUserCollection extends ResourceCollection
                     'service_group' => $item->service_group,
                     'v2ray_detail' => $v2ray_user,
                     'username' => $item->username,
+                    'phonenumber' => $item->phonenumber,
                     'usage' => $usage,
                     'usage_format' => $this->formatBytes($usage,2),
                     'total' => $total,

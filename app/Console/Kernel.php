@@ -13,6 +13,7 @@ use App\Models\WireGuardUsers;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Utility\SmsSend;
 
 class Kernel extends ConsoleKernel
 {
@@ -98,7 +99,15 @@ class Kernel extends ConsoleKernel
             }
         })->everyTwoHours();
 
-
+        $schedule->call(function () {
+            $users = User::where('phonenumber','!=',null)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(3))->where('expire_date','>=',Carbon::now('Asia/Tehran')->subDays(3))->get();
+            foreach ($users as $user){
+                if($user->expire_date) {
+                    $sms = new SmsSend($user->phonenumber);
+                    $sms->SendSmsExpire(Carbon::now()->diffInDays($user->expire_date, false));
+                }
+            }
+        })->everySixHours();
     }
 
     /**
