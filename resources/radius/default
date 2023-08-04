@@ -324,13 +324,13 @@ authorize {
        }
 
 
-       if("%{sql:SELECT ((SELECT max_usage FROM users WHERE username = '%{User-Name}' ) - SUM(total)) > 0   FROM user_graph INNER JOIN users ON users.id = user_graph.user_id WHERE users.username = '%{User-Name}' }" == 0){
-                	update reply {
-                 	    &Reply-Message := "Bandwidth Limit"
-                      	&Framed-Pool := "Bandwidth Limit"
-                 	}
-               reject
-        }
+       #if("%{sql:SELECT ((SELECT max_usage FROM users WHERE username = '%{User-Name}' ) - SUM(total)) > 0   FROM user_graph INNER JOIN users ON users.id = user_graph.user_id WHERE users.username = '%{User-Name}' }" == 0){
+             #   	update reply {
+             #    	    &Reply-Message := "Bandwidth Limit"
+              #        	&Framed-Pool := "Bandwidth Limit"
+              #   	}
+             #  reject
+     #   }
 
 
 
