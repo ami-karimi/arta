@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
     {
 
         $schedule->call(function () {
-            $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
+            $data =  RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
             foreach ($data as $item){
                 $findUser = User::where('username',$item->username)->first();
@@ -40,8 +40,8 @@ class Kernel extends ConsoleKernel
                     }
 
                 }
-                $item->delete();
-
+                $item->saved = 1;
+                $item->save();
             }
 
 
