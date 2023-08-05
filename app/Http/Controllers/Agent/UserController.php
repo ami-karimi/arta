@@ -151,6 +151,7 @@ class UserController extends Controller
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!']);
         }
 
+        /*
         if($userDetial->service_group == 'v2ray'){
 
             $findServer = false;
@@ -218,6 +219,8 @@ class UserController extends Controller
             ]);
         }
 
+       */
+
         $left_usage = 0;
         $up = 0;
         $down = 0;
@@ -225,14 +228,11 @@ class UserController extends Controller
         $total = 0;
 
         if($userDetial->group){
-                $GraphData = UserGraph::where('user_id',$userDetial->id)->get();
-                $up = $GraphData->sum('tx');
-                $down = $GraphData->sum('rx');
-                $usage = $GraphData->sum('total');
-                $left_usage = $userDetial->max_usage - $usage;
-
-                $total = $userDetial->max_usage;
-
+            $up = $userDetial->upload_usage;
+            $down = $userDetial->download_usage;
+            $usage = $userDetial->usage;
+            $left_usage = $userDetial->max_usage - $usage;
+            $total = $userDetial->max_usage;
         }
 
         $wireGuardConfigs = [];

@@ -173,13 +173,11 @@ class UserController extends Controller
 
         if($findUser->group){
             if($findUser->group->group_type === 'volume'){
-                $GraphData = UserGraph::where('user_id',$findUser->id)->get();
-                $up = $GraphData->sum('tx');
-                $down = $GraphData->sum('rx');
-                $usage = $GraphData->sum('total');
-                $left_usage = $findUser->max_usage - $usage;
-
-                $total = $findUser->max_usage;
+                $up = $userDetial->upload_usage;
+                $down = $userDetial->download_usage;
+                $usage = $userDetial->usage;
+                $left_usage = $userDetial->max_usage - $usage;
+                $total = $userDetial->max_usage;
             }
         }
         $preg_left = ($total > 0 ? ($usage * 100 / $total) : 0);

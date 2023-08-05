@@ -52,7 +52,7 @@ class UserCollection extends ResourceCollection
                 $usage = 0;
                 if($item->group){
                     if($item->group->group_type == 'volume'){
-                        $usage = UserGraph::where('user_id',$item->id)->get()->sum('total');
+                        $usage = $item->usage;
                     }
                 }
                 $total = $item->max_usage;

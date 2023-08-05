@@ -799,12 +799,10 @@ class UserController extends Controller
         $total = 0;
 
         if($userDetial->group){
-                $GraphData = UserGraph::where('user_id',$userDetial->id)->get();
-                $up = $GraphData->sum('tx');
-                $down = $GraphData->sum('rx');
-                $usage = $GraphData->sum('total');
+                $up = $userDetial->upload_usage;
+                $down = $userDetial->download_usage;
+                $usage = $userDetial->usage;
                 $left_usage = $userDetial->max_usage - $usage;
-
                 $total = $userDetial->max_usage;
 
         }
