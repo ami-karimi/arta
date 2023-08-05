@@ -314,7 +314,7 @@ authorize {
     		reject
       }
 
-	  "%{sql:UPDATE  radacct SET acctstoptime = date_add(now(),interval +1 MINUTE) WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
+	  "%{sql:UPDATE  radacct SET acctstoptime = date_add(now(),interval +2 MINUTE) WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
 
         if("%{sql:SELECT multi_login  FROM users  WHERE username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) }"){
          	update reply {
