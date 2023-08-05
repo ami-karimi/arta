@@ -173,11 +173,11 @@ class UserController extends Controller
 
         if($findUser->group){
             if($findUser->group->group_type === 'volume'){
-                $up = $userDetial->upload_usage;
-                $down = $userDetial->download_usage;
-                $usage = $userDetial->usage;
-                $left_usage = $userDetial->max_usage - $usage;
-                $total = $userDetial->max_usage;
+                $up = $findUser->upload_usage;
+                $down = $findUser->download_usage;
+                $usage = $findUser->usage;
+                $left_usage = $findUser->max_usage - $usage;
+                $total = $findUser->max_usage;
             }
         }
         $preg_left = ($total > 0 ? ($usage * 100 / $total) : 0);
@@ -348,6 +348,8 @@ class UserController extends Controller
        }
 
        $find->expire_set = 0;
+       $find->limited = 0;
+       $find->first_login = NULL;
        $find->expire_date = NULL;
        $find->save();
 
