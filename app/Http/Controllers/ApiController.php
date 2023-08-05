@@ -47,8 +47,7 @@ class ApiController extends Controller
         })->get();
 
        foreach($users as $user){
-           $find = UserGraph::where('user_id',$user->id)->first();
-           if($find) {
+
                $rx = UserGraph::where('user_id', $user->id)->get()->sum('rx');
                $tx = UserGraph::where('user_id', $user->id)->get()->sum('tx');
                $total_use = $rx + $tx;
@@ -65,7 +64,7 @@ class ApiController extends Controller
                    UserGraph::where('user_id', $user->id)->delete();
                }
            }
-       }
+
     }
 
     public function save_stogram(Request $request){
