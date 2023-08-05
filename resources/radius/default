@@ -325,9 +325,9 @@ authorize {
        }
 
 
-      if("%{sql:SELECT usage  FROM users WHERE username = '%{User-Name}' AND max_usage <= usage }"){
+      if("%{sql:SELECT usage,max_usage  FROM users WHERE username = '%{User-Name}' AND max_usage <= usage }"){
                 	update reply {
-                 	    &Reply-Message := "%{sql:SELECT usage  FROM users WHERE username = '%{User-Name}' AND max_usage <= usage }"
+                 	    &Reply-Message := "Bandwidth Limit"
                       	&Framed-Pool := "Bandwidth Limit"
                  	}
                reject
