@@ -20,9 +20,48 @@ use App\Utility\Sms;
 
 class ApiController extends Controller
 {
+    public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
+    {
+        $base = log($size, 1024);
+
+        if($format == 1) {
+            $suffixes = ['بایت', 'کلوبایت', 'مگابایت', 'گیگابایت', 'ترابایت']; # Persian
+        } elseif ($format == 2) {
+            $suffixes = ["B", "KB", "MB", "GB", "TB"];
+        } else {
+            $suffixes = ['B', 'K', 'M', 'G', 'T'];
+        }
+
+        if($size <= 0) return "0 ".$suffixes[1];
+
+        $result = pow(1024, $base - floor($base));
+        $result = round($result, $precision);
+        $suffixes = $suffixes[floor($base)];
+
+        return $result ." ". $suffixes;
+    }
 
     public function index(){
+       $users = User::whereHas('group',function($query){
+            return $query->where('group_type','volume');
+        })->get();
 
+       foreach($users as $user){
+           $rx = UserGraph::where('user_id',$user->id)->get()->sum('rx');
+           $tx = UserGraph::where('user_id',$user->id)->get()->sum('tx');
+           $total_use = $rx + $tx;
+
+           $usage =  $user->usage + $total_use;
+           if($usage >= $user->max_usage){
+               $user->limited = 1;
+           }
+
+           $user->usage += $total_use;
+           $user->download_usage += $rx;
+           $user->upload_usage += $tx;
+           $user->save();
+           UserGraph::where('user_id',$user->id)->delete();
+       }
     }
 
     public function save_stogram(Request $request){

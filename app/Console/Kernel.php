@@ -27,7 +27,9 @@ class Kernel extends ConsoleKernel
             $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
             foreach ($data as $item){
-                $findUser = User::where('username',$item->username)->first();
+                $findUser = User::where('username',$item->username)->whereHas('group',function($query){
+                    return $query->where('group_type','volume');
+                })->first();
                 if($findUser) {
                     $findOrCreateTotals = UserGraph::where('user_id', $findUser->id)->where('date',Carbon::now()->format('Y-m-d'))->first();
                     if ($findOrCreateTotals) {
@@ -53,6 +55,30 @@ class Kernel extends ConsoleKernel
 
         })->everyFiveMinutes();
         $schedule->call(function () {
+            $users = User::whereHas('group',function($query){
+                return $query->where('group_type','volume');
+            })->get();
+
+            foreach($users as $user){
+                $rx = UserGraph::where('user_id',$user->id)->get()->sum('rx');
+                $tx = UserGraph::where('user_id',$user->id)->get()->sum('tx');
+                $total_use = $rx + $tx;
+
+                $usage =  $user->usage + $total_use;
+                if($usage >= $user->max_usage){
+                    $user->limited = 1;
+                }
+
+                $user->usage += $total_use;
+                $user->download_usage += $rx;
+                $user->upload_usage += $tx;
+                $user->save();
+                UserGraph::where('user_id',$user->id)->delete();
+            }
+        })->everyTwoHours();
+
+
+        $schedule->call(function () {
             $API        = new Mikrotik();
             $API->debug = false;
             $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
@@ -77,6 +103,8 @@ class Kernel extends ConsoleKernel
             }
 
         })->everyTenMinutes();
+
+
         $schedule->call(function () {
 
             $now = Carbon::now()->format('Y-m-d');

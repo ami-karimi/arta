@@ -63,14 +63,16 @@ class AdminsController extends Controller
 
         $API->disconnect();
         */
-
         $AllOnlineCount = RadAcct::where('acctstoptime',NULL)->get()->count();
+
+        /*
 
         $total_month = Financial::whereIn('type',['plus','minus_amn'])->where('approved',1)->whereMonth('created_at', Carbon::now()->month)->get()->sum('price');
         $total_day = Financial::whereIn('type',['plus','minus_amn'])->where('approved',1)->whereDay('created_at', Carbon::now()->day)->get()->sum('price');
 
 
 
+        //*
         $chart_data = [];
         $chart_data[] = [
              'label' => 'دانلود',
@@ -154,19 +156,20 @@ class AdminsController extends Controller
             }
         }
 
+        */
 
         return response()->json([
-           'endBandwidth' => $EndBandwithList,
+           //'endBandwidth' => $EndBandwithList,
            'total_month'  => $total_month,
            'total_day'  => $total_day,
            'total_last_month'  => 0,
            'total_online'  => $AllOnlineCount,
-           'data' => $Jdays,
-           'chart_data' => $chart_data,
-            'sum_download' => $sumAllDownload,
-            'sum_upload' => $sumAllUpload,
-            'sum_total' => $sumAllDuplex,
-            'cl_us' => $cl_us,
+           //'data' => $Jdays,
+          // 'chart_data' => $chart_data,
+          //  'sum_download' => $sumAllDownload,
+           // 'sum_upload' => $sumAllUpload,
+           // 'sum_total' => $sumAllDuplex,
+            //'cl_us' => $cl_us,
         ]);
     }
 
