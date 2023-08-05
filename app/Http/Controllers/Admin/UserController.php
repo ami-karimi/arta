@@ -678,6 +678,7 @@ class UserController extends Controller
 
 
         SaveActivityUser::send($findUser->id,auth()->user()->id,'re_charge');
+        $findUser->limited = 0;
 
         $findUser->save();
 
