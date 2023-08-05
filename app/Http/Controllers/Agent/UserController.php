@@ -401,6 +401,8 @@ class UserController extends Controller
             }
         }
 
+         $find->limited = 0;
+
         if($find->group_id !== $findGroup->id){
             SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new'=> $findGroup->name]);
         }
@@ -988,6 +990,9 @@ class UserController extends Controller
         SaveActivityUser::send($find->id,auth()->user()->id,'buy_new_volume',['new' => $request->volume,'last' => $this->formatBytes($find->max_usage,2)]);
 
         $find->max_usage += @round((((int) $request->volume *1024) * 1024) * 1024 ) ;
+        if($find->max_usage > $find->usage){
+            $find->limited = 0;
+        }
         $find->save();
 
         return response()->json(['status' => false,'message' => "حجم با موفقیت به کاربر اضافه شد!"]);
