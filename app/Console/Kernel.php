@@ -27,9 +27,7 @@ class Kernel extends ConsoleKernel
             $data =  RadAcct::where('acctstoptime','!=',NULL)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
             foreach ($data as $item){
-                $findUser = User::where('username',$item->username)->whereHas('group',function($query){
-                    return $query->where('group_type','volume');
-                })->first();
+                $findUser = User::where('username',$item->username)->first();
                 if($findUser) {
                     $findOrCreateTotals = UserGraph::where('user_id', $findUser->id)->where('date',Carbon::now()->format('Y-m-d'))->first();
                     if ($findOrCreateTotals) {
