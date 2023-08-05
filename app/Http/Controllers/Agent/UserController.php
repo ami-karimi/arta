@@ -990,7 +990,7 @@ class UserController extends Controller
         SaveActivityUser::send($find->id,auth()->user()->id,'buy_new_volume',['new' => $request->volume,'last' => $this->formatBytes($find->max_usage,2)]);
 
         $find->max_usage += @round((((int) $request->volume *1024) * 1024) * 1024 ) ;
-        if($find->max_usage > $find->usage){
+        if($find->max_usage >= $find->usage){
             $find->limited = 0;
         }
         $find->save();
