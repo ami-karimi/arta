@@ -47,20 +47,23 @@ class ApiController extends Controller
         })->get();
 
        foreach($users as $user){
-           $rx = UserGraph::where('user_id',$user->id)->get()->sum('rx');
-           $tx = UserGraph::where('user_id',$user->id)->get()->sum('tx');
-           $total_use = $rx + $tx;
-           if($total_use > 0) {
-               $usage = $user->usage + $total_use;
-               if ($usage >= $user->max_usage) {
-                   $user->limited = 1;
-               }
+           $find = UserGraph::where('user_id',$user->id)->first();
+           if($find) {
+               $rx = UserGraph::where('user_id', $user->id)->get()->sum('rx');
+               $tx = UserGraph::where('user_id', $user->id)->get()->sum('tx');
+               $total_use = $rx + $tx;
+               if ($total_use > 0) {
+                   $usage = $user->usage + $total_use;
+                   if ($usage >= $user->max_usage) {
+                       $user->limited = 1;
+                   }
 
-               $user->usage += $total_use;
-               $user->download_usage += $rx;
-               $user->upload_usage += $tx;
-               $user->save();
-               UserGraph::where('user_id', $user->id)->delete();
+                   $user->usage += $total_use;
+                   $user->download_usage += $rx;
+                   $user->upload_usage += $tx;
+                   $user->save();
+                   UserGraph::where('user_id', $user->id)->delete();
+               }
            }
        }
     }
