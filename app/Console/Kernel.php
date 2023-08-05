@@ -29,20 +29,22 @@ class Kernel extends ConsoleKernel
             foreach ($data as $item){
                 $findUser = User::where('username',$item->username)->first();
                 if($findUser) {
-                    $findOrCreateTotals = UserGraph::where('user_id', $findUser->id)->where('date',Carbon::now()->format('Y-m-d'))->first();
-                    if ($findOrCreateTotals) {
-                        $findOrCreateTotals->rx += $item->download_sum;
-                        $findOrCreateTotals->tx += $item->upload_sum;
-                        $findOrCreateTotals->total += $item->total_sum;
-                        $findOrCreateTotals->save();
-                    } else {
-                        UserGraph::create([
-                            'date' => Carbon::now()->format('Y-m-d'),
-                            'user_id' => $findUser->id,
-                            'rx' => $item->download_sum,
-                            'tx' => $item->upload_sum,
-                            'total' => $item->download_sum + $item->upload_sum,
-                        ]);
+                    if($findUser->group->group_type == 'volume') {
+                        $findOrCreateTotals = UserGraph::where('user_id', $findUser->id)->where('date', Carbon::now()->format('Y-m-d'))->first();
+                        if ($findOrCreateTotals) {
+                            $findOrCreateTotals->rx += $item->download_sum;
+                            $findOrCreateTotals->tx += $item->upload_sum;
+                            $findOrCreateTotals->total += $item->total_sum;
+                            $findOrCreateTotals->save();
+                        } else {
+                            UserGraph::create([
+                                'date' => Carbon::now()->format('Y-m-d'),
+                                'user_id' => $findUser->id,
+                                'rx' => $item->download_sum,
+                                'tx' => $item->upload_sum,
+                                'total' => $item->download_sum + $item->upload_sum,
+                            ]);
+                        }
                     }
                     RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
 
