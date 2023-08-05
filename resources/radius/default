@@ -184,36 +184,6 @@ listen {
 	      #
 	      idle_timeout = 60
 	}
-	authorize {
-		  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
-           	update reply {
-        	    &Reply-Message := "Account Has Expired"
-             	&Framed-Pool := "Expired"
-        	}
-
-        		reject
-          }
-
-    	  "%{sql:UPDATE  radacct SET acctstoptime = date_add(now(),interval +1 MINUTE) WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
-
-            if("%{sql:SELECT multi_login  FROM users  WHERE users.username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) }"){
-             	update reply {
-              	    &Reply-Message := "Maximum Online"
-                  	&Framed-Pool := "Maximum Online"
-              	}
-              	reject
-           }
-
-
-          if("%{sql:SELECT usage  FROM users WHERE users.username = '%{User-Name}' AND max_usage <= usage }"){
-                    	update reply {
-                     	    &Reply-Message := "Bandwidth Limit"
-                          	&Framed-Pool := "Bandwidth Limit"
-                     	}
-                   reject
-          }
-
-	}
 
 }
 
@@ -334,6 +304,33 @@ authorize {
 	##Edit by Mitul
 
 
+	  if("%{sql:SELECT username,expire_date,expire_set FROM users WHERE username = '%{User-Name}' AND expire_set = 1  AND  expire_date < FROM_UNIXTIME(%{integer:Event-Timestamp})}"){
+       	update reply {
+    	    &Reply-Message := "Account Has Expired"
+         	&Framed-Pool := "Expired"
+    	}
+
+    		reject
+      }
+
+	  "%{sql:UPDATE  radacct SET acctstoptime = date_add(now(),interval +1 MINUTE) WHERE username = '%{User-Name}' AND  acctupdatetime < (NOW() - INTERVAL 10 MINUTE)  AND  ISNULL(acctstoptime) }"
+
+        if("%{sql:SELECT multi_login  FROM users  WHERE users.username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) }"){
+         	update reply {
+          	    &Reply-Message := "Maximum Online"
+              	&Framed-Pool := "Maximum Online"
+          	}
+          	reject
+       }
+
+
+      if("%{sql:SELECT usage  FROM users WHERE users.username = '%{User-Name}' AND max_usage <= usage }"){
+                	update reply {
+                 	    &Reply-Message := "Bandwidth Limit"
+                      	&Framed-Pool := "Bandwidth Limit"
+                 	}
+               reject
+      }
 
 
 
