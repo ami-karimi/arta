@@ -90,6 +90,7 @@ class UserController extends Controller
         if($request->account_type){
             return $this->CreateWireGuardAccount($request);
         }
+        /*
         if($request->service_group == 'v2ray'){
             $req_all = $request->all();
             $findUsername = User::where('username',$request->username)->first();
@@ -139,6 +140,7 @@ class UserController extends Controller
             return response()->json(['message' => 'کاربر با موفقیت ایجاد شد!']);
 
         }
+        */
         $userNameList = [];
 
         $type = 'single';
@@ -190,29 +192,37 @@ class UserController extends Controller
 
                 } elseif ($findGroup->expire_type == 'month') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
-                    $req_all['max_usage']  = @round(((((int) 100 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
+
                 } elseif ($findGroup->expire_type == 'days') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
-                    $req_all['max_usage']  = @round(((((int) 1 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
-
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
                 } elseif ($findGroup->expire_type == 'hours') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
-                    $req_all['max_usage']  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
 
                 } elseif ($findGroup->expire_type == 'year') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
-                    $req_all['max_usage']  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
 
                 }
             }
 
             $req_all['multi_login'] = $findGroup->multi_login;
 
-            if($findGroup->group_type == 'expire') {
-                $req_all['expire_value'] = $findGroup->expire_value;
-                $req_all['expire_type'] = $findGroup->expire_type;
-                $req_all['expire_set'] = 0;
-            }
+
+            $req_all['expire_value'] = $findGroup->expire_value;
+            $req_all['expire_type'] = $findGroup->expire_type;
+            $req_all['expire_set'] = 0;
+
             if($findGroup->group_type == 'volume') {
                 $req_all['multi_login'] = 5;
                 $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
@@ -377,6 +387,7 @@ class UserController extends Controller
         }
 
         $login = false;
+        /*
         if($find->service_group == 'v2ray'){
             $login = new V2rayApi($find->v2ray_server->ipaddress,$find->v2ray_server->port_v2ray,$find->v2ray_server->username_v2ray,$find->v2ray_server->password_v2ray);
 
@@ -420,6 +431,7 @@ class UserController extends Controller
 
         }
 
+       */
         if($request->service_group !== $find->service_group){
             if($find->service_group == 'v2ray'){
                 $login->del($find->v2ray_id);
@@ -501,25 +513,20 @@ class UserController extends Controller
 
             SaveActivityUser::send($find->id,auth()->user()->id,'change_group',['last' => $find->group->name,'new' => $findGroup->name]);
 
-            if($findGroup->group_type == 'expire') {
-                $find->expire_value = $findGroup->expire_value;
-                $find->expire_type = $findGroup->expire_type;
-            }
+
+            $find->expire_value = $findGroup->expire_value;
+            $find->expire_type = $findGroup->expire_type;
+
             if($findGroup->group_type == 'volume') {
                 $find->multi_login = 5;
                 $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
-                $find->expire_value = 0;
-                $find->expire_type = 'no_expire';
-                $find->expire_date = NULL;
-                $find->expire_set = 0;
-
             }
 
 
 
         }
 
-        if($request->change_expire_type && $findGroup->group_type == 'expire'){
+        if($request->change_expire_type){
             if($request->expire_type == 'minutes'){
                 $exp_val_minute = $request->expire_value;
             }elseif($request->expire_type == 'month'){
@@ -543,7 +550,7 @@ class UserController extends Controller
 
 
         $expire_date = false;
-        if($find->first_login !== NULL && $findGroup->group_type == 'expire'){
+        if($find->first_login !== NULL){
             $expire_date = Carbon::parse($find->first_login)->addMinutes($exp_val_minute)->toDateTimeString();
         }
 
@@ -585,7 +592,7 @@ class UserController extends Controller
 
         $find->update($request->only(['group_id','name','creator','multi_login']));
         $find->exp_val_minute = $exp_val_minute;
-        if($expire_date && $findGroup->group_type == 'expire'){
+        if($expire_date){
             $find->expire_date = $expire_date;
             $find->expire_set = 1;
         }
@@ -607,35 +614,55 @@ class UserController extends Controller
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!']);
         }
         $login = false;
+        /*
         if($findUser->service_group == 'v2ray'){
             $login = new V2rayApi($findUser->v2ray_server->ipaddress,$findUser->v2ray_server->port_v2ray,$findUser->v2ray_server->username_v2ray,$findUser->v2ray_server->password_v2ray);
             if($login){
                 $login->update($findUser->port_v2ray,['reset' => true]);
             }
         }
+        */
 
         UserGraph::where('user_id',$findUser->id)->delete();
 
 
-        if($findUser->service_group !== 'v2ray' && $findUser->group->group_type !== 'volume'){
+        if($findUser->group->expire_type !== 'no_expire'){
 
             if ($findUser->group->expire_type == 'minutes') {
                 $findUser->exp_val_minute = $findUser->group->expire_value;
             } elseif ($findUser->group->expire_type == 'month') {
                 $findUser->exp_val_minute = floor($findUser->group->expire_value * 43800);
-                $findUser->max_usage  = @round(((((int) 100 *1024) * 1024) * 1024 )  * $findUser->group->expire_value) * $findUser->group->multi_login;
+                if($findUser->group->group_volume > 0){
+                $findUser->max_usage  = @round(((((int) $findUser->group->group_volume *1024) * 1024) * 1024 )  * $findUser->group->expire_value) * $findUser->group->multi_login;
+                    }
             } elseif ($findUser->group->expire_type == 'days') {
                 $findUser->exp_val_minute = floor($findUser->group->expire_value * 1440);
-                $findUser->max_usage  = @round(1999999999.9999998  * $findUser->group->expire_value) * $findUser->group->multi_login;
+                if($findUser->group->group_volume > 0) {
+                    $findUser->max_usage = @round($findUser->group->group_volume * $findUser->group->expire_value) * $findUser->group->multi_login;
+                }
             } elseif ($findUser->group->expire_type == 'hours') {
                 $findUser->exp_val_minute = floor($findUser->group->expire_value * 60);
-                $findUser->max_usage  = @round(400000000  * $findUser->group->expire_value) * $findUser->group->multi_login;
+                if($findUser->group->group_volume > 0) {
+                    $findUser->max_usage = @round($findUser->group->group_volume * $findUser->group->expire_value) * $findUser->group->multi_login;
+                }
             } elseif ($findUser->group->expire_type == 'year') {
                 $findUser->exp_val_minute = floor($findUser->group->expire_value * 525600);
-                $findUser->max_usage  = @round(90000000000  * $findUser->group->expire_value) * $findUser->group->multi_login;
-            }
+                if($findUser->group->group_volume > 0) {
+                    $findUser->max_usage = @round($findUser->group->group_volume * $findUser->group->expire_value) * $findUser->group->multi_login;
+                }
+           }
 
             if($findUser->service_group !== 'wireguard') {
+                $findUser->expire_set = 0;
+                $findUser->first_login = NULL;
+                $findUser->expire_date = NULL;
+                $findUser->expired = 0;
+            }
+            if($findUser->group->group_type == 'volume'){
+                $findUser->multi_login = 5;
+                $findUser->usage = 0;
+                $findUser->download_usage = 0;
+                $findUser->upload_usage = 0;
                 $findUser->expire_set = 0;
                 $findUser->first_login = NULL;
                 $findUser->expire_date = NULL;
@@ -661,11 +688,6 @@ class UserController extends Controller
                 }
 
             }
-        }elseif($findUser->group->group_type == 'volume'){
-            $findUser->expire_set = 0;
-            $findUser->first_login = NULL;
-            $findUser->expire_date = NULL;
-            $findUser->multi_login = 5;
         }
 
         if($findUser->expire_date !== NULL) {

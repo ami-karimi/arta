@@ -31,12 +31,16 @@ use App\Models\Activitys;
 class UserController extends Controller
 {
     public function index(Request $request){
+
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+
         $user =  User::where('role','user');
         if($request->SearchText){
             $user->where('name', 'LIKE', "%$request->SearchText%")
                 ->orWhere('username', 'LIKE', "%$request->SearchText%");
         }
-        $user->where('creator',auth()->user()->id);
+        $user->whereIn('creator',$sub_agents);
 
         if($request->group_id){
             $user->where('group_id',$request->group_id);
@@ -85,7 +89,9 @@ class UserController extends Controller
     public function group_deactive(Request $request){
 
         foreach ($request->user_ids as $user_id){
-            $find = User::where('id',$user_id)->where('creator',auth()->user()->id)->first();
+            $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+            $sub_agents[] = auth()->user()->id;
+            $find = User::where('id',$user_id)->whereIn('creator',$sub_agents)->first();
             if($find) {
                 $find->is_enabled = 0;
                 $find->save();
@@ -106,7 +112,9 @@ class UserController extends Controller
     public function group_active(Request $request){
 
         foreach ($request->user_ids as $user_id){
-            $find = User::where('id',$user_id)->where('creator',auth()->user()->id)->first();
+            $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+            $sub_agents[] = auth()->user()->id;
+            $find = User::where('id',$user_id)->whereIn('creator',$sub_agents)->first();
             if($find) {
                 $find->is_enabled = 1;
                 $find->save();
@@ -146,7 +154,9 @@ class UserController extends Controller
     }
 
     public function show($id){
-        $userDetial = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $userDetial = User::where('id',$id)->whereIn('creator',$sub_agents)->first();
         if(!$userDetial){
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!']);
         }
@@ -292,7 +302,9 @@ class UserController extends Controller
 
     }
     public function getActivity($id){
-        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $find = User::where('id',$id)->whereIn('creator',$sub_agents)->first();
         if(!$find){
             return response()->json([
                 'message' => 'کاربر یافت نشد!'
@@ -301,8 +313,9 @@ class UserController extends Controller
         return new ActivityCollection(Activitys::where('user_id',$find->id)->orderBy('id','DESC')->paginate(5));
     }
     public function getActivityAll(Request $request){
-
-        $getAgentUsers = User::select('id')->where('creator',auth()->user()->id)->get()->pluck('id');
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $getAgentUsers = User::select('id')->whereIn('creator',$sub_agents)->get()->pluck('id');
         $activitys =  Activitys::whereIn('user_id',$getAgentUsers);
 
         $per_page = 10;
@@ -316,7 +329,9 @@ class UserController extends Controller
         if(!$username){
             return response()->json(['status' => false,'message' => 'حساب یافت نشد'],403);
         }
-        $find = User::where('username',$username)->where('creator',auth()->user()->id)->where('expire_set',1)->first();
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $find = User::where('username',$username)->whereIn('creator',$sub_agents)->where('expire_set',1)->first();
         if(!$find){
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!'],403);
         }
@@ -378,16 +393,27 @@ class UserController extends Controller
                 $find->exp_val_minute = $findGroup->expire_value;
             } elseif ($findGroup->expire_type == 'month') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 43800);
-                $find->max_usage  = @round(((((int) 100 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
+                if($findGroup->group_volume > 0) {
+                    $find->max_usage = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024)) ;
+                }
             } elseif ($findGroup->expire_type == 'days') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 1440);
-                $find->max_usage  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
-            } elseif ($findGroup->expire_type == 'hours') {
+                if($findGroup->group_volume > 0) {
+                    $find->max_usage = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024)) ;
+
+                }
+             } elseif ($findGroup->expire_type == 'hours') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 60);
-                $find->max_usage  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                if($findGroup->group_volume > 0) {
+                    $find->max_usage = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024)) ;
+
+                }
             } elseif ($findGroup->expire_type == 'year') {
                 $find->exp_val_minute = floor($findGroup->expire_value * 525600);
-                $find->max_usage  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                if($findGroup->group_volume > 0) {
+                    $find->max_usage = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024)) ;
+
+                }
             }
             $find->multi_login = $findGroup->multi_login;
 
@@ -444,11 +470,15 @@ class UserController extends Controller
 
         }elseif($findGroup->group_type == 'volume'){
             $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 );
-            $find->expire_value = 1;
-            $find->expire_type = 'no_expire';
-            $find->expire_date = NULL;
             $find->multi_login = 5;
+            $find->expire_value = $findGroup->expire_value;
+            $find->expire_type = $findGroup->expire_type;
+            $find->expire_date = NULL;
             $find->expire_set = 0;
+            $find->usage = 0;
+            $find->download_usage = 0;
+            $find->limited = 0;
+            $find->upload_usage = 0;
         }
         $find->creator = auth()->user()->id;
         UserGraph::where('user_id',$find->id)->delete();
@@ -600,30 +630,43 @@ class UserController extends Controller
                     $req_all['exp_val_minute'] = $findGroup->expire_value;
                 } elseif ($findGroup->expire_type == 'month') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
-                    $req_all['max_usage'] = ((((int) 100 *1024) * 1024) * 1024 )  ;
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
 
                 } elseif ($findGroup->expire_type == 'days') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
 
                 } elseif ($findGroup->expire_type == 'hours') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
-                    $req_all['max_usage'] = 60000000000  ;
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
 
                 } elseif ($findGroup->expire_type == 'year') {
                     $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
                 }
             }
-            if($findGroup->group_type == 'expire') {
+            if($findGroup->group_type == 'expire' || $findGroup->group_type == 'volume') {
                 $req_all['expire_value'] = $findGroup->expire_value;
                 $req_all['expire_type'] = $findGroup->expire_type;
                 $req_all['expire_set'] = 0;
                 $req_all['multi_login'] = $findGroup->multi_login;
+
+
+                if($findGroup->group_type == 'volume') {
+                    $req_all['multi_login'] = 5;
+                    $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+                }
+
             }
 
-            if($findGroup->group_type == 'volume') {
-                $req_all['multi_login'] = 5;
-                $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
-            }
 
 
             $req_all['password'] = $row['password'];
@@ -805,7 +848,9 @@ class UserController extends Controller
     }
 
     public function edit(Request $request,$id){
-        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $find = User::where('id',$id)->whereIn('creator',$sub_agents)->first();
         if(!$find){
             return response()->json([
                 'message' => 'کاربر یافت نشد!'
@@ -827,6 +872,7 @@ class UserController extends Controller
             }
         }
         $login = false;
+        /*
         if($find->service_group == 'v2ray'){
             $login = new V2rayApi($find->v2ray_server->ipaddress,$find->v2ray_server->port_v2ray,$find->v2ray_server->username_v2ray,$find->v2ray_server->password_v2ray);
         }
@@ -861,6 +907,7 @@ class UserController extends Controller
             }
 
         }
+        */
 
         if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
             $find->is_enabled = ($request->is_enabled === true ? 1 : 0);
@@ -900,13 +947,16 @@ class UserController extends Controller
     }
 
     public function AcctSaved(Request $request){
-        $savedAccounts = AcctSaved::where('creator',auth()->user()->id)->select('*')->orderBy('id','DESC')->groupBy('groups');
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $savedAccounts = AcctSaved::whereIn('creator',$sub_agents)->select('*')->orderBy('id','DESC')->groupBy('groups');
 
         return new AcctSavedCollection($savedAccounts->paginate(20));
     }
     public function AcctSavedView(Request $request){
-
-        $findSaved = AcctSaved::where('id',$request->id)->where('creator',auth()->user()->id)->first();
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $findSaved = AcctSaved::where('id',$request->id)->whereIn('creator',$sub_agents)->first();
         if(!$findSaved){
             return response()->json([
                 'status' => false,
@@ -943,7 +993,9 @@ class UserController extends Controller
     }
 
     public function buy_volume(Request $request,$id){
-        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $find = User::where('id',$id)->whereIn('creator',$sub_agents)->first();
         if(!$find){
             return response()->json([
                 'message' => 'کاربر یافت نشد!'
@@ -1000,7 +1052,9 @@ class UserController extends Controller
     }
 
     public function buy_day(Request $request,$id){
-        $find = User::where('id',$id)->where('creator',auth()->user()->id)->first();
+        $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
+        $sub_agents[] = auth()->user()->id;
+        $find = User::where('id',$id)->whereIn('creator',$sub_agents)->first();
         if(!$find){
             return response()->json([
                 'message' => 'کاربر یافت نشد!'
@@ -1065,6 +1119,7 @@ class UserController extends Controller
             $new->for = auth()->user()->creator;
             $new->save();
         }
+
         SaveActivityUser::send($find->id,auth()->user()->id,'buy_day_for_account',['new' => $request->day,'total' => floor($find->exp_val_minute / 1440) ]);
 
 
