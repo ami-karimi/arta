@@ -30,23 +30,14 @@ class Kernel extends ConsoleKernel
                 $findUser = User::where('username',$item->username)->first();
                 if($findUser) {
                     if($findUser->group->group_type == 'volume') {
-                        $findOrCreateTotals = UserGraph::where('user_id', $findUser->id)->where('date', Carbon::now()->format('Y-m-d'))->first();
-                        if ($findOrCreateTotals) {
-                            $findOrCreateTotals->rx += $item->download_sum;
-                            $findOrCreateTotals->tx += $item->upload_sum;
-                            $findOrCreateTotals->total += $item->total_sum;
-                            $findOrCreateTotals->save();
-                        } else {
-                            UserGraph::create([
-                                'date' => Carbon::now()->format('Y-m-d'),
-                                'user_id' => $findUser->id,
-                                'rx' => $item->download_sum,
-                                'tx' => $item->upload_sum,
-                                'total' => $item->download_sum + $item->upload_sum,
-                            ]);
+                        $findUser->usage += $item->total_sum;
+                        $findUser->download_usage += $item->download_sum;
+                        $findUser->upload_usage += $item->download_sum;
+                        if($findUser->usage >= $findUser->max_usage ){
+                            $findUser->limited = 1;
                         }
+                        $findUser->save();
                     }
-                    RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
 
                 }
 
@@ -54,6 +45,7 @@ class Kernel extends ConsoleKernel
 
 
         })->everyFiveMinutes();
+        /*
         $schedule->call(function () {
             $users = User::whereHas('group',function($query){
                 return $query->where('group_type','volume');
@@ -77,7 +69,7 @@ class Kernel extends ConsoleKernel
                 }
             }
         })->everyTwoHours();
-
+        */
 
         $schedule->call(function () {
             $API        = new Mikrotik();
