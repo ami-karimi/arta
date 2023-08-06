@@ -43,6 +43,7 @@ class ApiController extends Controller
 
     public function index(){
 
+        /*
        $users = User::whereHas('group',function($query){
             return $query->where('group_type','volume');
         })->get();
@@ -67,6 +68,7 @@ class ApiController extends Controller
                }
            }
 
+        */
 
     }
 
