@@ -42,7 +42,7 @@ class ApiController extends Controller
     }
 
     public function index(){
-        /*
+
        $users = User::whereHas('group',function($query){
             return $query->where('group_type','volume');
         })->get();
@@ -53,8 +53,8 @@ class ApiController extends Controller
                $tx = $user->upload_usage;
                $total_use = $rx + $tx;
                if ($total_use > 0) {
-                   $usage = $user->usage + $total_use;
-                   if ($usage >= $user->max_usage) {
+                   $usage = $user->usage ;
+                   if ($total_use >= $user->max_usage) {
                        $user->limited = 1;
                    }else{
                        $user->limited = 0;
@@ -66,7 +66,7 @@ class ApiController extends Controller
                    $user->save();
                }
            }
-        */
+
 
     }
 
