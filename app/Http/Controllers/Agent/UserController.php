@@ -37,8 +37,10 @@ class UserController extends Controller
 
         $user =  User::where('role','user');
         if($request->SearchText){
-            $user->where('name', 'LIKE', "%$request->SearchText%")
-                ->orWhere('username', 'LIKE', "%$request->SearchText%");
+            $text = $request->SearchText;
+            $user->where(function($query) use($text){
+                $query->where('name', 'LIKE', "%$text%") ->orWhere('username', 'LIKE', "%$text%");
+            });
         }
         $user->whereIn('creator',$sub_agents);
 
