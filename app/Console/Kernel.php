@@ -27,6 +27,7 @@ class Kernel extends ConsoleKernel
         })->everySixHours();
 
         $schedule->call(function () {
+            /*
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
             })->where('limited',0)->get();
@@ -44,7 +45,7 @@ class Kernel extends ConsoleKernel
                 }
 
             }
-
+*/
 
         })->everyFiveMinutes();
         /*
