@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Utility\Helper;
 use Illuminate\Http\Request;
 use App\Utility\SendNotificationAdmin;
+use App\Utility\Sms;
 
 class FinancialController extends Controller
 {
@@ -88,6 +89,7 @@ class FinancialController extends Controller
         }
         $save = new Financial();
 
+
         $save->creator = auth()->user()->id;
         $save->for = (auth()->user()->creator ? auth()->user()->creator : auth()->user()->id);
         $save->description = $request->description;
@@ -98,6 +100,8 @@ class FinancialController extends Controller
             $save->attachment = '/attachment/payment/'.$imageName;
         }
         $save->save();
+        $sms = new Sms("09032998586");
+        $sms->SendNewFactore($save->id);
 
         SendNotificationAdmin::send(auth()->user()->id,'financial_create',['price' => $request->price ]);
 
