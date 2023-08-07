@@ -33,6 +33,7 @@ class Kernel extends ConsoleKernel
                 $findUser = User::where('username',$item->username)->first();
                 if($findUser) {
                     if($findUser->group->group_type == 'volume') {
+                        /*
                         $findUser->usage += $item->download_sum + $item->upload_sum;
                         $findUser->download_usage += $item->download_sum;
                         $findUser->upload_usage += $item->upload_sum;
@@ -40,6 +41,7 @@ class Kernel extends ConsoleKernel
                             $findUser->limited = 1;
                         }
                         $findUser->save();
+                        */
                     }
 
                 }
