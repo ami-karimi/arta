@@ -27,7 +27,12 @@ class SmsSend {
        $this->inputData = array('day_left' => $left);
        return $this->Send();
    }
+    public  function SendNewFactore($id){
 
+        $this->pattern_code = '4sadu7kyfdnuhve';
+        $this->inputData = array('number' => $id);
+        return $this->Send();
+    }
 
    public  function Send(){
        $url = $this->url;
