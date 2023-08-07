@@ -55,7 +55,7 @@ class ApiController extends Controller
                 if($item->usage >= $item->max_usage ){
                     $item->limited = 1;
                 }
-                echo $this->formatBytes($findUser[0]['download_sum'] + $findUser[0]['upload_sum']);
+                echo $this->formatBytes($findUser[0]['total_sum'] );
                 echo "</br>";
                // $item->save();
                 //RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
