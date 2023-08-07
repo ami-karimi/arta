@@ -43,6 +43,7 @@ class ApiController extends Controller
     }
 
     public function index(){
+        /*
         $data = User::whereHas('group',function ($query){
             $query->where('group_type','volume');
         })->where('limited',0)->get();
@@ -64,6 +65,7 @@ class ApiController extends Controller
             }
 
         }
+        */
     }
 
     public function save_stogram(Request $request){
