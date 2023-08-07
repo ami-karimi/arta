@@ -58,6 +58,8 @@ class ApiController extends Controller
                 echo $this->formatBytes($findUser[0]['total_sum'] + $findUser[0]['upload_sum']);
 
                 $item->save();
+                echo $item->username;
+                echo "</br>";
                 RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
             }
 
