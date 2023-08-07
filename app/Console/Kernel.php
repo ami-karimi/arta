@@ -27,26 +27,22 @@ class Kernel extends ConsoleKernel
         })->everySixHours();
 
         $schedule->call(function () {
-            $data =  RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
-
+            $data = User::whereHas('group',function ($query){
+                $query->where('group_type','volume');
+            })->get();
             foreach ($data as $item){
-                $findUser = User::where('username',$item->username)->first();
-                if($findUser) {
-                    if($findUser->group->group_type == 'volume') {
-                        /*
-                        $findUser->usage += $item->download_sum + $item->upload_sum;
-                        $findUser->download_usage += $item->download_sum;
-                        $findUser->upload_usage += $item->upload_sum;
-                        if($findUser->usage >= $findUser->max_usage ){
-                            $findUser->limited = 1;
+                $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
+                if(count($findUser)) {
+                        $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
+                        $item->download_usage += $findUser[0]['download_sum'];
+                        $item->upload_usage += $findUser[0]['upload_sum'];
+                        if($item->usage >= $item->max_usage ){
+                            $item->limited = 1;
                         }
-                        $findUser->save();
-                        */
-                    }
-
+                        $item->save();
+                    RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
                 }
-                $item->saved = 1;
-                $item->save();
+
             }
 
 
