@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RadAcct;
 use App\Models\RadPostAuth;
 use App\Models\Ras;
 use App\Models\WireGuardUsers;
@@ -42,7 +43,9 @@ class ApiController extends Controller
     }
 
     public function index(){
+        $data =  RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
+        print_r($data);
         /*
        $users = User::whereHas('group',function($query){
             return $query->where('group_type','volume');
