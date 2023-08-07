@@ -101,7 +101,7 @@ class FinancialController extends Controller
         }
         $save->save();
         $sms = new SmsSend("09032998586");
-        $sms->SendNewFactore($save->id);
+        $sms->SendNewFactore("10254");
 
         SendNotificationAdmin::send(auth()->user()->id,'financial_create',['price' => $request->price ]);
 
