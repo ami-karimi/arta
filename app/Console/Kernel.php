@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
-            })->get();
+            })->where('limited',0)->get();
             foreach ($data as $item){
                 $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
                 if(count($findUser)) {
