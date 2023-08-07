@@ -43,7 +43,7 @@ class ApiController extends Controller
     }
 
     public function index(){
-        $data =  RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username','Hamid3707')->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
+        $data =  RadAcct::where('acctstoptime','!=',NULL)->where('username','Hamid3707')->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
 
         print_r($data);
         echo "</br>";
