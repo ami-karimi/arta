@@ -37,16 +37,16 @@ class AuthController extends Controller
 
     public function sign_in(Request $request){
         if($request->username == ""){
-            return response()->json(['error' => true, 'result' => 'لطفا نام کاربری را وارد نمایید!'],403);
+            return response()->json(['status' => true, 'result' => 'لطفا نام کاربری را وارد نمایید!'],403);
         }
         if($request->password == ""){
-            return response()->json(['error' => true, 'result' => 'لطفا کلمه عبور را وارد نمایید!'],403);
+            return response()->json(['status' => true, 'result' => 'لطفا کلمه عبور را وارد نمایید!'],403);
         }
         $left_date = null;
         $findUser = User::where('username',$request->username)->where('password',$request->password)->first();
         if($findUser){
             if(!$findUser->is_enabled){
-                return response()->json(['error' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!'],403);
+                return response()->json(['status' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!'],403);
             }
 
             $token = new Tokens();
@@ -95,7 +95,7 @@ class AuthController extends Controller
 
 
             return  response()->json([
-               'error' => false,
+               'status' => false,
                'result' =>  [
                   'recommend' => $this->get_reccomecServer(),
                   'token' => $ts->token,
@@ -118,7 +118,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return response()->json(['error' => true, 'result' => 'حساب کابری شما یافت نشد!']);
+        return response()->json(['status' => true, 'result' => 'حساب کابری شما یافت نشد!']);
 
 
     }
@@ -158,20 +158,46 @@ class AuthController extends Controller
 
 
     public function is_valid_token(Request $request){
+
+
         if(!$request->token){
-            return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
+
+            return response()->json([
+               'status' => true,
+                'result' => [
+                    'version' => '1.0.0',
+                    'login'=> true,
+                    'recommend' => [],
+                    'user_type' => null,
+                    'username' => null,
+                    'group_name' => null,
+                    'multi_login' => null,
+                    'online_count' => null,
+                    'expire_date' => null,
+                    'j_expire_date' => null,
+                    'left_day' =>  null,
+                    'left_bandwidth' => null,
+                    'total_bandwidth' => null,
+                    'down_and_up' => null,
+                    'usage' => null,
+                    'expired' => null,
+                    'end_bandwidth' => null,
+                    'user_can_connect' => null,
+                    'count_notification' => null,
+                ]
+            ]);
         }
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
-            return response()->json(['error' => true, 'result' => 'توکن نامعتبر میباشد '],403);
+            return response()->json(['status' => true, 'result' => 'توکن نامعتبر میباشد '],403);
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['error' => true, 'result' => 'کاربر یافت تشد! '],403);
+            return response()->json(['status' => true, 'result' => 'کاربر یافت تشد! '],403);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['error' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+            return response()->json(['status' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
         }
         $expire_date = $findUser->expire_date ;
         $total_bandwidth = 'نامحدود';
@@ -218,8 +244,10 @@ class AuthController extends Controller
 
 
         return  response()->json([
-            'error' => false,
+            'status' => false,
             'result' =>  [
+                'version' => '1.0.0',
+                'login'=> false,
                 'recommend' => $this->get_reccomecServer(),
                 'user_type' => $findUser->group->group_type,
                 'username' => $findUser->username,
@@ -244,19 +272,19 @@ class AuthController extends Controller
 
     public function get_servers(Request $request){
         if(!$request->token){
-            return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
+            return response()->json(['status' => true, 'result' => 'توکن یافت نشد'],403);
         }
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
-            return response()->json(['error' => true, 'result' => 'توکن نامعتبر میباشد '],403);
+            return response()->json(['status' => true, 'result' => 'توکن نامعتبر میباشد '],403);
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['error' => true, 'result' => 'کاربر یافت تشد! '],403);
+            return response()->json(['status' => true, 'result' => 'کاربر یافت تشد! '],403);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['error' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+            return response()->json(['status' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
         }
 
          $serversList = Ras::where('config','!=','')->where('in_app',1)->where('is_enabled',1)->get();
@@ -289,25 +317,25 @@ class AuthController extends Controller
         $server_lists[$key]['selected'] = true;
 
 
-        return response()->json(['error' => false,'result' => $server_lists
+        return response()->json(['status' => false,'result' => $server_lists
         ]);
     }
     public function get_notifications(Request $request){
 
         if(!$request->token){
-            return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
+            return response()->json(['status' => true, 'result' => 'توکن یافت نشد'],403);
         }
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
-            return response()->json(['error' => true, 'result' => 'توکن نامعتبر میباشد '],403);
+            return response()->json(['status' => true, 'result' => 'توکن نامعتبر میباشد '],403);
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['error' => true, 'result' => 'کاربر یافت تشد! '],403);
+            return response()->json(['status' => true, 'result' => 'کاربر یافت تشد! '],403);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['error' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+            return response()->json(['status' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
         }
 
         $notif_count = Blog::where('show_for','mobile')->where('published',1);
@@ -328,7 +356,7 @@ class AuthController extends Controller
             ];
         }
 
-        return response()->json(['error'=> false,'result' => $lists]);
+        return response()->json(['status'=> false,'result' => $lists]);
     }
 
 }
