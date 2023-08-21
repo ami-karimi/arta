@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
+use App\Models\Blog;
 use App\Models\RadAcct;
 use App\Models\Ras;
 use Illuminate\Http\Request;
@@ -96,6 +97,7 @@ class AuthController extends Controller
             return  response()->json([
                'error' => false,
                'result' =>  [
+                  'recommend' => $this->get_reccomecServer(),
                   'token' => $ts->token,
                   'user_type' => $findUser->group->group_type,
                   'username' => $findUser->username,
@@ -121,6 +123,40 @@ class AuthController extends Controller
 
     }
 
+    public function get_reccomecServer(){
+        $serversList = Ras::where('config','!=','')->where('in_app',1)->where('is_enabled',1)->get();
+        $server_lists = [];
+
+        $last_select = 0;
+        $key = 0;
+        foreach ($serversList as $keys =>  $nas){
+            $online_count = $nas->getUsersOnline()->count();
+            $load = 100;
+            $max_online = 120;
+            $tb = ($online_count * 100 ) / $max_online;
+            $end_tb = 100 - $tb;
+            $end_tb =($end_tb < 0 ? 0 : $end_tb);
+            if($end_tb >= $last_select){
+                $last_select = $end_tb;
+                $key = $keys;
+            }
+            $server_lists[] = [
+                'name' =>   $nas->name,
+                'id' => $nas->id,
+                'load' => floor($end_tb),
+                'location' =>   $nas->server_location,
+                'config' => $nas->config,
+                'flag' => $nas->flag,
+                'selected' => false,
+            ];
+        }
+
+        $server_lists[$key]['selected'] = true;
+
+        return $server_lists[$key];
+    }
+
+
     public function is_valid_token(Request $request){
         if(!$request->token){
             return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
@@ -145,6 +181,13 @@ class AuthController extends Controller
         $down_and_up  = '0M/0M';
 
         $end_bandwidth = false;
+        $notif_count = Blog::where('show_for','mobile')->where('published',1);
+        if($request->notif_date){
+            $notif_count->where('created_at','>',Carbon::parse($request->notif_date));
+        }
+
+        $count_not_read = $notif_count->count();
+
         if($findUser->group->group_type == 'volume'){
             $left_bandwidth = $this->formatBytes($findUser->max_usage - $findUser->usage);
             $usage = $this->formatBytes($findUser->usage);
@@ -177,6 +220,7 @@ class AuthController extends Controller
         return  response()->json([
             'error' => false,
             'result' =>  [
+                'recommend' => $this->get_reccomecServer(),
                 'user_type' => $findUser->group->group_type,
                 'username' => $findUser->username,
                 'group_name' => $findUser->group->name,
@@ -192,6 +236,7 @@ class AuthController extends Controller
                 'expired' => $expired,
                 'end_bandwidth' => $end_bandwidth,
                 'user_can_connect' => $user_can_connect,
+                'count_notification' => $count_not_read,
             ]
         ]);
 
@@ -249,6 +294,41 @@ class AuthController extends Controller
     }
     public function get_notifications(Request $request){
 
+        if(!$request->token){
+            return response()->json(['error' => true, 'result' => 'توکن یافت نشد'],403);
+        }
+        $token = new Tokens();
+        $check = $token->checkToken($request->token);
+        if(!$check){
+            return response()->json(['error' => true, 'result' => 'توکن نامعتبر میباشد '],403);
+        }
+        $findUser = User::where('id',$check->user_id)->first();
+        if(!$findUser){
+            return response()->json(['error' => true, 'result' => 'کاربر یافت تشد! '],403);
+        }
+        if(!$findUser->is_enabled){
+            return response()->json(['error' => true, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+        }
+
+        $notif_count = Blog::where('show_for','mobile')->where('published',1);
+        if($request->notif_date){
+            $notif_count->where('created_at','>',Carbon::parse($request->notif_date));
+        }
+
+        $count_not_read = $notif_count->get();
+        $lists = [];
+
+        foreach ($count_not_read as $row){
+            $lists[] = [
+              'id' => $row->id,
+              'title' => $row->title,
+              'content' => $row->content,
+              'j_date' => Jalalian::forge($row->created_at)->format('%B %d، %Y'),
+              'date' =>  Carbon::parse($row->created_at)->format('Y-m-d H:i:s')
+            ];
+        }
+
+        return response()->json(['error'=> false,'result' => $lists]);
     }
 
 }

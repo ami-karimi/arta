@@ -92,6 +92,9 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/index', [\App\Http\Controllers\Admin\MonitorigController::class, 'index']);
             Route::get('/ether/{ip}', [\App\Http\Controllers\Admin\MonitorigController::class, 'ether']);
         });
+        Route::prefix('blog')->group(function () {
+            Route::post('/create', [\App\Http\Controllers\Admin\BlogController::class, 'create']);
+        });
 
         Route::prefix('notifications')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Admin\NotificationController::class, 'dashboard']);
