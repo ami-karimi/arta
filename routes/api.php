@@ -30,8 +30,9 @@ Route::get('/download/{image}', [\App\Http\Controllers\Admin\WireGuardController
 
 Route::prefix('mobile')->group(function () {
     Route::post('/sign-in', [\App\Http\Controllers\Mobile\AuthController::class, 'sign_in'])->name('sign_in');
-    Route::post('/is-token-valid', [\App\Http\Controllers\Mobile\AuthController::class, 'is_valid_token'])->name('is_valid_token');
-    Route::post('/vpn/get/servers', [\App\Http\Controllers\Mobile\AuthController::class, 'get_servers'])->name('get_servers');
+    Route::post('/config', [\App\Http\Controllers\Mobile\AuthController::class, 'is_valid_token'])->name('is_valid_token');
+    Route::post('/servers', [\App\Http\Controllers\Mobile\AuthController::class, 'get_servers'])->name('get_servers');
+    Route::post('/notifications', [\App\Http\Controllers\Mobile\AuthController::class, 'get_notifications'])->name('get_notifications');
 
 
 });

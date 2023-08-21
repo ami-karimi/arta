@@ -15,7 +15,24 @@ class RasController extends Controller
     }
 
     public function create(StoreRasRequest $request){
-        Ras::create($request->all());
+        $all = $request->all();
+        $all['is_enabled'] = ( $request->is_enabled == 'true' ? 1 : 0);
+        $all['unlimited'] = ( $request->unlimited  == 'true' ? 1 : 0);
+        $all['in_app'] = ( $request->in_app == 'true' ? 1 : 0);
+        $all['config'] =   ($request->config ? base64_encode($request->config) : '');
+
+        $flag = null;
+        if($request->has('flag')){
+            if($request->file('flag')){
+                $imageName = time().'.'.$request->flag->extension();
+                $flag =  $request->flag->move(public_path('attachment/flag'), $imageName);
+            }
+
+            $all['flag'] = public_path('attachment/flag/'.$imageName);
+        }
+
+
+        Ras::create($all);
 
         return response()->json(['status' => true,'message' => 'سرور با موفقیت اضافه شد!']);
     }
@@ -25,7 +42,23 @@ class RasController extends Controller
         if(!$find){
             return;
         }
-        $find->update($request->only(['name','secret','ipaddress','unlimited','is_enabled','l2tp_address','server_location','password_v2ray','port_v2ray','username_v2ray','cdn_address_v2ray','server_location']));
+        $req = $request->only(['name','secret','flag','config','ipaddress','in_app','unlimited','is_enabled','l2tp_address','server_location','password_v2ray','port_v2ray','username_v2ray','cdn_address_v2ray','server_location']);
+        $req['is_enabled'] =( $request->is_enabled  == 'true' ? 1 : 0);
+        $req['unlimited'] = ( $request->unlimited  == 'true' ? 1 : 0);
+        $req['in_app'] = (  $request->in_app  == 'true' ? 1 : 0);
+        $req['config'] =   ($request->config ? base64_encode($request->config) : '');
+        $flag = null;
+        if($request->has('flag')){
+            if($request->file('flag')){
+                $imageName = time().'.'.$request->flag->extension();
+                $flag =  $request->flag->move(public_path('attachment/flag'), $imageName);
+            }
+
+            $req['flag'] = url('attachment/flag/'.$imageName);
+        }
+
+
+        $find->update($req);
         return response()->json(['status' => true,'message' => 'سرور با موفقیت بروزرسانی شد!']);
     }
 
