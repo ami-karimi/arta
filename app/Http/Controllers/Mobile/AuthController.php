@@ -53,16 +53,25 @@ class AuthController extends Controller
         }
 
         if($request->username == ""){
-            return response()->json(['status' => false, 'result' => 'لطفا نام کاربری را وارد نمایید!'],403);
+            return response()->json(['status' => false, 'result' => [
+                'login'=> true,
+                'message' => 'لطفا نام کاربری را وارد نمایید',
+            ]],403);
         }
         if($request->password == ""){
-            return response()->json(['status' => false, 'result' => 'لطفا کلمه عبور را وارد نمایید!'],403);
+            return response()->json(['status' => false, 'result' => [
+                'login'=> true,
+                'message' => 'لطفا کلمه عبور را وارد نمایید',
+            ]],403);
         }
         $left_date = null;
         $findUser = User::where('username',$request->username)->where('password',$request->password)->first();
         if($findUser){
             if(!$findUser->is_enabled){
-                return response()->json(['status' => false, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!'],403);
+                return response()->json(['status' => false, 'result' => [
+                    'login'=> true,
+                    'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
+                ]],403);
             }
 
             $token = new Tokens();
@@ -208,14 +217,24 @@ class AuthController extends Controller
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
-            return response()->json(['status' => false, 'result' => 'توکن نامعتبر میباشد '],403);
+            return response()->json(['status' => false, 'result' => [
+                'login'=> true,
+                'message' => 'Invalid token',
+            ]
+            ],400);
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['status' => false, 'result' => 'کاربر یافت تشد! '],403);
+            return response()->json(['status' => false, 'result' =>[
+                'login'=> true,
+                'message' => 'کاربر یافت نشد',
+            ]],403);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['status' => false, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+            return response()->json(['status' => false, 'result' =>[
+                'login'=> true,
+                'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
+            ]]);
         }
         $expire_date = $findUser->expire_date ;
         $total_bandwidth = '∞';
@@ -303,19 +322,32 @@ class AuthController extends Controller
         }
 
         if(!$request->token){
-            return response()->json(['status' => false, 'result' => 'توکن یافت نشد'],403);
+            return response()->json(['status' => false, 'result' => [
+                'login'=> true,
+                'message' => 'Invalid token',
+            ]],403);
         }
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
-            return response()->json(['status' => false, 'result' => 'توکن نامعتبر میباشد '],403);
+            return response()->json(['status' => false, 'result' => [
+                'login'=> true,
+                'message' => 'Invalid token',
+            ]
+            ],400);
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['status' => false, 'result' => 'کاربر یافت تشد! '],403);
+            return response()->json(['status' => false, 'result' =>[
+                'login'=> true,
+                'message' => 'کاربر یافت نشد',
+            ]],403);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['status' => false, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+            return response()->json(['status' => false, 'result' =>[
+                'login'=> true,
+                'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
+            ]]);
         }
 
          $serversList = Ras::where('config','!=','')->where('in_app',1)->where('is_enabled',1)->get();
@@ -356,9 +388,6 @@ class AuthController extends Controller
             return response()->json(['status' => false, 'result' => 'Bad request'],400);
         }
 
-        if(!$request->token){
-            return response()->json(['status' => false, 'result' => 'توکن یافت نشد'],403);
-        }
 
         if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
             return response()->json(['status' => true, 'result' =>
@@ -369,17 +398,33 @@ class AuthController extends Controller
             ],200);
         }
 
+        if(!$request->token){
+            return response()->json(['status' => false, 'result' => [
+                'login'=> true,
+                'message' => 'Invalid token',
+            ]],403);
+        }
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
-            return response()->json(['status' => false, 'result' => 'توکن نامعتبر میباشد '],403);
+            return response()->json(['status' => false, 'result' => [
+                'login'=> true,
+                'message' => 'Invalid token',
+            ]
+            ],400);
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['status' => false, 'result' => 'کاربر یافت تشد! '],403);
+            return response()->json(['status' => false, 'result' =>[
+                'login'=> true,
+                'message' => 'کاربر یافت نشد',
+            ]],403);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['status' => false, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
+            return response()->json(['status' => false, 'result' =>[
+                'login'=> true,
+                'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
+            ]]);
         }
 
         $notif_count = Blog::where('show_for','mobile')->where('published',1);
