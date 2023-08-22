@@ -116,7 +116,7 @@ class AuthController extends Controller
             $count_not_read = $notif_count->count();
 
             return  response()->json([
-               'status' => false,
+               'status' => true,
                'result' =>  [
                    'link' => null,
                   'recommend' => $this->get_reccomecServer(),
@@ -280,7 +280,7 @@ class AuthController extends Controller
 
 
         return  response()->json([
-            'status' => false,
+            'status' => true,
             'result' =>  [
                 'link' => null,
                 'login'=> false,
