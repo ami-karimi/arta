@@ -208,11 +208,12 @@ class AuthController extends Controller
         if(!$request->token){
 
             return response()->json([
-               'status' => true,
+               'status' => false,
                 'result' => [
                     'login'=> true,
+                    'message' => 'Invalid token',
                 ]
-            ]);
+            ],403);
         }
         $token = new Tokens();
         $check = $token->checkToken($request->token);
