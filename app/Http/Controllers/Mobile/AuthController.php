@@ -40,7 +40,7 @@ class AuthController extends Controller
     public function sign_in(Request $request){
 
         if(!$request->version){
-            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+            return response()->json(['status' => false, 'result' => 'Bad request'],400);
         }
 
         if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
@@ -118,7 +118,6 @@ class AuthController extends Controller
             return  response()->json([
                'status' => false,
                'result' =>  [
-                   'version' => $this->version,
                    'link' => null,
                   'recommend' => $this->get_reccomecServer(),
                   'token' => $ts->token,
@@ -184,7 +183,7 @@ class AuthController extends Controller
     public function is_valid_token(Request $request){
 
         if(!$request->version){
-            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+            return response()->json(['status' => false, 'result' => 'Bad request'],400);
         }
 
 
@@ -202,7 +201,6 @@ class AuthController extends Controller
             return response()->json([
                'status' => true,
                 'result' => [
-                    'version' => $this->version,
                     'link' => null,
                     'login'=> true,
                     'recommend' => [],
@@ -284,7 +282,6 @@ class AuthController extends Controller
         return  response()->json([
             'status' => false,
             'result' =>  [
-                'version' => $this->version,
                 'link' => null,
                 'login'=> false,
                 'recommend' => $this->get_reccomecServer(),
@@ -311,7 +308,7 @@ class AuthController extends Controller
 
     public function get_servers(Request $request){
         if(!$request->version){
-            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+            return response()->json(['status' => false, 'result' => 'Bad request'],400);
         }
 
         if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
@@ -374,7 +371,7 @@ class AuthController extends Controller
     }
     public function get_notifications(Request $request){
         if(!$request->version){
-            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+            return response()->json(['status' => false, 'result' => 'Bad request'],400);
         }
 
         if(!$request->token){
@@ -421,7 +418,7 @@ class AuthController extends Controller
             ];
         }
 
-        return response()->json(['status'=> true,'version' => $this->version,'result' => $lists]);
+        return response()->json(['status'=> true,'result' => $lists]);
     }
 
 }
