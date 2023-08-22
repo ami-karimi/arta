@@ -113,7 +113,7 @@ class AuthController extends Controller
                 $notif_count->where('created_at','>',Carbon::parse($request->notif_date));
             }
 
-            $count_not_read = $notif_count->get();
+            $count_not_read = $notif_count->count();
 
             return  response()->json([
                'status' => false,
