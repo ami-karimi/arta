@@ -153,7 +153,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return response()->json(['status' => false, 'result' => 'حساب کابری شما یافت نشد!'],404);
+        return response()->json(['status' => false, 'result' => 'حساب کابری شما یافت نشد!'],403);
 
 
     }
