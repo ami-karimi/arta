@@ -340,16 +340,16 @@ class AuthController extends Controller
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['status' => true, 'result' =>[
+            return response()->json(['status' => false, 'result' =>[
                 'login'=> true,
                 'message' => 'کاربر یافت نشد',
-            ]]);
+            ]],404);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['status' => true, 'result' =>[
+            return response()->json(['status' => false, 'result' =>[
                 'login'=> true,
                 'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
-            ]]);
+            ]],403);
         }
 
          $serversList = Ras::where('config','!=','')->where('in_app',1)->where('is_enabled',1)->get();
@@ -417,16 +417,16 @@ class AuthController extends Controller
         }
         $findUser = User::where('id',$check->user_id)->first();
         if(!$findUser){
-            return response()->json(['status' => true, 'result' =>[
+            return response()->json(['status' => false, 'result' =>[
                 'login'=> true,
                 'message' => 'کاربر یافت نشد',
-            ]]);
+            ]],404);
         }
         if(!$findUser->is_enabled){
-            return response()->json(['status' => true, 'result' =>[
+            return response()->json(['status' => false, 'result' =>[
                 'login'=> true,
                 'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
-            ]]);
+            ]],403);
         }
 
         $notif_count = Blog::where('show_for','mobile')->where('published',1);
