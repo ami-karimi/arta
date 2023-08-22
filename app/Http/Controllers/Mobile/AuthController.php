@@ -14,6 +14,9 @@ use Morilog\Jalali\Jalalian;
 
 class AuthController extends Controller
 {
+
+    public $version = '1.0';
+
     public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
     {
         $base = log($size, 1024);
@@ -92,11 +95,18 @@ class AuthController extends Controller
                 $user_can_connect = false;
             }
 
+            $notif_count = Blog::where('show_for','mobile')->where('published',1);
+            if($request->notif_date){
+                $notif_count->where('created_at','>',Carbon::parse($request->notif_date));
+            }
 
+            $count_not_read = $notif_count->get();
 
             return  response()->json([
                'status' => false,
                'result' =>  [
+                   'version' => $this->version,
+                   'link' => null,
                   'recommend' => $this->get_reccomecServer(),
                   'token' => $ts->token,
                   'user_type' => $findUser->group->group_type,
@@ -114,6 +124,7 @@ class AuthController extends Controller
                   'expired' => $expired,
                   'end_bandwidth' => $end_bandwidth,
                   'user_can_connect' => $user_can_connect,
+                   'count_notification' => $count_not_read,
                  ]
             ]);
         }
@@ -165,7 +176,8 @@ class AuthController extends Controller
             return response()->json([
                'status' => true,
                 'result' => [
-                    'version' => '1.0.0',
+                    'version' => $this->version,
+                    'link' => null,
                     'login'=> true,
                     'recommend' => [],
                     'user_type' => null,
@@ -246,7 +258,8 @@ class AuthController extends Controller
         return  response()->json([
             'status' => false,
             'result' =>  [
-                'version' => '1.0.0',
+                'version' => $this->version,
+                'link' => null,
                 'login'=> false,
                 'recommend' => $this->get_reccomecServer(),
                 'user_type' => $findUser->group->group_type,
@@ -356,7 +369,7 @@ class AuthController extends Controller
             ];
         }
 
-        return response()->json(['status'=> false,'result' => $lists]);
+        return response()->json(['status'=> false,'version' => $this->version,'result' => $lists]);
     }
 
 }
