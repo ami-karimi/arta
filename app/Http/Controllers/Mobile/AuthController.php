@@ -44,7 +44,7 @@ class AuthController extends Controller
         }
 
         if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
-            return response()->json(['status' => false, 'result' =>
+            return response()->json(['status' => true, 'result' =>
                 [
               'update'=> true,
               'link' => 'https://www.arta20.xyz/download/last.apk',
@@ -188,7 +188,7 @@ class AuthController extends Controller
 
 
         if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
-            return response()->json(['status' => false, 'result' =>
+            return response()->json(['status' => true, 'result' =>
                 [
                     'update'=> true,
                     'link' => 'https://www.arta20.xyz/download/last.apk',
@@ -294,7 +294,7 @@ class AuthController extends Controller
         }
 
         if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
-            return response()->json(['status' => false, 'result' =>
+            return response()->json(['status' => true, 'result' =>
                 [
                     'update'=> true,
                     'link' => 'https://www.arta20.xyz/download/last.apk',
@@ -361,7 +361,7 @@ class AuthController extends Controller
         }
 
         if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
-            return response()->json(['status' => false, 'result' =>
+            return response()->json(['status' => true, 'result' =>
                 [
                     'update'=> true,
                     'link' => 'https://www.arta20.xyz/download/last.apk',
