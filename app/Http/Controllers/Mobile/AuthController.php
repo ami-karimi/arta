@@ -14,8 +14,7 @@ use Morilog\Jalali\Jalalian;
 
 class AuthController extends Controller
 {
-
-    public $version = '1.0';
+    public $ANDROID_AVAILABLE_VERSIONS =["0.1","1.0","2.0"];
 
     public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
     {
@@ -39,6 +38,20 @@ class AuthController extends Controller
     }
 
     public function sign_in(Request $request){
+
+        if(!$request->version){
+            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+        }
+
+        if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
+            return response()->json(['status' => false, 'result' =>
+                [
+              'update'=> true,
+              'link' => 'https://www.arta20.xyz/download/last.apk',
+            ]
+            ],200);
+        }
+
         if($request->username == ""){
             return response()->json(['status' => false, 'result' => 'لطفا نام کاربری را وارد نمایید!'],403);
         }
@@ -62,8 +75,8 @@ class AuthController extends Controller
                 $findUser->first_login = Carbon::now();
                 $findUser->save();
             }
-            $left_bandwidth = 'نامحدود';
-            $total_bandwidth = 'نامحدود';
+            $left_bandwidth = '∞';
+            $total_bandwidth = '∞';
             $usage = '---';
             $down_and_up  = '0M/0M';
 
@@ -170,6 +183,19 @@ class AuthController extends Controller
 
     public function is_valid_token(Request $request){
 
+        if(!$request->version){
+            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+        }
+
+
+        if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
+            return response()->json(['status' => false, 'result' =>
+                [
+                    'update'=> true,
+                    'link' => 'https://www.arta20.xyz/download/last.apk',
+                ]
+            ],200);
+        }
 
         if(!$request->token){
 
@@ -212,9 +238,9 @@ class AuthController extends Controller
             return response()->json(['status' => false, 'result' => 'حساب کاربری شما غیر فعال میباشد لطفا با مدیر تماس بگیرید!']);
         }
         $expire_date = $findUser->expire_date ;
-        $total_bandwidth = 'نامحدود';
+        $total_bandwidth = '∞';
 
-        $left_bandwidth = 'نامحدود';
+        $left_bandwidth = '∞';
         $usage = '---';
         $down_and_up  = '0M/0M';
 
@@ -284,6 +310,19 @@ class AuthController extends Controller
     }
 
     public function get_servers(Request $request){
+        if(!$request->version){
+            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+        }
+
+        if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
+            return response()->json(['status' => false, 'result' =>
+                [
+                    'update'=> true,
+                    'link' => 'https://www.arta20.xyz/download/last.apk',
+                ]
+            ],200);
+        }
+
         if(!$request->token){
             return response()->json(['status' => false, 'result' => 'توکن یافت نشد'],403);
         }
@@ -334,10 +373,23 @@ class AuthController extends Controller
         ]);
     }
     public function get_notifications(Request $request){
+        if(!$request->version){
+            return response()->json(['status' => false, 'result' => 'ورژن یافت نشد!'],403);
+        }
 
         if(!$request->token){
             return response()->json(['status' => false, 'result' => 'توکن یافت نشد'],403);
         }
+
+        if(!in_array($request->version,$this->ANDROID_AVAILABLE_VERSIONS)){
+            return response()->json(['status' => false, 'result' =>
+                [
+                    'update'=> true,
+                    'link' => 'https://www.arta20.xyz/download/last.apk',
+                ]
+            ],200);
+        }
+
         $token = new Tokens();
         $check = $token->checkToken($request->token);
         if(!$check){
