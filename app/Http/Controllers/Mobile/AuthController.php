@@ -73,7 +73,7 @@ class AuthController extends Controller
                 return response()->json(['status' => true, 'result' => [
                     'login'=> true,
                     'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
-                ]],200);
+                ]],403);
             }
 
             $token = new Tokens();
@@ -153,7 +153,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return response()->json(['status' => false, 'result' => 'حساب کابری شما یافت نشد!'],403);
+        return response()->json(['status' => false, 'result' => 'حساب کابری شما یافت نشد!'],404);
 
 
     }
