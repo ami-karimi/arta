@@ -201,25 +201,7 @@ class AuthController extends Controller
             return response()->json([
                'status' => true,
                 'result' => [
-                    'link' => null,
                     'login'=> true,
-                    'recommend' => [],
-                    'user_type' => null,
-                    'username' => null,
-                    'group_name' => null,
-                    'multi_login' => null,
-                    'online_count' => null,
-                    'expire_date' => null,
-                    'j_expire_date' => null,
-                    'left_day' =>  null,
-                    'left_bandwidth' => null,
-                    'total_bandwidth' => null,
-                    'down_and_up' => null,
-                    'usage' => null,
-                    'expired' => null,
-                    'end_bandwidth' => null,
-                    'user_can_connect' => null,
-                    'count_notification' => null,
                 ]
             ]);
         }
