@@ -16,6 +16,8 @@ class AuthController extends Controller
 {
     public $ANDROID_AVAILABLE_VERSIONS =["0.1","1.0"];
 
+    public $panel_link = 'https://www.arta20.top/t/';
+
     public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
     {
         $base = log($size, 1024);
@@ -130,6 +132,7 @@ class AuthController extends Controller
                    'link' => null,
                   'recommend' => $this->get_reccomecServer(),
                   'token' => $ts->token,
+                  'panel_link'=> $this->panel_link.$ts->token,
                   'user_type' => $findUser->group->group_type,
                   'username' => $findUser->username,
                   'group_name' => $findUser->group->name,
@@ -286,6 +289,7 @@ class AuthController extends Controller
             'result' =>  [
                 'link' => null,
                 'login'=> false,
+                'panel_link'=> $this->panel_link.$request->token,
                 'recommend' => $this->get_reccomecServer(),
                 'user_type' => $findUser->group->group_type,
                 'username' => $findUser->username,
