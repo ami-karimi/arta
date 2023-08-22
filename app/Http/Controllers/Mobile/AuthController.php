@@ -56,13 +56,11 @@ class AuthController extends Controller
 
         if($request->username == ""){
             return response()->json(['status' => false, 'result' => [
-                'login'=> true,
                 'message' => 'لطفا نام کاربری را وارد نمایید',
             ]],200);
         }
         if($request->password == ""){
-            return response()->json(['status' => true, 'result' => [
-                'login'=> true,
+            return response()->json(['status' => false, 'result' => [
                 'message' => 'لطفا کلمه عبور را وارد نمایید',
             ]],200);
         }
@@ -70,8 +68,7 @@ class AuthController extends Controller
         $findUser = User::where('username',$request->username)->where('password',$request->password)->first();
         if($findUser){
             if(!$findUser->is_enabled){
-                return response()->json(['status' => true, 'result' => [
-                    'login'=> true,
+                return response()->json(['status' => false, 'result' => [
                     'message' => 'اکانت شما غیرفعال شده است لطفا جهت رفع مشکل با مدیریت تماس بگیرید',
                 ]],403);
             }
