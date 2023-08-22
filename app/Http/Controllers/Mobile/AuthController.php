@@ -14,7 +14,7 @@ use Morilog\Jalali\Jalalian;
 
 class AuthController extends Controller
 {
-    public $ANDROID_AVAILABLE_VERSIONS =["0.1","1.0","2.0"];
+    public $ANDROID_AVAILABLE_VERSIONS =["0.1","1.0"];
 
     public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
     {
