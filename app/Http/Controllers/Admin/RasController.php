@@ -19,7 +19,7 @@ class RasController extends Controller
         $all['is_enabled'] = ( $request->is_enabled == 'true' ? 1 : 0);
         $all['unlimited'] = ( $request->unlimited  == 'true' ? 1 : 0);
         $all['in_app'] = ( $request->in_app == 'true' ? 1 : 0);
-        $all['config'] =   ($request->config ? base64_encode($request->config) : '');
+        $all['config'] =   ($request->config ? base64_encode(preg_replace("/\r\n\r\n|\r\r|\n\n/",'\n',$request->config)) : '');
 
         $flag = null;
         if($request->has('flag')){
@@ -46,7 +46,7 @@ class RasController extends Controller
         $req['is_enabled'] =( $request->is_enabled  == 'true' ? 1 : 0);
         $req['unlimited'] = ( $request->unlimited  == 'true' ? 1 : 0);
         $req['in_app'] = (  $request->in_app  == 'true' ? 1 : 0);
-        $req['config'] =   ($request->config ? base64_encode($request->config) : '');
+        $req['config'] =   ($request->config ? base64_encode( preg_replace("/\r\n\r\n|\r\r|\n\n/",'\n',$request->config)) : '');
         $flag = null;
         if($request->has('flag')){
             if($request->file('flag')){
