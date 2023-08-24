@@ -370,13 +370,13 @@ class AuthController extends Controller
              }
 
              $config_convert = base64_decode($nas->config);
-             $sr = preg_replace("/\n/m", '\n', $config_convert);
+             $sr = preg_replace("  ", '\n', $config_convert);
              $server_lists[] = [
                'name' =>   $nas->name,
                'id' => $nas->id,
                'load' => floor($end_tb),
                'location' =>   $nas->server_location,
-               'config' => nl2br($sr),
+               'config' => $sr,
                'flag' => $nas->flag,
                'selected' => false,
              ];
