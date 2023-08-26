@@ -177,7 +177,7 @@ class AuthController extends Controller
                 'id' => $nas->id,
                 'load' => floor($end_tb),
                 'location' =>   $nas->server_location,
-                'config' => base64_encode($nas->config),
+                'server_address' => $nas->l2tp_address,
                 'flag' => $nas->flag,
                 'selected' => false,
             ];
@@ -369,7 +369,6 @@ class AuthController extends Controller
                  $key = $keys;
              }
 
-             $config_convert = $nas->config;
              $server_lists[] = [
                'name' =>   $nas->name,
                'id' => $nas->id,
