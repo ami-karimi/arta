@@ -156,7 +156,7 @@ class AuthController extends Controller
     }
 
     public function get_reccomecServer(){
-        $serversList = Ras::where('config','!=','')->where('in_app',1)->where('is_enabled',1)->get();
+        $serversList = Ras::where('in_app',1)->where('is_enabled',1)->get();
         $server_lists = [];
 
         $last_select = 0;
@@ -352,7 +352,7 @@ class AuthController extends Controller
             ]],403);
         }
 
-         $serversList = Ras::where('config','!=','')->where('in_app',1)->where('is_enabled',1)->get();
+         $serversList = Ras::where('in_app',1)->where('is_enabled',1)->get();
          $server_lists = [];
 
          $last_select = 0;
