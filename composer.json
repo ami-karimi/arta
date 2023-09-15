@@ -13,6 +13,7 @@
         "laravel/sanctum": "^3.2",
         "laravel/tinker": "^2.8",
         "morilog/jalali": "3.*",
+        "parsisolution/gateway": "^1.6",
         "php-open-source-saver/jwt-auth": "^2.1",
         "protonemedia/inertiajs-tables-laravel-query-builder": "^2.2",
         "spatie/laravel-query-builder": "^5.2",

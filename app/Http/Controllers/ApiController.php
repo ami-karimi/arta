@@ -19,6 +19,7 @@ use App\Models\Activitys;
 use App\Models\AcctSaved;
 use App\Utility\Sms;
 
+
 class ApiController extends Controller
 {
     public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
@@ -43,11 +44,7 @@ class ApiController extends Controller
     }
 
     public function index(){
-        /*
-       $acc = RadAcct::where('acctstoptime','!=',NULL)->where('username','sahar8642')->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
-      echo $this->formatBytes($acc[0]['total_sum']);
-       print_r($acc);
-        */
+    
     }
 
     public function save_stogram(Request $request){

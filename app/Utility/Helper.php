@@ -264,7 +264,6 @@ class Helper
                 'id' => $row->id,
                 'name' => $row->name,
                 'multi_login' => $row->multi_login,
-                'reseler_price' => $reseler_price,
                 'price_for_reseler' => ($can_see ? $re_sell_price : 0),
                 'cmorgh_price' => $row->price,
                 'price' => $price,

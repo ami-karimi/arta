@@ -212,6 +212,7 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::POST('/kill_user', [\App\Http\Controllers\Agent\UserController::class, 'kill_user']);
                 Route::POST('/buy_volume/{id}', [\App\Http\Controllers\Agent\UserController::class, 'buy_volume']);
                 Route::POST('/buy_day/{id}', [\App\Http\Controllers\Agent\UserController::class, 'buy_day']);
+                Route::get('/get_users_form_date', [\App\Http\Controllers\Agent\UserController::class, 'get_users_form_date']);
 
             });
             Route::prefix('radius')->group(function () {

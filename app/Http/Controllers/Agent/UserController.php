@@ -1132,5 +1132,34 @@ class UserController extends Controller
         return response()->json(['status' => false,'message' => "با موفقیت مقدار روز ".$request->day." به اکانت اضافه شد."]);
     }
 
+    public function get_users_form_date(){
+        $sub_agents = [];
+
+        if(!auth()->user()->creator){
+            $sub_agents =  User::where('creator',auth()->user()->id)->where('role','agent')->select(['name','id'])->get();
+        }
+        $groups_list = array_filter(Helper::GetReselerGroupList('list',false,auth()->user()->id),function($item){
+            return $item['status'] == true;
+        });
+
+
+        $servers = Ras::select(['name','flag','server_location','id'])->get();
+
+        $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
+        $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
+
+        $incom  = $icom_user - $minus_income;
+
+
+
+        return response()->json([
+            'credit' => $incom,
+            'sub_agents' => $sub_agents,
+            'groups_list' => $groups_list,
+            'servers'=>  $servers
+        ]);
+
+
+    }
 
 }
