@@ -1138,12 +1138,16 @@ class UserController extends Controller
         if(!auth()->user()->creator){
             $sub_agents =  User::where('creator',auth()->user()->id)->where('role','agent')->select(['name','id'])->get();
         }
-        $groups_list = array_filter(Helper::GetReselerGroupList('list',false,auth()->user()->id),function($item){
-            return $item['status'] == true;
+        $s = array_filter(Helper::GetReselerGroupList('list',false,auth()->user()->id),function($item){
+            return $item['status'];
         });
+        foreach ($s as $row){
+            $groups_list[]   = $row;
+        }
 
 
-        $servers = Ras::select(['name','flag','server_location','id'])->get();
+
+        $servers = Ras::select(['name','flag','server_location','id'])->withCount('WireGuards')->where('unlimited',1)->get();
 
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
         $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
@@ -1155,7 +1159,7 @@ class UserController extends Controller
         return response()->json([
             'credit' => $incom,
             'sub_agents' => $sub_agents,
-            'groups_list' => $groups_list,
+            'groups_list' =>  $groups_list,
             'servers'=>  $servers
         ]);
 
