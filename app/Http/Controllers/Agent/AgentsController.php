@@ -117,6 +117,7 @@ class AgentsController extends Controller
             return response()->json(['message' => 'گروه مورد نظر یافت نشد!']);
         }
 
+
         ReselerMeta::updateOrCreate([
             'reseler_id' => $agent->creator_name->id,
             'key' => 'disabled_group_'.$findGroup['id']."_for_".$request->agent_id,
@@ -124,7 +125,7 @@ class AgentsController extends Controller
             [
                 'reseler_id' => $agent->creator_name->id,
                 'key' => 'disabled_group_'.$findGroup['id']."_for_".$request->agent_id,
-                'value' => $request->item['status'],
+                'value' => (!$request->item['status'] ? 2 : 1),
             ]);
 
 

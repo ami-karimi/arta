@@ -55,10 +55,19 @@ class AgentDetailResource extends JsonResource
         $incom  =  $icom_user - $minus_income;
 
 
-        $priceList = array_filter(Helper::GetReselerGroupList('list',false,$this->id),function($item){
-            return $item['status'] == true;
-        });
+        $priceList = Helper::GetReselerGroupList('list',false,$this->id) ;
 
+        if(auth()->user()->role == 'agent') {
+            if (auth()->user()->creator) {
+                $priceList = array_filter($priceList, function ($item) {
+                    return $item['status_code'] !== "2" && $item['status_code'] !== "0";
+                });
+            } else {
+                $priceList = array_filter($priceList, function ($item) {
+                    return $item['status_code'] !== "3"  && $item['status_code'] !== "0";
+                });
+            }
+        }
 
         return [
             'price_lists' => $priceList,
@@ -79,7 +88,7 @@ class AgentDetailResource extends JsonResource
             'all_users_expire' =>  $this->when($this->agent_users !== null, $this->agent_users->where('expire_date','!=',NULL)->where('expire_date','<=',Carbon::now('Asia/Tehran'))->count()),
             'agent_income' =>  number_format($incom),
             'block' =>  number_format($block),
-            'price_list' => $map_price,
+            'price_list' => [],
         ];
     }
 }

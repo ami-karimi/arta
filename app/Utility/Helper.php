@@ -190,30 +190,31 @@ class Helper
         $group_lists = Groups::get();
 
 
-          $user = User::where('id',$for)->first();
-          $sub_agent = null;
-          if($user) {
-              $sub_agent = ($user->creator ? $user->creator : $user->id);
+        $user = User::where('id',$for)->first();
+        $sub_agent = null;
+        if($user) {
+            $sub_agent = ($user->creator ? $user->creator : $user->id);
 
-          }
-
-
-          $Reselermetas = ReselerMeta::select(['key', 'value']);
-          $Reselermetas->where('reseler_id', ($for ? $sub_agent : auth()->user()->id));
-          $Reselermetas =   $Reselermetas->get();
+        }
 
 
-          $RsMtFull = Helper::toArray($Reselermetas);
+        $Reselermetas = ReselerMeta::select(['key', 'value']);
+        $Reselermetas->where('reseler_id', ($for ? $sub_agent : auth()->user()->id));
+        $Reselermetas =   $Reselermetas->get();
+
+
+        $RsMtFull = Helper::toArray($Reselermetas);
 
 
 
-          $group_re = [];
+        $group_re = [];
 
-         foreach ($group_lists as $row) {
+        foreach ($group_lists as $row) {
             $price = $row->price;
             $reseler_price =  self::getMePrice($row->id,$for,false,true);
             $re_sell_price =  self::getMePrice($row->id,$for,true);
             $enable = true;
+            $dis_status = 1;
 
             if(isset($RsMtFull['reseler_price_' . $row->id])){
                 $reseler_price =  $RsMtFull['reseler_price_' . $row->id];
@@ -230,9 +231,15 @@ class Helper
             }
 
 
-             if(isset($RsMtFull['disabled_group_' . $row->id])){
-                 $enable = (boolean) $RsMtFull['disabled_group_' . $row->id];
-             }
+            if(isset($RsMtFull['disabled_group_' . $row->id])){
+                $dis_status = $RsMtFull['disabled_group_' . $row->id];
+                if($RsMtFull['disabled_group_' . $row->id] == "1"){
+                    $enable = true;
+                }else{
+                    $enable = false;
+                }
+
+            }
 
             if($for){
                 if (isset($RsMtFull['price_for_reseler_' . $row->id."_for_".$for])) {
@@ -240,7 +247,12 @@ class Helper
                 }
 
                 if(isset($RsMtFull['disabled_group_' . $row->id."_for_".$for])){
-                    $enable = (boolean) $RsMtFull['disabled_group_' . $row->id."_for_".$for];
+                    $dis_status = $RsMtFull['disabled_group_' . $row->id."_for_".$for];
+                    if($RsMtFull['disabled_group_' . $row->id."_for_".$for] == "1"){
+                        $enable = true;
+                    }else{
+                        $enable = false;
+                    }
                 }
 
                 if($user->creator !== auth()->user()->id  && auth()->user()->creator && $user->creator || auth()->user()->role == 'admin' &&  $user->creator ){
@@ -264,10 +276,12 @@ class Helper
                 'id' => $row->id,
                 'name' => $row->name,
                 'multi_login' => $row->multi_login,
+                'reseler_price' => $reseler_price,
                 'price_for_reseler' => ($can_see ? $re_sell_price : 0),
                 'cmorgh_price' => $row->price,
                 'price' => $price,
-                'status' => $enable
+                'status' => $enable,
+                'status_code' => $dis_status,
             ];
 
 

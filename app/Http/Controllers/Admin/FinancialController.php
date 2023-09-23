@@ -212,7 +212,7 @@ class FinancialController extends Controller
                 [
                     'reseler_id' => $agent->id,
                     'key' => 'disabled_group_' . $findGroup['id'],
-                    'value' => $request->item['status'],
+                    'value' => (!$request->item['status'] ? 3 : 1),
                 ]);
 
 

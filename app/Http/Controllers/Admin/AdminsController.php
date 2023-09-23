@@ -65,14 +65,13 @@ class AdminsController extends Controller
         */
         $AllOnlineCount = RadAcct::where('acctstoptime',NULL)->get()->count();
 
-        /*
 
         $total_month = Financial::whereIn('type',['plus','minus_amn'])->where('approved',1)->whereMonth('created_at', Carbon::now()->month)->get()->sum('price');
         $total_day = Financial::whereIn('type',['plus','minus_amn'])->where('approved',1)->whereDay('created_at', Carbon::now()->day)->get()->sum('price');
 
 
 
-        //*
+         /*
         $chart_data = [];
         $chart_data[] = [
              'label' => 'دانلود',

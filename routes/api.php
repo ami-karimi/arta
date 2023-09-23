@@ -199,6 +199,7 @@ Route::middleware(['auth:api'])->group(function () {
             });
             Route::prefix('users')->group(function () {
                 Route::get('/list', [\App\Http\Controllers\Agent\UserController::class, 'index']);
+                Route::post('/create_v2', [\App\Http\Controllers\Agent\UserController::class, 'create_v2']);
                 Route::post('/group_deactive', [\App\Http\Controllers\Agent\UserController::class, 'group_deactive']);
                 Route::post('/group_active', [\App\Http\Controllers\Agent\UserController::class, 'group_active']);
                 Route::get('/show/{id}', [\App\Http\Controllers\Agent\UserController::class, 'show']);

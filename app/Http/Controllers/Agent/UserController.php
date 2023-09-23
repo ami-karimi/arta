@@ -154,7 +154,6 @@ class UserController extends Controller
 
         return $result ." ". $suffixes;
     }
-
     public function show($id){
         $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
         $sub_agents[] = auth()->user()->id;
@@ -1138,9 +1137,16 @@ class UserController extends Controller
         if(!auth()->user()->creator){
             $sub_agents =  User::where('creator',auth()->user()->id)->where('role','agent')->select(['name','id'])->get();
         }
-        $s = array_filter(Helper::GetReselerGroupList('list',false,auth()->user()->id),function($item){
-            return $item['status'];
-        });
+        $s = Helper::GetReselerGroupList('list',false,auth()->user()->id);
+        if (auth()->user()->creator) {
+            $s = array_filter($s, function ($item) {
+                return $item['status_code'] !== "2" && $item['status_code'] !== "0";
+            });
+        } else {
+            $s = array_filter($s, function ($item) {
+                return $item['status_code'] !== "3"  && $item['status_code'] !== "0";
+            });
+        }
         foreach ($s as $row){
             $groups_list[]   = $row;
         }
@@ -1149,10 +1155,8 @@ class UserController extends Controller
 
         $servers = Ras::select(['name','flag','server_location','id'])->withCount('WireGuards')->where('unlimited',1)->get();
 
-        $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
-        $icom_user = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['plus'])->sum('price');
 
-        $incom  = $icom_user - $minus_income;
+        $incom  = Helper::getIncome(auth()->user()->id);
 
 
 
@@ -1165,5 +1169,392 @@ class UserController extends Controller
 
 
     }
+
+    public function create_v2(Request $request){
+
+        $group_account = false;
+        $creator = false;
+        if($request->creator){
+            $sub_agents =  User::where('creator',auth()->user()->id)->where('id',$request->creator)->where('role','agent')->select(['name','id'])->first();
+            if(!$sub_agents){
+                return response()->json(['status' => false,'message' => 'خطا ! زیر نماینده یافت نشد!'],403);
+            }
+            $creator = $sub_agents->id;
+        }
+        if(!$request->type){
+            return response()->json(['status' => false,'message' => 'لطفا نوع اکانت را انتخاب نمایید!'],403);
+        }
+
+        if(!$request->group_id){
+            return response()->json(['status' => false,'message' => 'لطفا گروه کاربری را انتخاب نمایید!'],403);
+        }
+        $find_group = Helper::GetReselerGroupList('one',$request->group_id,auth()->user()->id);
+        if(!$find_group){
+            return response()->json(['status' => false,'message' => 'گروه کاربری یافت نشد!'],403);
+        }
+        $price = $find_group['reseler_price'];
+
+        $creator_price = 0;
+        $income = 0;
+
+        if(!$request->numbers){
+            return response()->json(['status' => false,'message' => 'لطفا تعداد اکانت درخواستی را انتخاب نمایید!'],403);
+        }
+        $numbers = (int) $request->numbers;
+        $total_price = $numbers * $price;
+        $total_price_creator = 0;
+
+        if(auth()->user()->creator){
+            $income = Helper::getIncome(auth()->user()->creator);
+            $creator_price = Helper::GetReselerGroupList('one',$request->group_id,auth()->user()->creator)['reseler_price'];
+            $total_price_creator = $numbers * $creator_price;
+
+            if($income <  $total_price_creator){
+                return response()->json([
+                    'message' => 'به دلیل نداشتن موجودی مدیر پنل امکان انجام عملیات وجود ندارد!'
+                ],403);
+            }
+        }
+
+
+        $incom_sub  = Helper::getIncome(auth()->user()->id);
+
+        if($total_price > $incom_sub){
+            return response()->json(['message' => 'موجودی شما برای ایجاد اکانت کافی نمیباشد لطفا جهت افزایش موجودی به بخش امور مالی بروید!'],403);
+
+        }
+
+
+
+        if(!$find_group['status']){
+            return response()->json(['status' => false,'message' => 'گروه کاربری برای شما یافت نشد!'],403);
+        }
+
+
+        if(!$request->username){
+            return response()->json(['status' => false,'message' => 'لطفا نام کاربری را وارد نمایید!'],403);
+        }
+        $usernamePattern = '/^[a-zA-Z0-9_]+$/';
+        if (!preg_match($usernamePattern, $request->username)) {
+            $message = 'نام کاربری میتواند متشکل از اعداد و حروف انگلیسی A-Z و _ باشد!';
+            return response()->json(['status' => false,'message' => $message],403);
+        }
+
+        if($request->random_password ){
+           if(!$request->password){
+               return response()->json(['status' => false,'message' => 'لطفا تعداد کاراکتر رمز را وارد نمایید بصورت عددی'],403);
+           }
+       }else{
+           if(!$request->password){
+               return response()->json(['status' => false,'message' => 'لطفا کلمه عبور را وارد نمایید'],403);
+           }
+
+            if(strlen($request->password) < 4 || strlen($request->password) > 8 ){
+                return response()->json(['status' => false,'message' => 'کلمه عبور میبایست کمتر از 4 کارکتر و بیشتر از 8 کاراکتر باشد.'],403);
+            }
+       }
+        if($request->type == 'wireguard'){
+            if(!$request->server_id){
+                return response()->json(['status' => false,'message' => 'لطفا سرور وارد گارد را انتخاب نمایید'],403);
+            }
+        }
+
+
+        if($request->numbers > 1){
+            if(!$request->start_of){
+                return response()->json(['status' => false,'message' => 'لطفا در بخش مشخصات پنل کاربری / اطلاعات ورود (شروع شمارش) را وارد نمایید.'],403);
+            }
+
+            if($request->start_of < 1 || $request->start_of > 500){
+                return response()->json(['status' => false,'message' => 'حداقل شروع شمارش از 1 میباشد وبیشترین از 500.'],403);
+            }
+
+            $group_account = true;
+        }
+
+        if(strlen($request->username) < 3 || strlen($request->username) > 10 ){
+            return response()->json(['status' => false,'message' => 'کلمه عبور میبایست کمتر از 3 کارکتر و بیشتر از 10 کاراکتر باشد.'],403);
+        }
+
+        if($request->phone_number){
+            if(!preg_match('/^(09){1}[0-9]{9}+$/', $request->phone_number)){
+                return response()->json(['message' => 'لطفا یک شماره تماس معتبر وارد نمایید همراه با 0 باشد!'],403);
+            }
+        }
+
+
+
+
+        $username_List = [];
+
+        if($group_account){
+            $start_of = (int) $request->start_of ;
+            $endOF = $request->numbers + $start_of;
+           // if(!($start_of % 2)){
+              //  $endOF =  $endOF;
+           // }
+
+            $username = $request->username;
+
+            for ($i= $start_of; $i < $endOF;$i++) {
+                $buildUsername = $username . $i;
+                $findUsername = User::where('username', $buildUsername)->first();
+                if ($findUsername) {
+                    return response()->json(['status' => false, 'نام کاربری ' . $buildUsername . ' موجود میباشد!']);
+                }
+                $password = $request->password;
+                if ($request->random_password) {
+                    $password = substr(rand(0, 99999), 0, (int)$request->password);
+                }
+
+                $username_List[] = ['username' => $buildUsername,'group' => $username."(".$start_of."-".$endOF.")", 'password' => $password];
+            }
+
+        }else {
+            $findUsername = User::where('username', $request->username)->first();
+            if($findUsername){
+                return response()->json(['message' => 'کاربری با نام کاربری '.$findUsername.' در دیتابیس موجود است ! لطفا نام کاربری دیگری وارد نمایید .'],403);
+            }
+            $password = $request->password;
+            if ($request->random_password) {
+                $password = substr(rand(0, 99999), 0, (int)$request->password);
+            }
+            $username_List[] = ['username' => $request->username,'group' => $request->username,'password' => $password];
+        }
+
+
+        $status = false;
+
+        // L2tp / Openvpn Account Create
+        if($request->type === 'other'){
+            $creator = ($creator ? $creator : auth()->user()->id);
+            $status = $this->CreateOtherAccount($username_List,$creator,$request->group_id,[
+                'name' => ($request->name ? $request->name : false),
+                'phonenumber' => ($request->phone_number ? $request->phone_number : false),
+            ]);
+        }
+
+        // wireGuard Account Create
+
+        if($request->type === 'wireguard'){
+            $creator = ($creator ? $creator : auth()->user()->id);
+
+            $status = $this->CreateWireGuardAccountV2($username_List,$creator,$request->group_id,[
+                'name' => ($request->name ? $request->name : false),
+                'server_id' => $request->server_id,
+                'phonenumber' => ($request->phone_number ? $request->phone_number : false),
+            ]);
+        }
+
+
+        if($status){
+            $texts = ($group_account ? 'کسر بابت ایجاد اکانت گروهی '.$username_List[0]['group'] : 'کسر بابت ایجاد اکانت '.$request->username );
+            $new =  new Financial;
+            $new->type = 'minus';
+            $new->price = $total_price;
+            $new->approved = 1;
+            $new->description = $texts;
+            $new->creator = 2;
+            $new->for = auth()->user()->id;
+            $new->save();
+
+            if(auth()->user()->creator){
+
+                $text = ($group_account ? 'گروهی'.$username_List[0]['group'] : 'تک اکانت'.$request->username );
+
+                $new =  new Financial;
+                $new->type = 'minus';
+                $new->price = $total_price_creator;
+                $new->approved = 1;
+                $new->description = 'کسر بابت ایجاد اکانت زیر نماینده به شناسه:  '.auth()->user()->id." ( ".auth()->user()->name." ) ".$text;
+                $new->creator = 2;
+                $new->for = auth()->user()->creator;
+                $new->save();
+            }
+
+
+            return response()->json(['status' => true,'result' => $status]);
+        }
+
+
+        return response()->json(['message' => 'خطا در ایجاد کاربران لطفا مجددا تلاش نمایید !'],500);
+
+    }
+
+    public function CreateOtherAccount($username_List = [],$creator = false,$group_id = 0,$data){
+
+        $findGroup = Groups::where('id',$group_id)->first();
+
+        $saved_users = [];
+
+
+        foreach ($username_List as $row) {
+            $req_all = [];
+
+            if($data['name']){
+                $req_all['name'] = $data['name'];
+            }
+
+            if($data['phonenumber']){
+                $req_all['phonenumber'] = $data['phonenumber'];
+            }
+
+            if ($findGroup->expire_type !== 'no_expire') {
+                if ($findGroup->expire_type == 'minutes') {
+                    $req_all['exp_val_minute'] = $findGroup->expire_value;
+                } elseif ($findGroup->expire_type == 'month') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
+
+                } elseif ($findGroup->expire_type == 'days') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
+
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
+
+                } elseif ($findGroup->expire_type == 'year') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage']  = @round(((((int) $findGroup->group_volume *1024) * 1024) * 1024 )) ;
+                    }
+                }
+            }
+            if($findGroup->group_type == 'expire' || $findGroup->group_type == 'volume') {
+                $req_all['expire_value'] = $findGroup->expire_value;
+                $req_all['expire_type'] = $findGroup->expire_type;
+                $req_all['expire_set'] = 0;
+                $req_all['multi_login'] = $findGroup->multi_login;
+
+
+                if($findGroup->group_type == 'volume') {
+                    $req_all['multi_login'] = 5;
+                    $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+                }
+
+            }
+
+
+
+            $req_all['password'] = $row['password'];
+            $req_all['username'] = $row['username'];
+
+            $req_all['creator'] = $creator;
+            $req_all['group_id'] = $group_id;
+
+
+
+            $user = User::create($req_all);
+            if($user) {
+                $saved_users[] = ['id' => $user->id ,'username' => $row['username'],'password' => $row['password']];
+                $req_all['username'] = $row['username'];
+                $req_all['password'] = $row['password'];
+                $req_all['groups'] = $row['group'];
+                $req_all['creator'] = $creator;
+                AcctSaved::create($req_all);
+                SaveActivityUser::send($user->id, auth()->user()->id, 'create');
+            }
+
+        }
+
+        if(count($saved_users) > 0){
+            return $saved_users;
+        }
+
+        return false;
+
+
+    }
+
+    public function CreateWireGuardAccountV2($username_List = [],$creator = false,$group_id = 0,$data){
+
+        $findGroup = Groups::where('id',$group_id)->first();
+
+
+        foreach ($username_List as $row) {
+            $req_all = [];
+            $req_all['username'] = $row['username'];
+            $req_all['password'] = $row['password'];
+            $req_all['groups'] = $row['group'];
+            $req_all['creator'] = $creator;
+            AcctSaved::create($req_all);
+            if($data['name']){
+                $req_all['name'] = $data['name'];
+            }
+
+            if($data['phonenumber']){
+                $req_all['phonenumber'] = $data['phonenumber'];
+            }
+            $req_all['group_id'] = $group_id;
+
+
+
+            if ($findGroup->expire_type !== 'no_expire') {
+                if ($findGroup->expire_type == 'minutes') {
+                    $req_all['exp_val_minute'] = $findGroup->expire_value;
+
+                } elseif ($findGroup->expire_type == 'month') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                    $req_all['max_usage']  = @round(((((int) 100 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
+                } elseif ($findGroup->expire_type == 'days') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                    $req_all['max_usage']  = @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                    $req_all['max_usage']  = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                } elseif ($findGroup->expire_type == 'year') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                    $req_all['max_usage']  = @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+
+                }
+            }
+
+            $req_all['multi_login'] = 1;
+            $req_all['service_group'] = 'wireguard';
+
+            if($findGroup->group_type == 'expire') {
+                $req_all['expire_value'] = $findGroup->expire_value;
+                $req_all['expire_type'] = $findGroup->expire_type;
+                $req_all['expire_date'] = Carbon::now()->addMinutes($req_all['exp_val_minute']);
+                $req_all['first_login'] = Carbon::now();
+                $req_all['expire_set'] = 1;
+            }
+
+            $user = User::create($req_all);
+            if($user) {
+                $create_wr = new WireGuard($data['server_id'], $req_all['username']);
+
+                $user_wi = $create_wr->Run();
+                if($user_wi['status']) {
+                    $saved = new  WireGuardUsers();
+                    $saved->profile_name = $user_wi['config_file'];
+                    $saved->user_id = $user->id;
+                    $saved->server_id = $data['server_id'];
+                    $saved->public_key = $user_wi['client_public_key'];
+                    $saved->user_ip = $user_wi['ip_address'];
+                    $saved->save();
+                    exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
+
+
+                    return new WireGuardConfigCollection(WireGuardUsers::where('user_id',$user->id)->get());
+                }
+                $user->delete();
+            }
+        }
+
+
+        return false;
+    }
+
+
 
 }

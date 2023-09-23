@@ -16,11 +16,19 @@ class AgentController extends Controller
 
     public function GetGroups(){
         $ar = Helper::GetReselerGroupList('list',false,auth()->user()->id );
+        if (auth()->user()->creator) {
+            $ar = array_filter($ar, function ($item) {
+                return $item['status_code'] !== "2" && $item['status_code'] !== "0";
+            });
+        } else {
+            $ar = array_filter($ar, function ($item) {
+                return $item['status_code'] !== "3"  && $item['status_code'] !== "0";
+            });
+        }
+
         return response()->json([
                'can_agent' => (auth()->user()->creator ? false : true),
-               'data' => array_filter($ar,function($item){
-                   return $item['status'] == true;
-               }),
+               'data' => $ar,
             ]);
     }
     public function edit(Request $request,$group_id){
