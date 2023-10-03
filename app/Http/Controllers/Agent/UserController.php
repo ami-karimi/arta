@@ -261,6 +261,22 @@ class UserController extends Controller
             $servers = Ras::select(['name','ipaddress','server_location','l2tp_address','id'])->where('unlimited',($userDetial->group->group_type == 'volume' ? 0 : 1))->get();
         }
 
+        $groups_list = [];
+        $s = Helper::GetReselerGroupList('list',false,auth()->user()->id);
+        if (auth()->user()->creator) {
+            $s = array_filter($s, function ($item) {
+                return $item['status_code'] !== "2" && $item['status_code'] !== "0";
+            });
+        } else {
+            $s = array_filter($s, function ($item) {
+                return $item['status_code'] !== "3"  && $item['status_code'] !== "0";
+            });
+        }
+        foreach ($s as $row){
+            $groups_list[]   = $row;
+        }
+
+
         return  response()->json([
             'status' => true,
             'servers' => $servers,
@@ -296,7 +312,7 @@ class UserController extends Controller
                 'service_group' => $userDetial->service_group,
 
             ],
-            'groups' => Groups::select('name','id')->get(),
+            'groups' => $groups_list,
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
         ]);
 
