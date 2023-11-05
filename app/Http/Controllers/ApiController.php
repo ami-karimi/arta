@@ -18,7 +18,9 @@ use App\Models\UserGraph;
 use App\Models\Activitys;
 use App\Models\AcctSaved;
 use App\Utility\Sms;
-
+use phpseclib3\Net\SSH2;
+use phpseclib3\Exception\UnableToConnectException;
+use App\Utility\SshServer;
 
 class ApiController extends Controller
 {
@@ -44,7 +46,21 @@ class ApiController extends Controller
     }
 
     public function index(){
-    
+
+            $ssh = new SshServer('20.174.1.79');
+            if($result = $ssh->CheckConnect()['status']){
+                $onlines = $ssh->getOnlineCount('');
+                print_r($onlines);
+
+                //$first = $ssh->getFirstLoginUser('vpn');
+                //print_r($first);
+
+               // $online = $ssh->getLastLoginUser('vpn');
+               // print_r($online);
+            }
+    }
+    public function ping(){
+        return response()->json(['status' => true,'result' => 'pong']);
     }
 
     public function save_stogram(Request $request){

@@ -28,6 +28,8 @@ Route::get('/login', function(){
 
 Route::get('/download/{image}', [\App\Http\Controllers\Admin\WireGuardController::class, 'download']);
 
+
+
 Route::prefix('mobile')->group(function () {
     Route::post('/sign-in', [\App\Http\Controllers\Mobile\AuthController::class, 'sign_in'])->name('sign_in');
     Route::post('/config', [\App\Http\Controllers\Mobile\AuthController::class, 'is_valid_token'])->name('is_valid_token');
@@ -38,6 +40,19 @@ Route::prefix('mobile')->group(function () {
 
 });
 
+Route::middleware(['trust_api'])->group(function () {
+    Route::prefix('telegram')->group(function () {
+        Route::get('/service_group', [\App\Http\Controllers\Telegram\ApiController::class, 'get_service']);
+        Route::get('/service_child/{id}', [\App\Http\Controllers\Telegram\ApiController::class, 'get_service_child']);
+        Route::get('/service_info/{parent_id}/{child_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'getServiceInfo']);
+        Route::get('/service_info/{parent_id}/{child_id}/{server_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'getServiceANDServer']);
+        Route::get('/get_server/{type}', [\App\Http\Controllers\Telegram\ApiController::class, 'get_server']);
+        Route::post('/place_order', [\App\Http\Controllers\Telegram\ApiController::class, 'place_order']);
+        Route::get('/check_last_order/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'check_last_order']);
+        Route::post('/order_remove/{user_id}/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'order_remove']);
+
+    });
+});
 Route::middleware(['auth:api'])->group(function () {
 
 

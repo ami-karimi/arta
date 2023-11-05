@@ -9,6 +9,8 @@ use App\Models\ReselerMeta;
 use App\Models\UserMetas;
 use App\Models\PriceReseler;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Settings;
 
 class Helper
 {
@@ -316,6 +318,25 @@ class Helper
         return $incom;
     }
 
+    public static function GetSettings(){
+        $value = Cache::rememberForever('settings', function () {
+            return Settings::get()->toArray();
+        });
 
+
+        return $value;
+    }
+
+
+    public static function s($key){
+        $setting = self::GetSettings();
+        $key = array_search($key, array_column($setting, 'key'));
+
+        if(!$key){
+            return false;
+        }
+
+        return $setting[$key]['value'];
+    }
 }
 

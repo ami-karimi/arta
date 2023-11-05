@@ -15,6 +15,7 @@
         "morilog/jalali": "3.*",
         "parsisolution/gateway": "^1.6",
         "php-open-source-saver/jwt-auth": "^2.1",
+        "phpseclib/phpseclib": "^3.0",
         "protonemedia/inertiajs-tables-laravel-query-builder": "^2.2",
         "spatie/laravel-query-builder": "^5.2",
         "tightenco/ziggy": "^1.0"
