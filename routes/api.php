@@ -50,6 +50,8 @@ Route::middleware(['trust_api'])->group(function () {
         Route::post('/place_order', [\App\Http\Controllers\Telegram\ApiController::class, 'place_order']);
         Route::get('/check_last_order/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'check_last_order']);
         Route::post('/order_remove/{user_id}/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'order_remove']);
+        Route::get('/get_cart_number', [\App\Http\Controllers\Telegram\ApiController::class, 'get_cart_number']);
+        Route::post('/change_order_status/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'change_order_status']);
 
     });
 });

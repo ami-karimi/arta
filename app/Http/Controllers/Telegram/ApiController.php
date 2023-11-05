@@ -8,6 +8,9 @@ use App\Models\ServiceGroup;
 use App\Models\ServiceChilds;
 use App\Models\Ras;
 use App\Models\TelegramOrders;
+use App\Models\CardNumbers;
+use App\Models\TelegramUsers;
+use App\Models\TelegramUserService;
 
 class ApiController extends Controller
 {
@@ -69,7 +72,7 @@ class ApiController extends Controller
 
     }
     public function check_last_order($user_id){
-        $find = TelegramOrders::where('user_id',$user_id)->where('status','pending_payment')->first();
+        $find = TelegramOrders::where('user_id',$user_id)->whereIn('status',['pending_payment','pending_approved'])->first();
         $result = false;
         if($find){
             $name = "🔰";
@@ -105,7 +108,22 @@ class ApiController extends Controller
         );
     }
     public function place_order(Request $request){
+        $find_user = TelegramUsers::where('user_id',$request->user_id)->first();
+
+        if(!$find_user){
+            TelegramUsers::create(
+                [
+                    'user_id' => $request->user_id,
+                    'fullname' => $request->fullname,
+                    'username' => $request->username,
+                ]
+            );
+        }
+
         TelegramOrders::create($request->only(['user_id','fullname','service_id','child_id','server_id','price','ng_price']));
+
+
+
     }
 
     public function order_remove($user_id,$order_id){
@@ -116,5 +134,33 @@ class ApiController extends Controller
                 'result' => true
             ]
         );
+    }
+
+    public function get_cart_number(){
+        $cart = CardNumbers::select(['card_number_name','card_number','card_number_bank'])->where('for',0)->where('is_enabled',1)->first();
+
+        if($cart){
+            $cart->card_number = str_replace('-','',$cart->card_number);
+        }
+       return response()->json(
+           [
+               'status' => true,
+               'result' => $cart
+           ]
+       );
+    }
+
+    public function change_order_status($order_id,Request $request){
+        if(!$request->status){
+            return response()->json(['status' => false,'result' => 'Server Not Found'],502);
+        }
+        $find_order = TelegramOrders::where('id',$order_id)->first();
+        if(!$find_order){
+            return response()->json(['status' => false,'result' => 'Order Not Found'],404);
+        }
+        $find_order->status = $request->status;
+        $find_order->save();
+        return response()->json(['status' => true]);
+
     }
 }
