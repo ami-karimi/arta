@@ -52,6 +52,8 @@ Route::middleware(['trust_api'])->group(function () {
         Route::post('/order_remove/{user_id}/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'order_remove']);
         Route::get('/get_cart_number', [\App\Http\Controllers\Telegram\ApiController::class, 'get_cart_number']);
         Route::post('/change_order_status/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'change_order_status']);
+        Route::post('/accept_order/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'accept_order']);
+        Route::get('/manage_service/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'manage_service']);
 
     });
 });

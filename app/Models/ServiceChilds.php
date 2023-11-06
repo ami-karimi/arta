@@ -11,4 +11,8 @@ class ServiceChilds extends Model
     protected $table = 'service_childs';
     protected $guarded = ['id'];
     public $timestamps = false;
+
+    public function parent(){
+        return $this->hasOne(ServiceGroup::class,'id','group_id');
+    }
 }
