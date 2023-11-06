@@ -127,7 +127,7 @@ class ApiController extends Controller
     }
 
     public function order_remove($user_id,$order_id){
-        TelegramOrders::where('user_id',(string) $user_id)->where('id',$order_id)->where('status','pending_payment')->delete();
+        TelegramOrders::where('user_id',(string) $user_id)->where('id',$order_id)->whereIn('status',['pending_payment','pending_approved'])->delete();
         return response()->json(
             [
                 'status' => true,
