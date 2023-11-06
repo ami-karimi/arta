@@ -21,16 +21,20 @@ class ServiceCollection extends ResourceCollection
             'status' => true,
             'result' => $this->collection->map(function($item){
                 $childName = "";
+                $left =  ( $item->expire_set ? Jalalian::forge($item->first_login)->__toString() : false);
+                $expired =  ($left ? ($left <= 0 ? 1 : 0 ): 0);
                 $re = [
                     'id' => $item->id,
                     'username' => $item->username,
                     'password' => $item->password,
+                    'status_account' => ($expired ? 2 : $item->is_enabled),
                     'service_group' => $item->service_group,
                     'expire_set' => $item->expire_set,
                     'expire_date' => ( $item->expire_set ? Jalalian::forge($item->expire_date)->__toString()  : false ),
-                    'time_left' => ( $item->expire_set ? Carbon::now()->diffInDays($item->expire_date, false)  : false),
+                    'time_left' => $left,
                     'first_login' =>  ( $item->expire_set ? Jalalian::forge($item->first_login)->__toString() : false),
                     'service_id' =>   $item->tg_group->parent->id,
+                    'expired' =>  $expired,
                     'service_name' =>   $item->tg_group->parent->name,
                     'group_data' => [
                         'id' => $item->tg_group->id,

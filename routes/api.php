@@ -54,6 +54,7 @@ Route::middleware(['trust_api'])->group(function () {
         Route::post('/change_order_status/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'change_order_status']);
         Route::post('/accept_order/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'accept_order']);
         Route::get('/manage_service/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'manage_service']);
+        Route::post('/manage_service_setting/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'manage_service_setting']);
 
     });
 });

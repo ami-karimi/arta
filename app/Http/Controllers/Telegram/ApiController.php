@@ -18,6 +18,7 @@ use App\Models\TelegramUsers;
 use App\Models\TelegramUserService;
 use Morilog\Jalali\Jalalian;
 use App\Http\Resources\Telegram\ServiceCollection;
+use App\Http\Resources\Telegram\ServiceResource;
 
 
 class ApiController extends Controller
@@ -309,6 +310,38 @@ class ApiController extends Controller
 
 
         return new ServiceCollection($find_service);
+
+
+    }
+
+    public function manage_service_setting($user_id,Request $request){
+        if(!$request->service_id){
+            return  response()->json(
+                [
+                    'data' =>    [
+                        'status' => false,
+                        'result' => 'Error',
+
+                    ]
+                ],502
+            );
+        }
+        $find_service = User::where('tg_user_id',$user_id)->where('id',$request->service_id)->where('role','user')->first();
+
+        if(!$find_service){
+            return  response()->json(
+             [
+                 'data' =>    [
+                     'status' => false,
+                     'result' => 'No Active Service',
+
+                 ]
+             ],404
+            );
+        }
+
+
+        return new ServiceResource($find_service);
 
 
     }
