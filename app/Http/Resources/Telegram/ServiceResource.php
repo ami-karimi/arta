@@ -32,12 +32,14 @@ class ServiceResource extends JsonResource
             'first_login' =>  ( $this->expire_set ? Jalalian::forge($this->first_login)->__toString() : false),
             'service_id' =>   $this->tg_group->parent->id,
             'expired' =>  $expired,
+            'service_parent_id' =>   $this->tg_group->parent->id,
             'service_name' =>   $this->tg_group->parent->name,
             'group_data' => [
                 'id' => $this->tg_group->id,
                 'multi_login' => $this->tg_group->multi_login,
                 'days' => $this->tg_group->days,
                 'volume' => $this->tg_group->volume,
+                'base_price' => $this->tg_group->price,
             ]
         ];
 
@@ -46,7 +48,6 @@ class ServiceResource extends JsonResource
             $re['server_location'] = $this->wg->server->server_location;
             $re['config_qr'] = url('/configs/'.$this->wg->profile_name.".png");
             $re['config_conf'] = url('/configs/'.$this->wg->profile_name.".conf");
-
         }
 
         return $re;

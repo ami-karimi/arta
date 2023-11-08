@@ -49,12 +49,18 @@ Route::middleware(['trust_api'])->group(function () {
         Route::get('/get_server/{type}', [\App\Http\Controllers\Telegram\ApiController::class, 'get_server']);
         Route::post('/place_order', [\App\Http\Controllers\Telegram\ApiController::class, 'place_order']);
         Route::get('/check_last_order/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'check_last_order']);
+        Route::get('/check_last_order/{user_id}/{type}', [\App\Http\Controllers\Telegram\ApiController::class, 'check_last_order']);
         Route::post('/order_remove/{user_id}/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'order_remove']);
+        Route::post('/order_remove/{user_id}/{order_id}/{type}', [\App\Http\Controllers\Telegram\ApiController::class, 'order_remove']);
         Route::get('/get_cart_number', [\App\Http\Controllers\Telegram\ApiController::class, 'get_cart_number']);
         Route::post('/change_order_status/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'change_order_status']);
         Route::post('/accept_order/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'accept_order']);
         Route::get('/manage_service/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'manage_service']);
         Route::post('/manage_service_setting/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'manage_service_setting']);
+
+
+        Route::post('/recharge_account/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'recharge_account']);
+
 
     });
 });

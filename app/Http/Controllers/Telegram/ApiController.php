@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Financial;
 use App\Models\User;
 use App\Models\WireGuardUsers;
+use App\Utility\SaveActivityUser;
 use App\Utility\WireGuard;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -80,8 +81,8 @@ class ApiController extends Controller
 
 
     }
-    public function check_last_order($user_id){
-        $find = TelegramOrders::where('user_id',$user_id)->whereIn('status',['pending_payment','pending_approved'])->first();
+    public function check_last_order($user_id,$type = 'new'){
+        $find = TelegramOrders::where('user_id',$user_id)->where('order_type',$type)->whereIn('status',['pending_payment','pending_approved'])->first();
         $result = false;
         if($find){
             $name = "🔰";
@@ -137,6 +138,13 @@ class ApiController extends Controller
             $user_id = $find_user->id;
         }
 
+        if($request->order_type == 'recharge' && $request->build_id){
+            TelegramOrders::where('user_id',$request->user_id)
+                ->where('sync_id',$user_id)
+                ->where('order_type','recharge')
+                ->where('status','pending_payment')
+                ->where('build_id',$request->build_id)->delete();
+        }
 
         $order = new TelegramOrders();
         $order->user_id = $request->user_id;
@@ -144,9 +152,13 @@ class ApiController extends Controller
         $order->service_id = $request->service_id;
         $order->child_id = $request->child_id;
         $order->server_id = $request->server_id;
+        $order->order_type = $request->order_type;
         $order->price = $request->price;
         $order->ng_price = $request->ng_price;
         $order->sync_id = $user_id;
+        if($request->build_id){
+            $order->build_id = $request->build_id;
+        }
         $order->save();
 
         return response()->json([
@@ -157,9 +169,8 @@ class ApiController extends Controller
             ]
         ]);
     }
-
-    public function order_remove($user_id,$order_id){
-        TelegramOrders::where('user_id',(string) $user_id)->where('id',$order_id)->whereIn('status',['pending_payment','pending_approved'])->delete();
+    public function order_remove($user_id,$order_id,$type = 'new'){
+        TelegramOrders::where('user_id',(string) $user_id)->where('id',$order_id)->where('order_type',$type)->whereIn('status',['pending_payment','pending_approved'])->delete();
         return response()->json(
             [
                 'status' => true,
@@ -167,7 +178,6 @@ class ApiController extends Controller
             ]
         );
     }
-
     public function get_cart_number(){
         $cart = CardNumbers::select(['card_number_name','card_number','card_number_bank'])->where('for',0)->where('is_enabled',1)->first();
 
@@ -181,7 +191,6 @@ class ApiController extends Controller
            ]
        );
     }
-
     public function change_order_status($order_id,Request $request){
         if(!$request->status){
             return response()->json(['status' => false,'result' => 'Server Not Found'],502);
@@ -195,9 +204,8 @@ class ApiController extends Controller
         return response()->json(['status' => true]);
 
     }
-
     public function accept_order($order_id,Request $request){
-        $find_order = TelegramOrders::where('id',$order_id)->whereIn('status',['pending_payment','pending_approved'])->first();
+        $find_order = TelegramOrders::where('id',$order_id)->where('order_type','new')->whereIn('status',['pending_payment','pending_approved'])->first();
         if(!$find_order){
             return response()->json(['status' => false,'result' => 'Order Not Found'],404);
         }
@@ -212,7 +220,13 @@ class ApiController extends Controller
             $req_all['first_login'] = Carbon::now();
             $req_all['expire_set'] = 1;
         }else{
+            $days = $find_order->child->days;
+            $req_all['exp_val_minute'] = floor($days * 1440);
             $req_all['expire_set'] = 0;
+        }
+
+        if($find_order->child->volume > 0){
+            $req_all['max_usage'] = @round(((((int)$find_order->child->volume * 1024) * 1024) * 1024));
         }
 
         $req_all['expire_value'] = $find_order->child->days;
@@ -291,8 +305,6 @@ class ApiController extends Controller
 
 
     }
-
-
     public function manage_service($user_id){
         $find_service = User::where('tg_user_id',$user_id)->where('role','user')->get();
 
@@ -313,7 +325,6 @@ class ApiController extends Controller
 
 
     }
-
     public function manage_service_setting($user_id,Request $request){
         if(!$request->service_id){
             return  response()->json(
@@ -342,6 +353,117 @@ class ApiController extends Controller
 
 
         return new ServiceResource($find_service);
+
+
+    }
+
+
+    public function recharge_account($order_id){
+       $order =  TelegramOrders::where('id',$order_id)->where('order_type','recharge')->whereIn('status',['pending_approved'])->first();
+       if(!$order){
+           return response()->json([
+               'status' => false,
+               'result' => 'Not Find Order',
+           ]);
+       }
+
+        $findUser = User::where('id',$order->build_id)->first();
+       if(!$findUser){
+           return response()->json([
+               'status' => false,
+               'result' => 'Not Find User',
+           ]);
+       }
+
+
+
+       $service_type = $order->service->type;
+
+       // For Wireguard Account
+        if($service_type == 'wireguard'){
+           $days = $order->child->days;
+           $findUser->exp_val_minute = floor($days * 1440);
+           $findUser->expire_date = Carbon::now()->addMinutes($findUser->exp_val_minute);
+           $findUser->first_login = Carbon::now();
+           $findUser->expire_set = 1;
+
+           if($findUser->wg){
+               $mik = new WireGuard($findUser->wg->server_id,'null');
+               $peers = $mik->getUser($findUser->wg->public_key);
+               if($peers['status']){
+                   $status =  $mik->ChangeConfigStatus($findUser->wg->public_key,1);
+                   if($status['status']) {
+                       SaveActivityUser::send($findUser->id, 0, 'active_status', ['status' => 0]);
+                   }
+               }
+           }
+       }
+        if($service_type == 'l2tp_cisco'){
+            $days = $order->child->days;
+            $findUser->exp_val_minute = floor($days * 1440);
+            $findUser->expire_value = 'days';
+            $findUser->expire_date = NULL;
+            $findUser->first_login = NULL;
+            $findUser->expire_set = 0;
+        }
+
+
+        if( $order->child->volume > 0){
+            $findUser->max_usage  = @round(((((int) $order->child->volume *1024) * 1024) * 1024 )  * $findUser->group->expire_value) * $findUser->group->multi_login;
+        }
+        $findUser->usage = 0;
+        $findUser->download_usage = 0;
+        $findUser->expired = 0;
+        $findUser->upload_usage = 0;
+
+
+
+       if($findUser->expire_date !== NULL) {
+            $last_time_s = (int) Carbon::now()->diffInDays($findUser->expire_date, false);
+            if ($last_time_s > 0) {
+                $findUser->exp_val_minute += floor($last_time_s * 1440);
+                SaveActivityUser::send($findUser->id,0,'add_left_day',['day' => $last_time_s]);
+            }
+        }
+
+
+        SaveActivityUser::send($findUser->id,0,'re_charge');
+        $findUser->limited = 0;
+        $findUser->save();
+
+        $new =  new Financial;
+        $new->type = 'plus';
+        $new->price = $order->price;
+        $new->approved = 1;
+        $new->description = 'افزایش موجودی جهت شارژ اکانت حساب از طریق تلگرام';
+        $new->creator = 2;
+        $new->for = $order->sync_id;
+        $new->save();
+
+        $new =  new Financial;
+        $new->type = 'minus';
+        $new->price = $order->price;
+        $new->approved = 1;
+        $new->description = 'کسر بابت شارژ اکانت از طریق تلگرام '.$order->username;
+        $new->creator = 2;
+        $new->for = $order->sync_id;
+        $new->save();
+
+        $order->status = 'order_complate';
+        $order->save();
+
+
+        return  response()->json(
+            [
+                'status' => true,
+                'result' => [
+                    'username' => $findUser->username,
+                    'expire_date' => ($service_type == 'wireguard' ? Jalalian::forge($findUser->expire_date)->__toString($findUser->expire_date)  : false ),
+                ],
+
+            ]
+        );
+
 
 
     }

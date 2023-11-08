@@ -698,7 +698,9 @@ class UserController extends Controller
             }
         }
 
-
+        $findUser->usage = 0;
+        $findUser->download_usage = 0;
+        $findUser->upload_usage = 0;
         SaveActivityUser::send($findUser->id,auth()->user()->id,'re_charge');
         $findUser->limited = 0;
 
