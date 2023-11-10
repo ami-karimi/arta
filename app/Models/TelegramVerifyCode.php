@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TelegramUserService extends Model
+class TelegramVerifyCode extends Model
 {
     use HasFactory;
 
-    protected $table = 'tg_users_service_id';
-
+    protected $table = 'tg_verify_code';
+    protected $guarded = ['id'];
     public $timestamps = false;
 }

@@ -17,6 +17,7 @@ class ServiceCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
+
         return [
             'status' => true,
             'result' => $this->collection->map(function($item){
@@ -36,6 +37,7 @@ class ServiceCollection extends ResourceCollection
                     'service_id' =>   $item->tg_group->parent->id,
                     'expired' =>  $expired,
                     'service_name' =>   $item->tg_group->parent->name,
+                    'group_name' =>   $item->group->name,
                     'group_data' => [
                         'id' => $item->tg_group->id,
                         'multi_login' => $item->tg_group->multi_login,
@@ -53,8 +55,8 @@ class ServiceCollection extends ResourceCollection
                 }
                 return $re;
             }),
-            'active_count' => User::where('tg_user_id',$request->user_id)->where('expire_date','>',Carbon::now('Asia/Tehran'))->count(),
-            'expired_count' => User::where('tg_user_id',$request->user_id)->where('expire_date','<',Carbon::now('Asia/Tehran'))->count(),
+            'active_count' => User::where('tg_user_id',(int) $request->user_id)->where('expire_date','>',Carbon::now('Asia/Tehran'))->count(),
+            'expired_count' => User::where('tg_user_id',(int)  $request->user_id)->where('expire_date','<',Carbon::now('Asia/Tehran'))->count(),
         ];
     }
 }

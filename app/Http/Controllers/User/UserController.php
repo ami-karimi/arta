@@ -21,7 +21,7 @@ use App\Models\UserMetas;
 use App\Models\ReselerMeta;
 use App\Utility\Helper;
 use App\Utility\SaveActivityUser;
-
+use App\Models\TelegramVerifyCode;
 
 class UserController extends Controller
 {
@@ -276,8 +276,6 @@ class UserController extends Controller
 
        return new GetServerCollection(Ras::where('is_enabled',1)->orderBy('name','DESC')->get());
    }
-
-
    public function get_groups(){
        $ballance = Financial::where('for',auth()->user()->id)->where('approved',1)->where('type','plus')->get()->sum('price');
        $ballance_minus = Financial::where('for',auth()->user()->id)->where('approved',1)->where('type','minus')->get()->sum('price');
@@ -295,11 +293,9 @@ class UserController extends Controller
 
          ]);
    }
-
    public function get_group(){
        return response()->json(Helper::getGroupPriceReseler('one',auth()->user()->group_id));
    }
-
    public function charge_account(Request $request){
        $findGroups = Helper::getGroupPriceReseler('one',$request->id,true);
        if(!$findGroups){
@@ -390,4 +386,61 @@ class UserController extends Controller
        ]);
 
    }
+
+
+   public function tg_verify_code_create(){
+      $find_last =  TelegramVerifyCode::where('user_id',auth()->user()->id)->first();
+
+       if($find_last){
+           if($find_last->status == 'use'){
+               $find_user = User::where('tg_user_id',$find_last->tg_user_id)->where('service_group','telegram')->first();
+               return  response()->json([
+                   'status' => true,
+                   'result' => [
+                       'verify_code' => false,
+                       'expired' =>   false,
+                       'tg_user_id' => $find_user->tg_user_id,
+                       'name' =>    $find_user->name,
+                   ]
+               ]);
+           }
+           if($find_last->expired_at > time()){
+               return  response()->json([
+                   'status' => true,
+                   'result' => [
+                       'tg_user_id' => false,
+                       'name' =>    false,
+                       'verify_code' => $find_last->verify_code,
+                       'expired' =>    $find_last->expired_at - time(),
+                   ]
+               ]);
+           }
+       }
+
+       $verifyCode = substr(random_int(1111,99999999999999),1,6);
+       $expire = time() + 180;
+       TelegramVerifyCode::updateOrCreate([
+           'user_id' => auth()->user()->id,
+       ],[
+           'user_id' => auth()->user()->id,
+           'verify_code' => $verifyCode,
+           'status' => 'active',
+           'expired_at' => time() + 180
+       ]);
+
+
+       return  response()->json([
+           'status' => true,
+           'result' => [
+             'tg_user_id' => false,
+              'name' =>    false,
+             'verify_code' => $verifyCode,
+             'expired' =>   $expire - time(),
+           ]
+       ]);
+
+
+
+   }
+
 }

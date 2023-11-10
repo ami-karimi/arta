@@ -230,6 +230,7 @@ class ApiController extends Controller
         }
 
         $req_all['expire_value'] = $find_order->child->days;
+        $req_all['group_id'] = $find_order->child->general_group_id;
         $req_all['expire_type'] = 'days';
         $req_all['multi_login'] = $find_order->child->multi_login;
         $req_all['service_group'] = $find_order->service->type;

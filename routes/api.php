@@ -82,6 +82,9 @@ Route::middleware(['auth:api'])->group(function () {
           Route::POST('/charge_account', [\App\Http\Controllers\User\UserController::class, 'charge_account']);
 
 
+          Route::POST('/get_telegram_verify_code', [\App\Http\Controllers\User\UserController::class, 'tg_verify_code_create']);
+
+
            Route::prefix('v2ray')->group(function () {
                Route::POST('/buy_volume', [\App\Http\Controllers\User\V2rayController::class, 'buy_volume']);
                Route::POST('/update_config', [\App\Http\Controllers\User\V2rayController::class, 'update_config']);

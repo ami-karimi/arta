@@ -33,6 +33,7 @@ class ServiceResource extends JsonResource
             'service_id' =>   $this->tg_group->parent->id,
             'expired' =>  $expired,
             'service_parent_id' =>   $this->tg_group->parent->id,
+            'group_name' =>   $this->group->name,
             'service_name' =>   $this->tg_group->parent->name,
             'group_data' => [
                 'id' => $this->tg_group->id,
