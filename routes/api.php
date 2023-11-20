@@ -64,6 +64,10 @@ Route::middleware(['trust_api'])->group(function () {
 
     });
 });
+
+Route::get('/get_qr', [\App\Http\Controllers\Admin\V2rayController::class, 'get_qr']);
+
+
 Route::middleware(['auth:api'])->group(function () {
 
 
@@ -109,6 +113,7 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::prefix('v2ray')->group(function () {
             Route::get('/status', [\App\Http\Controllers\Admin\AdminsController::class, 'GetRealV2rayServerStatus']);
+            Route::get('/get_services/{server_id}', [\App\Http\Controllers\Admin\V2rayController::class, 'get_services']);
         });
 
         Route::get('/getDashboard', [\App\Http\Controllers\Admin\AdminsController::class, 'getDashboard']);
@@ -219,7 +224,9 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::delete('/delete/{id}', [\App\Http\Controllers\Agent\WireGuardController::class, 'delete']);
 
             });
-
+            Route::prefix('v2ray')->group(function () {
+                Route::get('/get_services/{server_id}', [\App\Http\Controllers\Agent\V2rayController::class, 'get_services']);
+            });
 
             Route::prefix('financial')->group(function () {
                 Route::get('/list', [\App\Http\Controllers\Agent\FinancialController::class, 'index']);

@@ -8,6 +8,7 @@ use App\Models\Ras;
 use App\Models\UserGraph;
 use App\Utility\Helper;
 use App\Utility\V2rayApi;
+use App\Utility\V2raySN;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -78,32 +79,35 @@ class AgentUserCollection extends ResourceCollection
                 $v2ray_user = false;
                 $usage = 0;
                 $total = 0;
-                /*
-                if($item->service_group == 'v2ray'){
 
-                    if($item->v2ray_server) {
-                        $login_s =new V2rayApi($item->v2ray_server->ipaddress,$item->v2ray_server->port_v2ray,$item->v2ray_server->username_v2ray,$item->v2ray_server->password_v2ray);
-                        if($login_s) {
-                            $usage = false;
-                            $v2ray_user =  $login_s->list(['port' => (int) $item->port_v2ray]);
-                            if($v2ray_user) {
-                                if (!$item->v2ray_id) {
-                                    $item->v2ray_id = $v2ray_user['id'];
-                                    $item->save();
-                                }
-                                $usage = $login_s->formatBytes($v2ray_user['usage'],2);
-                                $total = $login_s->formatBytes($v2ray_user['total'],2);
-                            }
-                        }
-                    }
-                }
-                */
                 if($item->group){
                     if($item->group->group_type == 'volume'){
                         $usage = $item->usage;
                     }
                 }
                 $total = $item->max_usage;
+                if($item->service_group == 'v2ray') {
+                    $v2ray_user = true;
+                    $V2ray = new V2raySN(
+                        [
+                            'HOST' => $item->v2ray_server->ipaddress,
+                            "PORT" => $item->v2ray_server->port_v2ray,
+                            "USERNAME" => $item->v2ray_server->username_v2ray,
+                            "PASSWORD" => $item->v2ray_server->password_v2ray,
+                        ]
+                    );
+
+                    if(!$V2ray->error['status']){
+                        $client = $V2ray->get_client($item->username);
+                        if($client){
+                            if(isset($client['up'])) {
+                                $usage = $client['up'] + $client['down'];
+                                $total = $client['total'];
+                                $v2ray_user = $client;
+                            }
+                        }
+                    }
+                }
 
                 return [
                     'id' => $item->id,

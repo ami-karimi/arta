@@ -21,6 +21,7 @@ use App\Utility\Sms;
 use phpseclib3\Net\SSH2;
 use phpseclib3\Exception\UnableToConnectException;
 use App\Utility\SshServer;
+use App\Utility\V2raySN;
 
 class ApiController extends Controller
 {
@@ -47,17 +48,20 @@ class ApiController extends Controller
 
     public function index(){
 
-            $ssh = new SshServer('20.174.1.79');
-            if($result = $ssh->CheckConnect()['status']){
-                $onlines = $ssh->getOnlineCount('');
-                print_r($onlines);
+        $V2ray = new V2raySN([
+            'HOST' =>  "185.162.235.203",
+            "PORT" => "2084",
+            "USERNAME" => 'amirtld',
+            "PASSWORD"=> 'Amir102040',
+        ]);
+        if(!$V2ray->error['status']){
+            print_r($V2ray->get_user(4,'v2test')['user']);
 
-                //$first = $ssh->getFirstLoginUser('vpn');
-                //print_r($first);
+        }else{
+            return response()->json(['status' => false,'message'=> $V2ray->error['message']]);
+        }
 
-               // $online = $ssh->getLastLoginUser('vpn');
-               // print_r($online);
-            }
+
     }
     public function ping(){
         return response()->json(['status' => true,'result' => 'pong']);

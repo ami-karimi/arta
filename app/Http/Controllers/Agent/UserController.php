@@ -20,6 +20,7 @@ use App\Models\UserGraph;
 use App\Models\WireGuardUsers;
 use App\Utility\Helper;
 use App\Utility\V2rayApi;
+use App\Utility\V2raySN;
 use App\Utility\WireGuard;
 use Carbon\Carbon;
 use http\Client\Response;
@@ -162,7 +163,6 @@ class UserController extends Controller
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!']);
         }
 
-        /*
         if($userDetial->service_group == 'v2ray'){
 
             $findServer = false;
@@ -173,22 +173,50 @@ class UserController extends Controller
             $preg_left = 0;
             $down = 0;
             $up = 0;
+            $enable = false;
+            $portocol = [];
             if($userDetial->v2ray_server){
-                $login_s =new V2rayApi($userDetial->v2ray_server->ipaddress,$userDetial->v2ray_server->port_v2ray,$userDetial->v2ray_server->username_v2ray,$userDetial->v2ray_server->password_v2ray);
-                if($login_s) {
-                    $v2ray_user =  $login_s->list(['port' => (int) $userDetial->port_v2ray]);
-                    if(count($v2ray_user)) {
-                        if (!$userDetial->v2ray_id) {
-                            $userDetial->v2ray_id = $v2ray_user['id'];
-                            $userDetial->save();
-                        }
-                        $usage = $login_s->formatBytes($v2ray_user['usage'],2);
-                        $total = $login_s->formatBytes($v2ray_user['total'],2);
-                        $left_usage = $login_s->formatBytes($v2ray_user['total'] - $v2ray_user['usage']);
-                        $preg_left = ($v2ray_user['total'] > 0 ? ($v2ray_user['usage'] * 100 / $v2ray_user['total']) : 0);
+                $v2ray_user = true;
+
+                $V2ray = new V2raySN(
+                    [
+                        'HOST' => $userDetial->v2ray_server->ipaddress,
+                        "PORT" => $userDetial->v2ray_server->port_v2ray,
+                        "USERNAME" => $userDetial->v2ray_server->username_v2ray,
+                        "PASSWORD" => $userDetial->v2ray_server->password_v2ray,
+                    ]
+                );
+
+                if(!$V2ray->error['status']){
+                    $list = $V2ray->InBoandList();
+                    $re = [];
+                    foreach ($list['obj'] as $key => $row){
+                        $re[] = [
+                            'id' => $row['id'],
+                            'port' => $row['port'],
+                            'protocol' => $row['protocol'],
+                            'remark' => $row['remark'],
+                            'tag' => $row['tag'],
+                        ];
+                    }
+                    $portocol = $re;
+
+                    $client = $V2ray->get_user($userDetial->protocol_v2ray,$userDetial->username);
+                    if($client){
+                        $clients = $V2ray->get_client($userDetial->username);
+
+                        $v2ray_user = $client['user'];
+                        $usage = $clients['up'] +  $clients['down'];
+                        $enable = $clients['enable'];
+                        $total = $clients['total'];
+                        $left_usage = $this->formatBytes($total - $usage);
+                        $preg_left = ($total > 0 ? ($usage * 100 / $total) : 0);
                         $preg_left = 100  - $preg_left  ;
-                        $down = $login_s->formatBytes($v2ray_user['down'],2);
-                        $up = $login_s->formatBytes($v2ray_user['up'],2);
+                        $usage = $this->formatBytes($usage);
+                        $total = $this->formatBytes($total);
+                        $down = $this->formatBytes($clients['up']);
+                        $up = $this->formatBytes($clients['down']);
+
                     }
                 }
             }
@@ -196,13 +224,14 @@ class UserController extends Controller
             return  response()->json([
                 'status' => true,
                 'user' => [
+                    'portocols' => $re,
+                    'v2ray_user' => $v2ray_user,
                     'id' => $userDetial->id,
-                    'server_detial' => ($userDetial->v2ray_server ? $userDetial->v2ray_server->only(['server_location','ipaddress','cdn_address_v2ray']) : false),
+                    'server_detial' => ($userDetial->v2ray_server ? $userDetial->v2ray_server : false),
                     'left_usage' => $left_usage,
                     'down' => $down,
                     'up' => $up,
                     'preg_left' => $preg_left,
-                    'v2ray_user' => $v2ray_user,
                     'usage' => $usage,
                     'total' => $total,
                     'name' => $userDetial->name,
@@ -210,7 +239,6 @@ class UserController extends Controller
                     'v2ray_transmission' => $userDetial->v2ray_transmission,
                     'port_v2ray' => $userDetial->port_v2ray,
                     'remark_v2ray' => $userDetial->remark_v2ray,
-                    'phonenumber' => $userDetial->phonenumber,
                     'protocol_v2ray' => $userDetial->protocol_v2ray,
                     'v2ray_id' => $userDetial->v2ray_id,
                     'v2ray_u_id' => $userDetial->v2ray_u_id,
@@ -220,7 +248,9 @@ class UserController extends Controller
                     'creator_detial' => ($userDetial->creator_name ? ['name' => $userDetial->creator_name->name ,'id' =>$userDetial->creator_name->id] : [] ) ,
                     'password' => $userDetial->password,
                     'group' => ($userDetial->group ? $userDetial->group->name : '---'),
+                    'group_type' => ($userDetial->group ? $userDetial->group->group_type : '---'),
                     'group_id' => $userDetial->group_id,
+                    'enable_config' => $enable ,
                     'is_enabled' => $userDetial->is_enabled ,
                     'created_at' => Jalalian::forge($userDetial->created_at)->__toString(),
                 ],
@@ -229,8 +259,6 @@ class UserController extends Controller
                 'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             ]);
         }
-
-       */
 
         $left_usage = 0;
         $up = 0;
@@ -889,48 +917,58 @@ class UserController extends Controller
             }
         }
         $login = false;
-        /*
+        $v2_current = false;
         if($find->service_group == 'v2ray'){
-            $login = new V2rayApi($find->v2ray_server->ipaddress,$find->v2ray_server->port_v2ray,$find->v2ray_server->username_v2ray,$find->v2ray_server->password_v2ray);
+            $login = new V2raySN(
+                [
+                    'HOST' => $find->v2ray_server->ipaddress,
+                    "PORT" => $find->v2ray_server->port_v2ray,
+                    "USERNAME" => $find->v2ray_server->username_v2ray,
+                    "PASSWORD" => $find->v2ray_server->password_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
+            }
+            $v2_current = $login->get_client($find->username);
         }
 
+
         if($find->service_group == 'v2ray') {
+
             if ($request->protocol_v2ray !== $find->protocol_v2ray) {
                 if ($login) {
-                    $change = $login->update($find->port_v2ray, ['protocol' => $request->protocol_v2ray]);
+                    $change = $login->update_client($find->uuid_v2ray, [
+                        'service_id' => $request->protocol_v2ray,
+                        'username' => $find->username,
+                        'multi_login' => $find->group->multi_login,
+                        'totalGB' => $v2_current['total'],
+                        'expiryTime' => $v2_current['expiryTime'],
+                        'enable' => $v2_current['enable'],
+                    ]);
                     if ($change) {
                         SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_protocol', ['last' => $find->protocol_v2ray, 'new' => $request->protocol_v2ray]);
                         $find->protocol_v2ray = $request->protocol_v2ray;
                     }
                 }
             }
-            if ($request->v2ray_transmission !== $find->v2ray_transmission) {
-                if ($login) {
-                    $change = $login->update($find->port_v2ray, ['transmission' => $request->v2ray_transmission]);
-                    if ($change) {
-                        SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_transmission', ['last' => $find->v2ray_transmission, 'new' => $request->v2ray_transmission]);
-                        $find->v2ray_transmission = $request->v2ray_transmission;
-                    }
-                }
-            }
-            if ($request->remark_v2ray !== $find->remark_v2ray) {
-                if ($login) {
-                    $change = $login->update($find->port_v2ray, ['remark' => $request->remark_v2ray]);
-                    if ($change) {
-                        SaveActivityUser::send($find->id, auth()->user()->id, 'remark_v2ray', ['last' => $find->remark_v2ray, 'new' => $request->remark_v2ray]);
-                        $find->remark_v2ray = $request->remark_v2ray;
-                    }
-                }
-            }
 
         }
-        */
+
 
         if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
-            $find->is_enabled = ($request->is_enabled === true ? 1 : 0);
+            $find->is_enabled = ($request->is_enabled == true ? 1 : 0);
             SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => $find->is_enabled]);
             if($login){
-                $login->update($find->port_v2ray,['enable' => $request->is_enabled]);
+                $login->update_client($find->uuid_v2ray, [
+                    'service_id' => $find->protocol_v2ray,
+                    'username' => $find->username,
+                    'multi_login' => $find->group->multi_login,
+                    'totalGB' => $v2_current['total'],
+                    'expiryTime' => $v2_current['expiryTime'],
+                    'enable' => $request->is_enabled,
+                ]);
+
             }
         }
 
@@ -1170,6 +1208,7 @@ class UserController extends Controller
 
 
         $servers = Ras::select(['name','flag','server_location','id'])->withCount('WireGuards')->where('unlimited',1)->get();
+        $v2ray_servers = Ras::select(['flag','id','server_location','name'])->where('server_type','v2ray')->get();
 
 
         $incom  = Helper::getIncome(auth()->user()->id);
@@ -1180,7 +1219,8 @@ class UserController extends Controller
             'credit' => $incom,
             'sub_agents' => $sub_agents,
             'groups_list' =>  $groups_list,
-            'servers'=>  $servers
+            'servers'=>  $servers,
+            'v2ray_servers'=>  $v2ray_servers
         ]);
 
 
@@ -1216,6 +1256,7 @@ class UserController extends Controller
         if(!$request->numbers){
             return response()->json(['status' => false,'message' => 'لطفا تعداد اکانت درخواستی را انتخاب نمایید!'],403);
         }
+
         $numbers = (int) $request->numbers;
         $total_price = $numbers * $price;
         $total_price_creator = 0;
@@ -1269,9 +1310,18 @@ class UserController extends Controller
                 return response()->json(['status' => false,'message' => 'کلمه عبور میبایست کمتر از 4 کارکتر و بیشتر از 8 کاراکتر باشد.'],403);
             }
        }
+
         if($request->type == 'wireguard'){
             if(!$request->server_id){
                 return response()->json(['status' => false,'message' => 'لطفا سرور وارد گارد را انتخاب نمایید'],403);
+            }
+        }
+        if($request->type == 'v2ray'){
+            if(!$request->server_id){
+                return response()->json(['status' => false,'message' => 'لطفا لوکیشن v2ray را انتخاب نمایید'],403);
+            }
+            if(!$request->protocol_v2ray){
+                return response()->json(['status' => false,'message' => 'لطفا پرتکل اتصال v2ray را انتخاب نمایید'],403);
             }
         }
 
@@ -1329,7 +1379,7 @@ class UserController extends Controller
         }else {
             $findUsername = User::where('username', $request->username)->first();
             if($findUsername){
-                return response()->json(['message' => 'کاربری با نام کاربری '.$findUsername.' در دیتابیس موجود است ! لطفا نام کاربری دیگری وارد نمایید .'],403);
+                return response()->json(['message' => 'کاربری با نام کاربری '.$findUsername->username.' در دیتابیس موجود است ! لطفا نام کاربری دیگری وارد نمایید .'],403);
             }
             $password = $request->password;
             if ($request->random_password) {
@@ -1342,7 +1392,7 @@ class UserController extends Controller
         $status = false;
 
         // L2tp / Openvpn Account Create
-        if($request->type === 'other'){
+        if($request->type == 'other'){
             $creator = ($creator ? $creator : auth()->user()->id);
             $status = $this->CreateOtherAccount($username_List,$creator,$request->group_id,[
                 'name' => ($request->name ? $request->name : false),
@@ -1350,9 +1400,21 @@ class UserController extends Controller
             ]);
         }
 
+        // V2ray Account
+        if($request->type == 'v2ray'){
+            $creator = ($creator ? $creator : auth()->user()->id);
+            $status = $this->CreateAccountV2ray($username_List,$creator,$request->group_id,[
+                'name' => ($request->name ? $request->name : false),
+                'server_id' => $request->server_id,
+                'protocol_v2ray' => $request->protocol_v2ray,
+                'phonenumber' => ($request->phone_number ? $request->phone_number : false),
+            ]);
+
+        }
+
         // wireGuard Account Create
 
-        if($request->type === 'wireguard'){
+        if($request->type == 'wireguard'){
             $creator = ($creator ? $creator : auth()->user()->id);
 
             $status = $this->CreateWireGuardAccountV2($username_List,$creator,$request->group_id,[
@@ -1571,6 +1633,80 @@ class UserController extends Controller
         return false;
     }
 
+    public function CreateAccountV2ray($username_List = [],$creator = false,$group_id = 0,$data){
+        $findGroup = Groups::where('id',$group_id)->first();
+
+        $findLocation = Ras::where('server_type','v2ray')->where('is_enabled',1)->where('id',$data['server_id'])->first();
+        if(!$findLocation){
+            return false;
+        }
+        $V2ray = new V2raySN(
+            [
+                'HOST' =>  $findLocation->ipaddress,
+                "PORT" =>  $findLocation->port_v2ray,
+                "USERNAME" => $findLocation->username_v2ray,
+                "PASSWORD"=> $findLocation->password_v2ray,
+            ]
+        );
+        if($V2ray->error['status']){
+            return false;
+        }
+        $expire_date = 0;
+
+        if($findGroup->expire_value > 0){
+            $expire_date = $findGroup->expire_value;
+            if($findGroup->expire_type !== 'days'){
+                $expire_date *= 30;
+            }
+        }
+        $saved_account = [];
+
+        foreach ($username_List as $row) {
+
+
+            $req_all = [];
+            $req_all['username'] = $row['username'];
+            $req_all['password'] = $row['password'];
+            $req_all['groups'] = $row['group'];
+            $req_all['creator'] = $creator;
+            AcctSaved::create($req_all);
+            if($data['name']){
+                $req_all['name'] = $data['name'];
+            }
+
+            if($data['phonenumber']){
+                $req_all['phonenumber'] = $data['phonenumber'];
+            }
+
+
+
+            $add_client = $V2ray->add_client((int) $data['protocol_v2ray'],$row['username'],(int) $findGroup->multi_login,$findGroup->group_volume,$expire_date,true);
+            if(!$add_client['success']){
+                return false;
+            }
+
+            $req_all['group_id'] = $group_id;
+            $req_all['protocol_v2ray'] = $data['protocol_v2ray'];
+            $req_all['v2ray_location'] = $data['server_id'];
+            $req_all['password'] = $row['password'];
+            $req_all['username'] = $row['username'];
+            $req_all['uuid_v2ray'] = $add_client['uuid'];
+            $req_all['service_group'] = 'v2ray';
+
+            $usr = User::create($req_all);
+            if($usr){
+                $saved_account[] = [
+                  'id' =>   $usr->id,
+                  'username' =>   $row['username'],
+                  'password' =>   $row['password'],
+                  'user' =>   $V2ray->get_user((int) $data['protocol_v2ray'],$row['username'])['user']
+                ];
+            }
+        }
+
+        return $saved_account;
+
+    }
 
 
 }

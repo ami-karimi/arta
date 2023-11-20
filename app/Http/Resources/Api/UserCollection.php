@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api;
 
+use App\Utility\V2raySN;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -47,6 +48,7 @@ class UserCollection extends ResourceCollection
         return [
             'groups' => Groups::select('name','id','price_reseler')->get(),
             'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
+            'v2ray_server' => Ras::select(['id','server_location','name'])->where('server_type','v2ray')->where('is_enabled',1)->get(),
             'data' => $this->collection->map(function($item){
                 $v2ray_user = false;
                 $usage = 0;
@@ -56,6 +58,29 @@ class UserCollection extends ResourceCollection
                     }
                 }
                 $total = $item->max_usage;
+
+                if($item->service_group == 'v2ray') {
+                    $v2ray_user = true;
+                    $V2ray = new V2raySN(
+                        [
+                            'HOST' => $item->v2ray_server->ipaddress,
+                            "PORT" => $item->v2ray_server->port_v2ray,
+                            "USERNAME" => $item->v2ray_server->username_v2ray,
+                            "PASSWORD" => $item->v2ray_server->password_v2ray,
+                        ]
+                    );
+
+                    if(!$V2ray->error['status']){
+                        $client = $V2ray->get_client($item->username);
+                        if($client){
+                            $usage = $client['up'] +  $client['down'];
+                            $total = $client['total'];
+                            $v2ray_user = $client;
+                        }
+                    }
+                }
+
+
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
