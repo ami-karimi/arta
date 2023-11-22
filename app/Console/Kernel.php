@@ -132,6 +132,8 @@ class Kernel extends ConsoleKernel
                 }
             }
         })->everySixHours();
+
+
     }
 
     /**

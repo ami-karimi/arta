@@ -204,7 +204,14 @@ class UserController extends Controller
                     $client = $V2ray->get_user($userDetial->protocol_v2ray,$userDetial->username);
                     if($client){
                         $clients = $V2ray->get_client($userDetial->username);
+                        $expire_time = ((int) $clients['expiryTime'] > 0 ? (int) $clients['expiryTime'] /1000 : 0);
+                        if($expire_time  > 0){
+                            $ex = date('Y-m-d H:i:s', $expire_time);
+                            $jalali = Jalalian::forge($ex)->toString();
+                            $left = "(".Carbon::now()->diffInDays($ex, false)." روز)";
 
+                            $expire_time = $jalali." - ".$left;
+                        }
                         $v2ray_user = $client['user'];
                         $usage = $clients['up'] +  $clients['down'];
                         $enable = $clients['enable'];
@@ -228,6 +235,7 @@ class UserController extends Controller
                     'v2ray_user' => $v2ray_user,
                     'id' => $userDetial->id,
                     'server_detial' => ($userDetial->v2ray_server ? $userDetial->v2ray_server : false),
+                    'expire_time' => $expire_time,
                     'left_usage' => $left_usage,
                     'down' => $down,
                     'up' => $up,
@@ -376,7 +384,7 @@ class UserController extends Controller
         }
         $sub_agents = User::where('creator',auth()->user()->id)->where('role','agent')->get()->pluck('id');
         $sub_agents[] = auth()->user()->id;
-        $find = User::where('username',$username)->whereIn('creator',$sub_agents)->where('expire_set',1)->first();
+        $find = User::where('username',$username)->whereIn('creator',$sub_agents)->first();
         if(!$find){
             return response()->json(['status' => false,'message' => 'کاربر یافت نشد!'],403);
         }
@@ -462,6 +470,36 @@ class UserController extends Controller
             }
             $find->multi_login = $findGroup->multi_login;
 
+        }
+
+        if($find->service_group == 'v2ray'){
+            $login = new V2raySN(
+                [
+                    'HOST' => $find->v2ray_server->ipaddress,
+                    "PORT" => $find->v2ray_server->port_v2ray,
+                    "USERNAME" => $find->v2ray_server->username_v2ray,
+                    "PASSWORD" => $find->v2ray_server->password_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
+            }
+
+            $tm = (86400 * 1000);
+            $expiretime = $tm * $findGroup->expire_value;
+            $v2_current = $login->get_client($find->username);
+            $Usage = $v2_current['total']  - $v2_current['up'] + $v2_current['down'];
+            if($Usage > 0) {
+                SaveActivityUser::send($find->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
+            }
+            $login->update_client($find->uuid_v2ray, [
+                'service_id' => $find->protocol_v2ray,
+                'username' => $find->username,
+                'multi_login' => $find->group->multi_login,
+                'totalGB' => $Usage + $find->max_usage,
+                'expiryTime' => "-$expiretime",
+                'enable' => ($find->is_enabled ? true : false),
+            ]);
         }
 
         if($find->expire_date !== NULL) {
@@ -934,26 +972,6 @@ class UserController extends Controller
         }
 
 
-        if($find->service_group == 'v2ray') {
-
-            if ($request->protocol_v2ray !== $find->protocol_v2ray) {
-                if ($login) {
-                    $change = $login->update_client($find->uuid_v2ray, [
-                        'service_id' => $request->protocol_v2ray,
-                        'username' => $find->username,
-                        'multi_login' => $find->group->multi_login,
-                        'totalGB' => $v2_current['total'],
-                        'expiryTime' => $v2_current['expiryTime'],
-                        'enable' => $v2_current['enable'],
-                    ]);
-                    if ($change) {
-                        SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_protocol', ['last' => $find->protocol_v2ray, 'new' => $request->protocol_v2ray]);
-                        $find->protocol_v2ray = $request->protocol_v2ray;
-                    }
-                }
-            }
-
-        }
 
 
         if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
@@ -1058,6 +1076,30 @@ class UserController extends Controller
         }
         $price = 2300;
         $sub_sm = 1200;
+        if($find->service_group == 'v2ray'){
+            $login = new V2raySN(
+                [
+                    'HOST' => $find->v2ray_server->ipaddress,
+                    "PORT" => $find->v2ray_server->port_v2ray,
+                    "USERNAME" => $find->v2ray_server->username_v2ray,
+                    "PASSWORD" => $find->v2ray_server->password_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
+            }
+            $v2_current = $login->get_client($find->username);
+            $login->update_client($find->uuid_v2ray, [
+                'service_id' => $find->protocol_v2ray,
+                'username' => $find->username,
+                'multi_login' => $find->group->multi_login,
+                'totalGB' => $v2_current['total'] + @round((((int) $request->volume *1024) * 1024) * 1024 ),
+                'expiryTime' => $v2_current['expiryTime'],
+                'enable' => ($find->is_enabled ? true : false),
+            ]);
+            $price = 4000;
+            $sub_sm = 3500;
+        }
         $total_price = (int) $request->volume * $price;
         $total_sub_price = (int) $request->volume * $sub_sm;
         $minus_income = Financial::where('for',auth()->user()->id)->where('approved',1)->whereIn('type',['minus'])->sum('price');
@@ -1684,7 +1726,9 @@ class UserController extends Controller
             if(!$add_client['success']){
                 return false;
             }
+            $client = $V2ray->get_user((int) $data['protocol_v2ray'],$row['username']);
 
+            $req_all['v2ray_config_uri'] = $client['user']['url'];
             $req_all['group_id'] = $group_id;
             $req_all['protocol_v2ray'] = $data['protocol_v2ray'];
             $req_all['v2ray_location'] = $data['server_id'];
@@ -1699,7 +1743,7 @@ class UserController extends Controller
                   'id' =>   $usr->id,
                   'username' =>   $row['username'],
                   'password' =>   $row['password'],
-                  'user' =>   $V2ray->get_user((int) $data['protocol_v2ray'],$row['username'])['user']
+                  'user' =>  $client['user']
                 ];
             }
         }

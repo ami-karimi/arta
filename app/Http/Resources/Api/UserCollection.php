@@ -76,9 +76,13 @@ class UserCollection extends ResourceCollection
                             $usage = $client['up'] +  $client['down'];
                             $total = $client['total'];
                             $v2ray_user = $client;
+                            $v2ray_user['url'] = $item->v2ray_config_uri;
+                            $v2ray_user['url_encode'] = urlencode($item->v2ray_config_uri);
+
                         }
                     }
                 }
+
 
 
                 return [

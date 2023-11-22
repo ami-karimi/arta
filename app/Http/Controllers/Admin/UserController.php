@@ -141,12 +141,49 @@ class UserController extends Controller
                     $expire_date *= 30;
                 }
             }
+            if ($findGroup->expire_type !== 'no_expire') {
+                if ($findGroup->expire_type == 'minutes') {
+                    $req_all['exp_val_minute'] = $findGroup->expire_value;
+
+                } elseif ($findGroup->expire_type == 'month') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 43800);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
+
+                } elseif ($findGroup->expire_type == 'days') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 1440);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
+                } elseif ($findGroup->expire_type == 'hours') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 60);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
+
+                } elseif ($findGroup->expire_type == 'year') {
+                    $req_all['exp_val_minute'] = floor($findGroup->expire_value * 525600);
+                    if($findGroup->group_volume > 0) {
+                        $req_all['max_usage'] = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024));
+                    }
+
+                }
+            }
+
+            $req_all['expire_type'] = $findGroup->expire_type;
+            $req_all['expire_set'] = 0;
 
             $add_client = $V2ray->add_client((int) $request->protocol_v2ray,$request->username,(int) $findGroup->multi_login,$findGroup->group_volume,$expire_date,true);
+
             if(!$add_client['success']){
                 return response()->json(['message' => $add_client['msg']],403);
             }
+            $client = $V2ray->get_user((int) $request->protocol_v2ray,$request->username);
+
             $req_all['username'] = $request->username;
+            $req_all['v2ray_config_uri'] = $client['user']['url'];
+            $req_all['last_update'] = Carbon::now();
             $req_all['password'] = $password;
             $req_all['groups'] = $request->username;
             $req_all['creator'] = $request->creator;
@@ -403,110 +440,35 @@ class UserController extends Controller
         }
 
         $login = false;
-        /*
-        if($find->service_group == 'v2ray'){
-            $login = new V2rayApi($find->v2ray_server->ipaddress,$find->v2ray_server->port_v2ray,$find->v2ray_server->username_v2ray,$find->v2ray_server->password_v2ray);
-
-            if($request->protocol_v2ray !== $find->protocol_v2ray){
-                if($login) {
-                    $change = $login->update($find->port_v2ray, ['protocol' => $request->protocol_v2ray]);
-                    if($change) {
-                        SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_protocol', ['last' => $find->protocol_v2ray, 'new' => $request->protocol_v2ray]);
-                        $find->protocol_v2ray = $request->protocol_v2ray;
-                    }
-                }
-            }
-            if($request->v2ray_transmission !== $find->v2ray_transmission){
-                if($login) {
-                    $change = $login->update($find->port_v2ray, ['transmission' => $request->v2ray_transmission]);
-                    if($change) {
-                        SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_transmission', ['last' => $find->v2ray_transmission, 'new' => $request->v2ray_transmission]);
-                        $find->v2ray_transmission = $request->v2ray_transmission;
-                    }
-                }
-            }
-            if($request->remark_v2ray !== $find->remark_v2ray){
-                if($login) {
-                    $change =  $login->update($find->port_v2ray, ['remark' => $request->remark_v2ray]);
-                    if($change) {
-                        SaveActivityUser::send($find->id, auth()->user()->id, 'remark_v2ray', ['last' => $find->remark_v2ray, 'new' => $request->remark_v2ray]);
-                        $find->remark_v2ray = $request->remark_v2ray;
-                    }
-                }
-            }
-
-            if($request->port_v2ray !== $find->port_v2ray){
-                if($login) {
-                    $change =  $login->update($find->port_v2ray, ['port' => $request->port_v2ray]);
-                    if($change) {
-                        SaveActivityUser::send($find->id, auth()->user()->id, 'change_user_port', ['last' => $find->port_v2ray, 'new' => $request->port_v2ray]);
-                        $find->port_v2ray = $request->port_v2ray;
-                    }
-                }
-            }
-
-        }
-
-       */
-        if($request->service_group !== $find->service_group){
-            if($find->service_group == 'v2ray'){
-                $login->del($find->v2ray_id);
-            }elseif($request->service_group == 'v2ray'){
-                $req_all = $request->all();
-                if(!$request->v2ray_location){
-                    return response()->json(['message' => 'لطفا لوکیشن مقضد را انتخاب نمایید!'],403);
-                }
-                if(!$request->v2ray_transmission){
-                    return response()->json(['message' => 'لطفا نوع  transmission	 را انتخاب نمایید!'],403);
-                }
-                if(!$request->protocol_v2ray){
-                    return response()->json(['message' => 'لطفا نوع پرتکل را انتخاب نمایید'],403);
-                }
-                $findGroup = Groups::where('id', $request->group_id)->first();
-                if(!$findGroup){
-                    return response()->json(['message' => 'گروه مورد نظر یافت نشد!'],403);
-                }
-                if($findGroup->group_type !== 'volume'){
-                    return response()->json(['message' => 'امکان ایجاد کاربر در این گروه برای V2ray وجود ندارد!'],403);
-                }
-                $findLocation = Ras::where('server_type','v2ray')->where('is_enabled',1)->where('id',$request->v2ray_location)->first();
-                $login = new V2rayApi($findLocation->ipaddress,$findLocation->port_v2ray,$findLocation->username_v2ray,$findLocation->password_v2ray);
-                $status_data = ($login ?  true : false) ;
-                if(!$status_data){
-                    return response()->json(['message' => 'متاسفانه لوکیشن درخواستی در دسترس نمیباشد!'],403);
-                }
-
-                $password = $request->password;
-                if($request->random_password){
-                    $password = substr(rand(0,99999),0,(int) $request->random_password_num);
-                }
 
 
-                $create_status =  $login->add($request->protocol_v2ray,10,$request->v2ray_transmission,$request->remark_v2ray ." -".$request->username,$request->port_v2ray,strtotime(time()."+360 Days"));
-                if(!$create_status){
-                    return response()->json(['message' => 'متسفانه کاربر در سرور مورد نظر ایجاد نشد ! مجددا تلاش نمایید'],403);
-                }
-
-
-            }
-        }
 
 
         if($request->service_group){
             $find->service_group = $request->service_group;
         }
 
+        if($find->service_group == 'v2ray'){
+            $login = new V2raySN(
+                [
+                    'HOST' => $find->v2ray_server->ipaddress,
+                    "PORT" => $find->v2ray_server->port_v2ray,
+                    "USERNAME" => $find->v2ray_server->username_v2ray,
+                    "PASSWORD" => $find->v2ray_server->password_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
+            }
+            $v2_current = $login->get_client($find->username);
+        }
 
 
         $exp_val_minute = $find->exp_val_minute;
         $findGroup = Groups::where('id',$request->group_id)->first();
 
         if($findGroup->id !== $find->group_id){
-            if($find->service_group == 'v2ray'){
-                if($login){
-                    $login->update($find->port_v2ray,['total' =>$findGroup->group_volume]);
-                }
-            }
+
             $find->group_id = $findGroup->id;
 
             if($findGroup->expire_type !== 'no_expire'){
@@ -538,7 +500,19 @@ class UserController extends Controller
                 $find->max_usage = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
             }
 
+            if($find->service_group == 'v2ray') {
+                if ($login) {
+                    $login->update_client($find->uuid_v2ray, [
+                        'service_id' => $find->protocol_v2ray,
+                        'username' => $find->username,
+                        'multi_login' => $find->group->multi_login,
+                        'totalGB' => @round((((int)$findGroup->group_volume * 1024) * 1024) * 1024),
+                        'expiryTime' => $v2_current['expiryTime'],
+                        'enable' => $request->is_enabled,
+                    ]);
 
+                }
+            }
 
         }
 
@@ -572,7 +546,7 @@ class UserController extends Controller
 
 
         if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
-            $find->is_enabled = ($request->is_enabled === true ? 1 : 0);
+            $find->is_enabled = ($request->is_enabled == true ? 1 : 0);
             SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => $find->is_enabled]);
             if($find->service_group == 'wireguard'){
                 $AllConfig = WireGuardUsers::where('user_id',$find->id)->get();
@@ -585,7 +559,15 @@ class UserController extends Controller
 
             }
             if($login){
-                $login->update($find->port_v2ray,['enable' => $request->is_enabled]);
+                $login->update_client($find->uuid_v2ray, [
+                    'service_id' => $find->protocol_v2ray,
+                    'username' => $find->username,
+                    'multi_login' => $find->group->multi_login,
+                    'totalGB' => $v2_current['total'],
+                    'expiryTime' => $v2_current['expiryTime'],
+                    'enable' => $request->is_enabled,
+                ]);
+
             }
         }
 
@@ -714,6 +696,38 @@ class UserController extends Controller
             }
         }
 
+        if($findUser->service_group == 'v2ray'){
+            $login = new V2raySN(
+                [
+                    'HOST' => $findUser->v2ray_server->ipaddress,
+                    "PORT" => $findUser->v2ray_server->port_v2ray,
+                    "USERNAME" => $findUser->v2ray_server->username_v2ray,
+                    "PASSWORD" => $findUser->v2ray_server->password_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
+            }
+            $tm = (86400 * 1000);
+            $expiretime = $tm * $findUser->group->expire_value;
+            $v2_current = $login->get_client($findUser->username);
+            $Usage = $v2_current['total']  - $v2_current['up'] + $v2_current['down'];
+            if($Usage > 0) {
+                SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
+            }
+
+            $login->update_client($findUser->uuid_v2ray, [
+                'service_id' => $findUser->protocol_v2ray,
+                'username' => $findUser->username,
+                'multi_login' => $findUser->group->multi_login,
+                'totalGB' =>  $Usage + $findUser->max_usage,
+                'expiryTime' => "-$expiretime",
+                'enable' => ($findUser->is_enabled ? true : false),
+            ]);
+        }
+
+
+
         $findUser->usage = 0;
         $findUser->download_usage = 0;
         $findUser->upload_usage = 0;
@@ -766,9 +780,10 @@ class UserController extends Controller
             $up = 0;
             $enable = false;
             $portocol = [];
+            $expire_time = false;
+
             if($userDetial->v2ray_server){
                 $v2ray_user = true;
-
                 $V2ray = new V2raySN(
                     [
                         'HOST' => $userDetial->v2ray_server->ipaddress,
@@ -796,6 +811,14 @@ class UserController extends Controller
                     if($client){
                         $clients = $V2ray->get_client($userDetial->username);
 
+                        $expire_time = ((int) $clients['expiryTime'] > 0 ? (int) $clients['expiryTime'] /1000 : 0);
+                         if($expire_time  > 0){
+                             $ex = date('Y-m-d H:i:s', $expire_time);
+                             $jalali = Jalalian::forge($ex)->toString();
+                             $left = "(".Carbon::now()->diffInDays($ex, false)." روز)";
+
+                             $expire_time = $jalali." - ".$left;
+                         }
                         $v2ray_user = $client['user'];
                         $usage = $clients['up'] +  $clients['down'];
                         $enable = $clients['enable'];
@@ -825,6 +848,7 @@ class UserController extends Controller
                     'preg_left' => $preg_left,
                     'usage' => $usage,
                     'total' => $total,
+                    'expire_time' => $expire_time,
                     'name' => $userDetial->name,
                     'v2ray_location' => $userDetial->v2ray_location,
                     'v2ray_transmission' => $userDetial->v2ray_transmission,
@@ -1204,6 +1228,29 @@ class UserController extends Controller
 
         $user->max_usage += @round((((int) $request->volume *1024) * 1024) * 1024 ) ;
         $user->save();
+
+        if($user->service_group == 'v2ray'){
+            $login = new V2raySN(
+                [
+                    'HOST' => $user->v2ray_server->ipaddress,
+                    "PORT" => $user->v2ray_server->port_v2ray,
+                    "USERNAME" => $user->v2ray_server->username_v2ray,
+                    "PASSWORD" => $user->v2ray_server->password_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
+            }
+            $v2_current = $login->get_client($user->username);
+            $login->update_client($user->uuid_v2ray, [
+                'service_id' => $user->protocol_v2ray,
+                'username' => $user->username,
+                'multi_login' => $user->group->multi_login,
+                'totalGB' => $v2_current['total'] + @round((((int) $request->volume *1024) * 1024) * 1024 ),
+                'expiryTime' => $v2_current['expiryTime'],
+                'enable' => ($user->is_enabled ? true : false),
+            ]);
+        }
 
         return response()->json([
             'status' => false,
