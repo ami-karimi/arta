@@ -75,26 +75,19 @@ class Kernel extends ConsoleKernel
         */
 
         $schedule->call(function () {
-            $API        = new Mikrotik();
-            $API->debug = false;
             $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
             $user_list = [];
             foreach ($Servers as $sr) {
-                if ($API->connect($sr->ipaddress, 'admin', 'Amir@###1401')) {
+                $API = new Mikrotik($sr);
+                $API->connect();
 
-                    $BRIDGEINFO = $API->comm('/ppp/active/print', array(
-                        "?encoding" => "",
-                        "?service" => "ovpn"
-                    ));
-
-                    foreach ($BRIDGEINFO as $user) {
-                        $user_list[] = $user;
-                        RadAcct::where('username',$user['name'])->delete();
-                        $API->comm('/ppp/active/remove', array(
-                            ".id" => $user['.id'],
-                        ));
+                $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");
+                if($BRIDGEINFO['ok']){
+                    foreach ($BRIDGEINFO['data'] as $row){
+                        echo $row['name'];
+                        RadAcct::where('username',$row['name'])->delete();
+                        $API->bs_mkt_rest_api_del("/ppp/active/remove" . $row['.id']);
                     }
-
                 }
             }
 

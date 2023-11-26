@@ -48,6 +48,21 @@ class ApiController extends Controller
 
     public function index(){
 
+        $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
+        $user_list = [];
+        foreach ($Servers as $sr) {
+            $API = new Mikrotik($sr);
+            $API->connect();
+
+                $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");
+                if($BRIDGEINFO['ok']){
+                    foreach ($BRIDGEINFO['data'] as $row){
+                        echo $row['name'];
+                        RadAcct::where('username',$row['name'])->delete();
+                        $API->bs_mkt_rest_api_del("/ppp/active/remove" . $row['.id']);
+                    }
+                }
+        }
 
     }
 
