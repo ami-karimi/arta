@@ -42,7 +42,7 @@ class WireGuardController extends Controller
         // Change Server
         if($find->server_id !== $request->server_id){
             $removeLastConfig = new WireGuard($find->server_id,'user');
-            $re = $removeLastConfig->removeConfig($find->public_key);
+             $removeLastConfig->removeConfig($find->public_key);
 
             SaveActivityUser::send($find->user->id,auth()->user()->id,'change_wg_server',['last'=> $find->server->name,'new' => Ras::where('id',$request->server_id)->first()->name ]);
 
@@ -59,7 +59,7 @@ class WireGuardController extends Controller
 
                 $find->user_ip = $user_wi['ip_address'];
                 $find->save();
-                //exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
+                exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
             }
             $find->server_id = $request->server_id;
 
