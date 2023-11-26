@@ -47,35 +47,12 @@ class ApiController extends Controller
     }
 
     public function index(){
-        $wg  = WireGuardUsers::where('is_enabled',1)->get();
-        foreach ($wg as $row){
-            $getWg_user = new WireGuard($row->server_id,'user');
-            $peers = $wg->getUser($getWg_user->wg->public_key);
-            if(!$peers['status']){
-                echo $row->user->name;
-                echo "-";
-                echo $wg->server->name;
-                echo "</br>";
-
-            }
-        }
 
 
     }
 
     public function ping(){
-        $wg  = WireGuardUsers::where('is_enabled',1)->get();
-        foreach ($wg as $row){
-            $getWg_user = new WireGuard($row->server_id,'user');
-            $peers = $wg->getUser($getWg_user->wg->public_key);
-            if(!$peers['status']){
-               echo $row->user->name;
-               echo "-";
-               echo $wg->server->name;
-               echo "</br>";
 
-            }
-        }
     }
 
     public function save_stogram(Request $request){

@@ -301,9 +301,6 @@ class UserController extends Controller
 
             $user_wi = $create_wr->Run();
             if($user_wi['status']) {
-
-
-
                 $saved = new  WireGuardUsers();
                 $saved->profile_name = $user_wi['config_file'];
                 $saved->user_id = $user->id;
@@ -317,6 +314,7 @@ class UserController extends Controller
 
             return  response()->json(['status' => true,'message' => 'کانفیگ با موفقیت ایجاد شد']);
         }
+
         $userNameList = [];
 
         if(!$request->server_id){
@@ -401,22 +399,32 @@ class UserController extends Controller
                 $req_all['max_usage'] =@round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
             }
 
+
                 $user = User::create($req_all);
               if($user) {
                 $create_wr = new WireGuard($request->server_id, $req_all['username']);
 
                     $user_wi = $create_wr->Run();
+
                   if($user_wi['status']) {
                       $saved = new  WireGuardUsers();
                       $saved->profile_name = $user_wi['config_file'];
                       $saved->user_id = $user->id;
+                      $saved->client_private_key  =  $user_wi['client_private_key'];
                       $saved->server_id = $request->server_id;
                       $saved->public_key = $user_wi['client_public_key'];
                       $saved->user_ip = $user_wi['ip_address'];
-                      $saved->save();
+                      $save = $saved->save();
+                      if(!$save){
+                          $user->delete();
+                          return response()->json(['status' => true, 'message' => 'کاربر ایجاد نشد مجددا تلاش نمایید!','ss'=> $user_wi,'sss'=>$save],403);
+
+                      }
                       exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
 
-                }
+                }else{
+                      $user->delete();
+                  }
             }
         }
 

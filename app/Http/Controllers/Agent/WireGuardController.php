@@ -55,9 +55,11 @@ class WireGuardController extends Controller
                 $find->server_id = $server_id;
                 $find->public_key = $user_wi['client_public_key'];
                 $public_key = $user_wi['client_public_key'];
+                $find->client_private_key = $user_wi['client_private_key'];
+
                 $find->user_ip = $user_wi['ip_address'];
                 $find->save();
-                exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
+                //exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
             }
             $find->server_id = $request->server_id;
 

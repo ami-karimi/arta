@@ -39,7 +39,7 @@ class WireGuardController extends Controller
         // Change Server
         if($find->server_id !== $request->server_id){
             $removeLastConfig = new WireGuard($find->server_id,'user');
-            $re = $removeLastConfig->removeConfig($find->public_key);
+            $removeLastConfig->removeConfig($find->public_key);
 
             SaveActivityUser::send($find->user->id,auth()->user()->id,'change_wg_server',['last'=> $find->server->name,'new' => Ras::where('id',$request->server_id)->first()->name ]);
 
@@ -51,6 +51,7 @@ class WireGuardController extends Controller
                 $find->user_id = $find->user->id;
                 $find->server_id = $server_id;
                 $find->public_key = $user_wi['client_public_key'];
+                $find->client_private_key = $user_wi['client_private_key'];
                 $public_key = $user_wi['client_public_key'];
                 $find->user_ip = $user_wi['ip_address'];
                 $find->save();

@@ -895,6 +895,7 @@ class UserController extends Controller
                     $saved->profile_name = $user_wi['config_file'];
                     $saved->user_id = $user->id;
                     $saved->server_id = $request->server_id;
+                    $saved->client_private_key  =  $user_wi['client_private_key'];
                     $saved->public_key = $user_wi['client_public_key'];
                     $saved->user_ip = $user_wi['ip_address'];
                     $saved->save();
@@ -1659,6 +1660,7 @@ class UserController extends Controller
                     $saved->profile_name = $user_wi['config_file'];
                     $saved->user_id = $user->id;
                     $saved->server_id = $data['server_id'];
+                    $saved->client_private_key  =  $user_wi['client_private_key'];
                     $saved->public_key = $user_wi['client_public_key'];
                     $saved->user_ip = $user_wi['ip_address'];
                     $saved->save();
