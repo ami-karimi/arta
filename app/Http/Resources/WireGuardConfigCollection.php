@@ -43,7 +43,6 @@ class WireGuardConfigCollection extends ResourceCollection
             $findUser = $wire->getUser($item->public_key);
 
             $ROS_DATA = [
-                'current-endpoint-address' => '',
             ];
             if($findUser['status']){
                 $ROS_DATA = $findUser['user'];
@@ -54,7 +53,7 @@ class WireGuardConfigCollection extends ResourceCollection
               'name' => $item->profile_name,
               'server_id' => $item->server_id,
               'user_ip' =>   $item->user_ip,
-              'server_endpoint' => $ROS_DATA['current-endpoint-address'],
+              'server_endpoint' => (count($ROS_DATA) ? $ROS_DATA['current-endpoint-address'] : '' ),
               'config_file' => url("/configs/$item->profile_name.conf"),
               'qr_file' => url("/configs/$item->profile_name.png"),
               'config_download_patch' => url("/api/download/$item->profile_name.conf"),

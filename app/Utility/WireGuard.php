@@ -46,9 +46,11 @@ class WireGuard
         if($res['ok']) {
             $findUser  = $this->ROS->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key='.$public_key);
             if($findUser['ok']){
-                 $this->ROS->bs_mkt_rest_api_del("/interface/wireguard/peers/".$findUser['data'][0]['.id']);
-                $this->delQuee(['allowed-address' => $findUser['data'][0]['allowed-address']]);
-                return ['status' => true,'message' => 'Removed User'];
+                if(count($findUser['data'])) {
+                    $this->ROS->bs_mkt_rest_api_del("/interface/wireguard/peers/" . $findUser['data'][0]['.id']);
+                    $this->delQuee(['allowed-address' => $findUser['data'][0]['allowed-address']]);
+                    return ['status' => true, 'message' => 'Removed User'];
+                }
             }
             return ['status' => true,'message' => 'User Not Find Im Delete Record'];
         }else{
