@@ -130,10 +130,7 @@ class WireGuard
         }else{
             return ['status' => false,'message' => 'Not Conenct To Server'];
         }
-        $BRIDGEINFO_Peers = $this->ROS->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key='.$public_key, array(
-            '?interface' => 'ROS_WG_USERS',
-            '?public-key' => $public_key,
-        ));
+        $BRIDGEINFO_Peers = $this->ROS->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key='.$public_key);
         if(!$BRIDGEINFO_Peers['ok']){
             return ['status' => false,'message' => 'Not Find User'];
         }
