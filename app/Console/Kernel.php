@@ -86,7 +86,7 @@ class Kernel extends ConsoleKernel
                     foreach ($BRIDGEINFO['data'] as $row){
                         echo $row['name'];
                         RadAcct::where('username',$row['name'])->delete();
-                        $API->bs_mkt_rest_api_del("/ppp/active/remove" . $row['.id']);
+                        $API->bs_mkt_rest_api_del("/ppp/active/" . $row['.id']);
                     }
                 }
             }
