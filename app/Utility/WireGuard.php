@@ -230,7 +230,7 @@ class WireGuard
         $content .= "\nAddress = ".$this->ip_address."/32";
         $content .= "\nDNS = 8.8.8.8";
         $content .= "\n[Peer]";
-        $content .= "\nPublicKey = ".$this->server_pub_key."=";
+        $content .= "\nPublicKey = ".$this->server_pub_key;
         $content .= "\nAllowedIPs = 0.0.0.0/0";
         $content .= "\nEndpoint = ".$this->server->l2tp_address.":".$this->server_port;
         $content .= "\nPersistentKeepalive = 10";
