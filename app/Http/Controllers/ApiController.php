@@ -47,18 +47,17 @@ class ApiController extends Controller
     }
 
     public function index(){
+        $wg  = WireGuardUsers::where('is_enabled',1)->get();
+        foreach ($wg as $row){
+            $getWg_user = new WireGuard($row->server_id,'user');
+            $peers = $wg->getUser($getWg_user->wg->public_key);
+            if(!$peers['status']){
+                echo $row->user->name;
+                echo "-";
+                echo $wg->server->name;
+                echo "</br>";
 
-        $V2ray = new V2raySN([
-            'HOST' =>  "185.162.235.203",
-            "PORT" => "2084",
-            "USERNAME" => 'amirtld',
-            "PASSWORD"=> 'Amir102040',
-        ]);
-        if(!$V2ray->error['status']){
-            print_r($V2ray->get_user(4,'v2test')['user']);
-
-        }else{
-            return response()->json(['status' => false,'message'=> $V2ray->error['message']]);
+            }
         }
 
 

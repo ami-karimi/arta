@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->call(function () {
             RadAcct::where('saved',1)->delete();
-        })->everySixHours();
+        })->everyTwoHours();
 
         $schedule->call(function () {
 
@@ -133,6 +133,16 @@ class Kernel extends ConsoleKernel
             }
         })->everySixHours();
 
+        $schedule->call(function () {
+            $filename = "backup-" . Carbon::now()->format('Y-m-d') . ".gz";
+
+            $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD') . " --host=" . env('DB_HOST') . " " . env('DB_DATABASE') . "  | gzip > " . storage_path() . "/app/backup/" . $filename;
+
+            $returnVar = NULL;
+            $output  = NULL;
+
+            exec($command, $output, $returnVar);
+        })->everyTwoHours();
 
     }
 
