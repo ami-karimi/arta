@@ -37,44 +37,46 @@ class MonitorigController extends Controller
 
 
     public function ether($ip){
-        $API        = new Mikrotik();
-        $API->debug = false;
+        $FindRas = Ras::where('ipaddress',$ip)->first();
+        $API        = new Mikrotik($FindRas);
+        $connect = $API->connect();
+        if(!$connect['ok']){
+            return response()->json([
+                'status' => false,
+                'result' => [
+
+                ]
+            ]);
+        }
         $servers = [];
-        if($API->connect($ip, 'admin', 'Amir@###1401')){
 
-            $API->write('/interface/print',false);
-            $API->write("?type=" .'ether', true);
-            $READ = $API->read(false);
-            $etherDatas = $API->parseResponse($READ);
+            $ras = $API->bs_mkt_rest_api_get('/interface?type=ether');
+            if(!$ras['ok']){
+                return response()->json([
+                    'status' => false,
+                    'result' => [
 
-            $etherName = $etherDatas[0]['name'];
-
-            $API->write('/interface/monitor-traffic',false);
-            $API->write("?interface=" .$etherName, false);
-            $API->write("=once");
-            $READ = $API->read(false);
-            $etherData = $API->parseResponse($READ);
+                    ]
+                ]);
+            }
+            $etherName = $ras['data'][0]['name'];
+             $etherData = $API->bs_mkt_rest_api_post('/interface/monitor-traffic',array(
+                "interface" => $etherName,
+                "duration" => '1s',
+            ))['data'];
 
 
             $servers = [
                 'status' => true,
                 'result' => [
-                    'ether' => $etherData,
+                    'ether' => $etherData[0],
                     'rx_byte' => (isset($etherData[0]) ? $this->formatBytes($etherData[0]['rx-bits-per-second'],2) : 0),
                     'tx_byte' => (isset($etherData[0]) ?  $this->formatBytes($etherData[0]['tx-bits-per-second'],2) : 0),
                 ]
             ];
-            $API->disconnect();
 
 
-        }else{
-            $servers = [
-                'status' => false,
-                'result' => [
 
-                ]
-            ];
-        }
 
         return response()->json($servers);
     }

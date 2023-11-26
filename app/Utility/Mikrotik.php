@@ -264,6 +264,51 @@ class Mikrotik
     }
 
 
+    function bs_mkt_rest_api_post($cmd,$data) {
+
+        $out['ok']=0;
+        $out['error']='';
+
+        $ch = curl_init();
+        curl_setopt_array($ch , $this->options($cmd));
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        $responseData = curl_exec($ch);
+        $responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if(!empty($mkt['debug'])) {
+            echo "\n\n";
+            echo 'CODE: '.$responseCode;
+            echo "\n\n";
+            echo "RESPONSE: ";
+            print_r($responseData);
+            echo "\n\n";
+        }
+
+        if($responseCode==0) {
+            $out['error']='No output from mikrotik';
+            return $out;
+        }
+
+        $response = ['code' => $responseCode, 'data' => @json_decode($responseData, true)];
+
+        if(!empty($response['data'])) {
+            $out['data'] = $response['data'];
+        }
+
+        // we expect code 200
+        if( ($response['code'] == 200) && isset($response['data']) && empty($response['data']['error']) ) {
+            $out['ok']=1;
+        }
+        #$out['response_debug'] = $response;
+
+        return $out;
+
+        return $out;
+    }
+
+
     // Add single record data in Mikrotik
     function bs_mkt_rest_api_add($cmd,$data) {
 

@@ -84,7 +84,6 @@ class Kernel extends ConsoleKernel
                 $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");
                 if($BRIDGEINFO['ok']){
                     foreach ($BRIDGEINFO['data'] as $row){
-                        echo $row['name'];
                         RadAcct::where('username',$row['name'])->delete();
                         $API->bs_mkt_rest_api_del("/ppp/active/" . $row['.id']);
                     }
