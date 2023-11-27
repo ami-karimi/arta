@@ -55,9 +55,13 @@ class ApiController extends Controller
             $query->where('group_type','volume');
         })->where('service_group','l2tp_cisco')->where('limited',0)->get();
         foreach ($data as $item){
-            $findUser = DB::table('radacct')->where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->sum('acctoutputoctets')->sum('acctinputoctets');
+            $findUser = DB::table('radacct')->where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username);
+             $download =  $findUser->sum('acctoutputoctets');
+             $upload =  $findUser->sum('acctinputoctets');
 
-            print_r($findUser);
+             echo $download;
+             echo $upload;
+
             /*
             if(count($findUser)) {
                 $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
