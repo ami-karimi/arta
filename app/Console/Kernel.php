@@ -109,7 +109,7 @@ class Kernel extends ConsoleKernel
                 }
             }
 
-        })->everyMinute()();
+        })->everyMinute();
 
 
         $schedule->call(function () {
