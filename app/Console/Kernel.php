@@ -27,22 +27,13 @@ class Kernel extends ConsoleKernel
     {
         $schedule->call(function () {
             RadAcct::where('saved',1)->delete();
-        })->everyTwoHours();
+        })->everyFiveMinutes();
 
         // Backup system
         $schedule->call(function () {
             Helper::get_backup();
         })->everyTenMinutes();
         // Backup DB
-        $schedule->call(function () {
-            RadAcct::where('saved', 1)->delete();
-
-            Helper::get_db_backup();
-
-
-        })->everyMinute();
-
-
         $schedule->call(function () {
 
             $now = Carbon::now()->format('Y-m-d');
@@ -70,17 +61,30 @@ class Kernel extends ConsoleKernel
             foreach ($data as $item){
                 $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
                 if(count($findUser)) {
-                        $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
-                        $item->download_usage += $findUser[0]['download_sum'];
-                        $item->upload_usage += $findUser[0]['upload_sum'];
-                        if($item->usage >= $item->max_usage ){
-                            $item->limited = 1;
-                        }
-                        $item->save();
+                    $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
+                    $item->download_usage += $findUser[0]['download_sum'];
+                    $item->upload_usage += $findUser[0]['upload_sum'];
+                    if($item->usage >= $item->max_usage ){
+                        $item->limited = 1;
+                    }
+                    $item->save();
                     RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
                 }
 
             }
+
+
+            Helper::get_db_backup();
+
+
+
+        })->everyMinute();
+
+
+        $schedule->call(function () {
+
+
+
 
 
         })->everyFiveMinutes();
