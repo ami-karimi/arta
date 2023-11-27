@@ -451,6 +451,16 @@ class Helper
     }
 
     public static function get_db_backup(){
+        $setting = Settings::get()->toArray();
+
+        $ftp_system =  Helper::toArray(array_filter($setting,function($item){ return $item['group'] == 'ftp';}));
+        if(!count($ftp_system)){
+            return false;
+        }
+        if($ftp_system['FTP_enabled'] !== '1'){
+            return false;
+        }
+
         $filename = "backupDB-" . date('Y-m-d_H_i') . ".gz";
         $save_path = public_path('backups/') . $filename;
         $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD')
@@ -462,6 +472,14 @@ class Helper
 
         exec($command, $output, $returnVar);
 
+
+        self::uploadBackupToServer($ftp_system,[
+            'last_backup_name' => $filename,
+            'ip' => 'DB',
+        ]);
+
+
+        return true;
     }
 }
 

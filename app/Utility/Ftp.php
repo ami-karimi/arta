@@ -62,7 +62,7 @@ class Ftp
         }
     }
 
-    public function uploadFileToBackUp($file_name,$ip){
+    public function uploadFileToBackUp($file_name,$ip = "no"){
         $save_dir = "/public_html/";
         $backupdir = $this->exit_create($save_dir.'backups');
         $save_dir = "/public_html/backups/";
