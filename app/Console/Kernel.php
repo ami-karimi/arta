@@ -36,6 +36,7 @@ class Kernel extends ConsoleKernel
         // Backup DB
         $schedule->call(function () {
 
+            /*
             $now = Carbon::now()->format('Y-m-d');
             $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
 
@@ -54,6 +55,8 @@ class Kernel extends ConsoleKernel
                     }
                 }
             }
+            */
+
 
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
@@ -74,7 +77,7 @@ class Kernel extends ConsoleKernel
             }
 
 
-            Helper::get_db_backup();
+           // Helper::get_db_backup();
 
 
 
