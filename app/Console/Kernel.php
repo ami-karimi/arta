@@ -109,7 +109,7 @@ class Kernel extends ConsoleKernel
                 }
             }
 
-        })->everyMinute();
+        })->everyTenMinutes();
 
 
         $schedule->call(function () {
@@ -132,7 +132,7 @@ class Kernel extends ConsoleKernel
                     }
                 }
             }
-        })->everyTwoHours();
+        })->everyFiveMinutes();
 
         $schedule->call(function () {
             $users = User::where('phonenumber','!=',null)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(3))->where('expire_date','>=',Carbon::now('Asia/Tehran')->subDays(3))->get();
@@ -144,16 +144,6 @@ class Kernel extends ConsoleKernel
             }
         })->everySixHours();
 
-        $schedule->call(function () {
-            $filename = "backup-" . Carbon::now()->format('Y-m-d') . ".gz";
-
-            $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD') . " --host=" . env('DB_HOST') . " " . env('DB_DATABASE') . "  | gzip > " . storage_path() . "/app/backup/" . $filename;
-
-            $returnVar = NULL;
-            $output  = NULL;
-
-            exec($command, $output, $returnVar);
-        })->everyTwoHours();
 
     }
 
