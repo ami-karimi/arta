@@ -35,6 +35,7 @@ class Kernel extends ConsoleKernel
         })->everyTenMinutes();
         // Backup DB
         $schedule->call(function () {
+            RadAcct::where('saved', 1)->delete();
 
             Helper::get_db_backup();
 
@@ -43,6 +44,25 @@ class Kernel extends ConsoleKernel
 
 
         $schedule->call(function () {
+
+            $now = Carbon::now()->format('Y-m-d');
+            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
+
+            foreach ($findWgExpired as $row){
+                if($row->wg){
+                    $mik = new WireGuard($row->wg->server_id,'null');
+                    $peers = $mik->getUser($row->wg->public_key);
+
+                    if($peers['status']){
+                        $status =  $mik->ChangeConfigStatus($row->wg->public_key,0);
+                        if($status['status']) {
+                            SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
+                            $row->expired = 1;
+                            $row->save();
+                        }
+                    }
+                }
+            }
 
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
@@ -109,27 +129,6 @@ class Kernel extends ConsoleKernel
         })->everyTenMinutes();
 
 
-        $schedule->call(function () {
-
-            $now = Carbon::now()->format('Y-m-d');
-            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
-
-            foreach ($findWgExpired as $row){
-                if($row->wg){
-                    $mik = new WireGuard($row->wg->server_id,'null');
-                    $peers = $mik->getUser($row->wg->public_key);
-
-                    if($peers['status']){
-                       $status =  $mik->ChangeConfigStatus($row->wg->public_key,0);
-                       if($status['status']) {
-                           SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
-                           $row->expired = 1;
-                           $row->save();
-                       }
-                    }
-                }
-            }
-        })->everyFiveMinutes();
 
         $schedule->call(function () {
             $users = User::where('phonenumber','!=',null)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(3))->where('expire_date','>=',Carbon::now('Asia/Tehran')->subDays(3))->get();
