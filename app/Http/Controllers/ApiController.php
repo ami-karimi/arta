@@ -25,7 +25,7 @@ use phpseclib3\Exception\UnableToConnectException;
 use App\Utility\SshServer;
 use App\Utility\V2raySN;
 use App\Utility\Ftp;
-
+use Illuminate\Support\Facades\DB;
 class ApiController extends Controller
 {
     public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
@@ -55,7 +55,7 @@ class ApiController extends Controller
             $query->where('group_type','volume');
         })->where('service_group','l2tp_cisco')->where('limited',0)->get();
         foreach ($data as $item){
-            $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->sum('acctoutputoctets')->sum('acctinputoctets');
+            $findUser = DB::table('radacct')->where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->sum('acctoutputoctets')->sum('acctinputoctets');
 
             print_r($findUser);
             /*
