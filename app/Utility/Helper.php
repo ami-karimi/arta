@@ -465,7 +465,7 @@ class Helper
         $save_path = public_path('backups/') . $filename;
         $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD')
             . " --host=" . env('DB_HOST') . " " . env('DB_DATABASE')
-            ." --no-create-info --ignore-table=".env('DB_DATABASE').".radpostauth --ignore-table=".env('DB_DATABASE').".radacct". "  | gzip > " . $save_path;
+            ."  --ignore-table=".env('DB_DATABASE').".radpostauth --ignore-table=".env('DB_DATABASE').".radacct". "  | gzip > " . $save_path;
 
         $returnVar = NULL;
         $output  = NULL;
