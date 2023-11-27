@@ -42,7 +42,7 @@ class Kernel extends ConsoleKernel
             Helper::get_db_backup();
 
 
-        })->cron("* * * * * *")->withoutOverlapping();
+        })->everyMinute();
 
 
         $schedule->call(function () {
