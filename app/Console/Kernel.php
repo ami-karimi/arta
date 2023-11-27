@@ -4,8 +4,10 @@ namespace App\Console;
 
 use App\Models\RadAcct;
 use App\Models\Ras;
+use App\Models\Settings;
 use App\Models\User;
 use App\Models\UserGraph;
+use App\Utility\Helper;
 use App\Utility\Mikrotik;
 use App\Utility\SaveActivityUser;
 use App\Utility\WireGuard;
@@ -14,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Utility\SmsSend;
+use App\Utility\Ftp;
 
 class Kernel extends ConsoleKernel
 {
@@ -25,6 +28,14 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             RadAcct::where('saved',1)->delete();
         })->everyTwoHours();
+
+        // Backup system
+        $schedule->call(function () {
+
+            Helper::get_backup();
+
+
+        })->everyFifteenMinutes();
 
         $schedule->call(function () {
 

@@ -108,6 +108,16 @@ Route::middleware(['auth:api'])->group(function () {
     // Admin Route
     Route::middleware(['is_admin'])->group(function () {
 
+        Route::prefix('ftp')->group(function () {
+
+          Route::post('/test_ftp', [\App\Http\Controllers\Admin\SettingsController::class, 'test_ftp']);
+
+        });
+        Route::prefix('settings')->group(function () {
+            Route::post('/save', [\App\Http\Controllers\Admin\SettingsController::class, 'save_setting']);
+            Route::get('/get', [\App\Http\Controllers\Admin\SettingsController::class, 'getSettings']);
+
+        });
 
         Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 

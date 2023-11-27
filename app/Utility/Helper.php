@@ -338,5 +338,132 @@ class Helper
 
         return $setting[$key]['value'];
     }
+
+    public static function SaveBackUpLog($array,$change){
+        foreach ($array as $key => $row){
+            if($row['ip'] == $change['ip']){
+                if(!isset($change['log'])){
+                    $array[$key] = $change;
+                }
+            }
+        }
+        $find = Settings::where('key','FTP_backup_server')->first();
+        $find->value = json_encode($array);
+        $find->save();
+    }
+
+    public static function get_backup(){
+        $setting = Settings::get()->toArray();
+        $backup_servers_l = Helper::toArray(array_filter($setting, function ($item) {
+            return $item['group'] == 'ftp_backup_servers';
+        }));
+        $ftp_system =  Helper::toArray(array_filter($setting,function($item){ return $item['group'] == 'ftp';}));
+        if(!count($ftp_system)){
+            return false;
+        }
+        if($ftp_system['FTP_enabled'] !== '1'){
+            return false;
+        }
+
+        $server_lists = json_decode($backup_servers_l['FTP_backup_server'],true);
+        $count = 0;
+        $count_server = count($server_lists);
+        while ($count < $count_server){
+
+               $server = $server_lists[$count];
+                $count++;
+                if($server['status_backup'] == "true"){
+
+                    if($server['type'] === "mikrotik"){
+
+                        // Save Mikrotik BackUp File
+                        $API = new Mikrotik((object)[
+                            'l2tp_address' => $server['mikrotik_domain'],
+                            'mikrotik_port' => $server['mikrotik_port'],
+                            'username' => $server['username'],
+                            'password' => $server['password'],
+                        ]);
+                        if($API->connect()['ok']){
+                            $filename = "ROS-".str_replace('.','_',$server['ip']).date('y-m-d_H-i');
+                            $re = $API->bs_mkt_rest_api_post('/system/backup/save',array(
+                                'name' => $filename
+                            ));
+                            // If Save OK
+                            if($re['ok']){
+                                $server['last_get_backup'] = date('Y-m-d H:i:s');
+                                $server['last_backup_name'] = $filename.".backup";
+                                $server['wait_download'] = "1";
+
+                                // Run Save To Internal Strong
+                                $ftp = new Ftp([
+                                    'ip' => $server['ip'],
+                                    'port' => $server['port'],
+                                    'username' => $server['username'],
+                                    'password' => $server['password'],
+                                ]);
+
+                                if($ftp->test_connection()) {
+                                    $saved_file = $ftp->SaveFile($server['last_backup_name']);
+                                    if($saved_file){
+                                        $server['wait_download'] = "0";
+                                        $server['saved_backup'] = 1;
+
+                                        // Upload BackUp To Server
+
+                                        $status = self::uploadBackupToServer($ftp_system,$server);
+                                        if($status){
+                                            $filename=  $server['last_backup_name'];
+                                            $server['last_upload_server'] = date('Y-m-d H:i:s');
+                                            $server['saved_backup'] = 0;
+                                        }
+                                    }
+                                }
+
+
+                            }
+                        }
+                    }
+
+
+                    Helper::SaveBackUpLog($server_lists,$server);
+
+                }
+
+        }
+    }
+
+    public static function uploadBackupToServer($ftp_system,$server){
+        $ftp = new Ftp([
+            'ip' => $ftp_system['FTP_ip'],
+            'port' => $ftp_system['FTP_port'],
+            'username' => $ftp_system['FTP_username'],
+            'password' => $ftp_system['FTP_password'],
+        ]);
+        if(!$ftp->test_connection()) {
+           return false;
+        }
+        $upload =  $ftp->uploadFileToBackUp($server['last_backup_name'],$server['ip']);
+        if($upload){
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function get_db_backup(){
+        $filename = "backupDB-" . date('Y-m-d_H_i') . ".gz";
+        $save_path = public_path('backups/') . $filename;
+        $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD')
+            . " --host=" . env('DB_HOST') . " " . env('DB_DATABASE')
+            . "  | gzip > " . $save_path;
+
+        $returnVar = NULL;
+        $output  = NULL;
+
+        exec($command, $output, $returnVar);
+
+    }
 }
+
+
 

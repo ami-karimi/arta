@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\RadAcct;
 use App\Models\RadPostAuth;
 use App\Models\Ras;
+use App\Models\Settings;
 use App\Models\WireGuardUsers;
+use App\Utility\Helper;
 use App\Utility\WireGuard;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -22,6 +24,7 @@ use phpseclib3\Net\SSH2;
 use phpseclib3\Exception\UnableToConnectException;
 use App\Utility\SshServer;
 use App\Utility\V2raySN;
+use App\Utility\Ftp;
 
 class ApiController extends Controller
 {
@@ -48,21 +51,11 @@ class ApiController extends Controller
 
     public function index(){
 
-        $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
-        $user_list = [];
-        foreach ($Servers as $sr) {
-            $API = new Mikrotik($sr);
-            $API->connect();
 
-                $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");
-                if($BRIDGEINFO['ok']){
-                    foreach ($BRIDGEINFO['data'] as $row){
-                        echo $row['name'];
-                        RadAcct::where('username',$row['name'])->delete();
-                        $API->bs_mkt_rest_api_del("/ppp/active/" . $row['.id']);
-                    }
-                }
-        }
+        Helper::get_db_backup();
+       // Helper::get_backup();
+
+
 
     }
 
