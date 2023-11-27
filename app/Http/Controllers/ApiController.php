@@ -55,9 +55,10 @@ class ApiController extends Controller
             $query->where('group_type','volume');
         })->where('service_group','l2tp_cisco')->where('limited',0)->get();
         foreach ($data as $item){
-            $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
+            $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->sum('acctoutputoctets')->sum('acctinputoctets');
 
-            echo $findUser[0]['download_sum'];
+            print_r($findUser);
+            /*
             if(count($findUser)) {
                 $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
                 $item->download_usage += $findUser[0]['download_sum'];
@@ -68,6 +69,7 @@ class ApiController extends Controller
                 $item->save();
                 RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
             }
+            */
 
         }
 
