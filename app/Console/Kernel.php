@@ -31,11 +31,8 @@ class Kernel extends ConsoleKernel
 
         // Backup system
         $schedule->call(function () {
-
             Helper::get_backup();
-
-
-        })->everyTwoHours();
+        })->everyTenMinutes();
         // Backup DB
         $schedule->call(function () {
 
