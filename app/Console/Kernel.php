@@ -63,6 +63,8 @@ class Kernel extends ConsoleKernel
             })->where('limited',0)->get();
             foreach ($data as $item){
                 $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
+
+                print_r($findUser);
                 if(count($findUser)) {
                     $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
                     $item->download_usage += $findUser[0]['download_sum'];
