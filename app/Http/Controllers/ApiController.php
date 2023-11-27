@@ -53,7 +53,7 @@ class ApiController extends Controller
 
         $data = User::whereHas('group',function ($query){
             $query->where('group_type','volume');
-        })->where('limited',0)->get();
+        })->where('service_group','l2tp_cisco')->where('limited',0)->get();
         print_r($data);
         foreach ($data as $item){
             $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
