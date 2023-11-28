@@ -67,7 +67,7 @@ class ApiController extends Controller
              echo "</br>";
 
 
-            if(count($findUser)) {
+            if(count($findUser) && ($upload + $download) > 0) {
                 $item->usage += $download+ $upload;
                 $item->download_usage +=  $download;
                 $item->upload_usage += $upload;
