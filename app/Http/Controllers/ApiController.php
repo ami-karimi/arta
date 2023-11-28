@@ -58,11 +58,13 @@ class ApiController extends Controller
             $findUser = DB::table('radacct')
                 ->where('saved',0)
                 ->where('username',$item->username)->get();
+            echo $item->username;
              $download =  $findUser->sum('acctoutputoctets');
              $upload =  $findUser->sum('acctinputoctets');
 
              echo $download;
              echo $upload;
+             echo "</br>";
 
             /*
             if(count($findUser)) {
