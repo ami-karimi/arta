@@ -57,13 +57,11 @@ class Kernel extends ConsoleKernel
         })->name('SaveUsageStats')->everyMinute();
 
         $schedule->call(function () {
-            $job = 0;
-            while($job <= 1) {
-                RadAcct::where('saved', 1)->delete();
+
 
                 Helper::get_db_backup();
-                $job++;
-            }
+            RadAcct::where('saved', 1)->delete();
+
 
 
         })   ->name('GetDB_backup')
