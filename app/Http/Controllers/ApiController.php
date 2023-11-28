@@ -59,6 +59,8 @@ class ApiController extends Controller
             foreach($row->wgs as $row_wg) {
                 echo $row_wg->public_key;
                 echo $row->expire_date;
+                echo $row_wg->server_id;
+                echo $row->username;
                 echo "</br>";
                 $mik = new WireGuard($row_wg->server_id, 'null');
                 $peers = $mik->getUser($row_wg->public_key);
