@@ -28,15 +28,6 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->call(function () {
-            RadAcct::where('saved',1)->delete();
-        })->everyFiveMinutes();
-
-        // Backup system
-        $schedule->call(function () {
-            Helper::get_backup();
-        })->everyTenMinutes();
-        // Backup DB
-        $schedule->call(function () {
 
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
@@ -65,12 +56,33 @@ class Kernel extends ConsoleKernel
 
         })->everyMinute();
 
-
         $schedule->call(function () {
+            RadAcct::where('saved',1)->delete();
 
             Helper::get_db_backup();
 
+
         })->everyFiveMinutes();
+        // Backup system
+        $schedule->call(function () {
+            $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
+            $user_list = [];
+            foreach ($Servers as $sr) {
+                $API = new Mikrotik($sr);
+                $API->connect();
+
+                $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");
+                if($BRIDGEINFO['ok']){
+                    foreach ($BRIDGEINFO['data'] as $row){
+                        RadAcct::where('username',$row['name'])->delete();
+                        $API->bs_mkt_rest_api_del("/ppp/active/" . $row['.id']);
+                    }
+                }
+            }
+
+
+        })->everyTenMinutes();
+        // Backup DB
         /*
         $schedule->call(function () {
             $users = User::whereHas('group',function($query){
@@ -96,26 +108,9 @@ class Kernel extends ConsoleKernel
             }
         })->everyTwoHours();
         */
-
-        $schedule->call(function () {
-            $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
-            $user_list = [];
-            foreach ($Servers as $sr) {
-                $API = new Mikrotik($sr);
-                $API->connect();
-
-                $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");
-                if($BRIDGEINFO['ok']){
-                    foreach ($BRIDGEINFO['data'] as $row){
-                        RadAcct::where('username',$row['name'])->delete();
-                        $API->bs_mkt_rest_api_del("/ppp/active/" . $row['.id']);
-                    }
-                }
-            }
-
-        })->everyTenMinutes();
-
         $schedule->call(function(){
+            Helper::get_backup();
+
 
             $now = Carbon::now()->format('Y-m-d');
             $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
@@ -138,7 +133,6 @@ class Kernel extends ConsoleKernel
 
             }
         })->everyFourHours();
-
         $schedule->call(function () {
 
 
