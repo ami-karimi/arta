@@ -51,35 +51,15 @@ class ApiController extends Controller
 
     public function index(){
 
-        $data = User::whereHas('group',function ($query){
-            $query->where('group_type','volume');
-        })->where('service_group','l2tp_cisco')->where('limited',0)->get();
-        foreach ($data as $item){
-            $findUser = DB::table('radacct')
-                ->where('saved',0)
-                ->where('username',$item->username)->get();
-            echo $item->username;
-             $download =  $findUser->sum('acctoutputoctets');
-             $upload =  $findUser->sum('acctinputoctets');
 
-             echo $download;
-             echo $upload;
-             echo "</br>";
+        $data_no = User::whereHas('group',function ($query){
+            $query->where('group_type','expire');
+        })->where('service_group','l2tp_cisco')->get();
 
-
-            if(count($findUser) && ($upload + $download) > 0) {
-                $item->usage += $download+ $upload;
-                $item->download_usage +=  $download;
-                $item->upload_usage += $upload;
-                if($item->usage >= $item->max_usage ){
-                    $item->limited = 1;
-                }
-                $item->save();
-                RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
-            }
-
-
+        foreach ($data_no as $item){
+            RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
         }
+
 
        // Helper::get_db_backup();
        // Helper::get_backup();
