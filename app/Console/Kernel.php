@@ -113,7 +113,7 @@ class Kernel extends ConsoleKernel
 
 
             $now = Carbon::now()->format('Y-m-d');
-            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
+            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->get();
 
             foreach ($findWgExpired as $row){
                 foreach($row->wgs as $row_wg) {
