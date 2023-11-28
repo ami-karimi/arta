@@ -51,7 +51,10 @@ class ApiController extends Controller
 
     public function index(){
 
+        $now = Carbon::now()->format('Y-m-d');
+        $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->get();
 
+        print_r($findWgExpired);
 
 
        // Helper::get_db_backup();
