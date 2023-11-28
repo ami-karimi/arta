@@ -8,6 +8,7 @@ use App\Models\Ras;
 use App\Models\Settings;
 use App\Models\WireGuardUsers;
 use App\Utility\Helper;
+use App\Utility\SaveActivityUser;
 use App\Utility\WireGuard;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -54,8 +55,26 @@ class ApiController extends Controller
         $now = Carbon::now()->format('Y-m-d');
         $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->get();
 
-        print_r($findWgExpired);
+        foreach ($findWgExpired as $row){
+            foreach($row->wgs as $row_wg) {
+                echo $row_wg->public_key;
+                echo $row->expire_date;
+                echo "</br>";
+                $mik = new WireGuard($row_wg->server_id, 'null');
+                $peers = $mik->getUser($row_wg->public_key);
+                $row_wg->is_enabled = 0;
+                $row_wg->save();
+                if ($peers['status']) {
+                    $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
+                    if ($status['status']) {
+                        SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
+                        $row->expired = 1;
+                        $row->save();
+                    }
+                }
+            }
 
+        }
 
        // Helper::get_db_backup();
        // Helper::get_backup();
