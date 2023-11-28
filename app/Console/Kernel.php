@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Models\RadAcct;
+use App\Models\RadPostAuth;
 use App\Models\Ras;
 use App\Models\Settings;
 use App\Models\User;
@@ -37,28 +38,6 @@ class Kernel extends ConsoleKernel
         // Backup DB
         $schedule->call(function () {
 
-            /*
-            $now = Carbon::now()->format('Y-m-d');
-            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
-
-            foreach ($findWgExpired as $row){
-                if($row->wg){
-                    $mik = new WireGuard($row->wg->server_id,'null');
-                    $peers = $mik->getUser($row->wg->public_key);
-
-                    if($peers['status']){
-                        $status =  $mik->ChangeConfigStatus($row->wg->public_key,0);
-                        if($status['status']) {
-                            SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
-                            $row->expired = 1;
-                            $row->save();
-                        }
-                    }
-                }
-            }
-            */
-
-
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
             })->where('service_group','l2tp_cisco')->where('limited',0)->get();
@@ -84,19 +63,12 @@ class Kernel extends ConsoleKernel
 
             }
 
-
-            // Helper::get_db_backup();
-
-
-
         })->everyMinute();
 
 
         $schedule->call(function () {
 
-
-
-
+            Helper::get_db_backup();
 
         })->everyFiveMinutes();
         /*
@@ -143,9 +115,44 @@ class Kernel extends ConsoleKernel
 
         })->everyTenMinutes();
 
+        $schedule->call(function(){
 
+            $now = Carbon::now()->format('Y-m-d');
+            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
+
+            foreach ($findWgExpired as $row){
+                foreach($row->wgs as $row_wg) {
+                    $mik = new WireGuard($row_wg->server_id, 'null');
+                    $peers = $mik->getUser($row_wg->public_key);
+                    $row_wg->is_enabled = 0;
+                    $row_wg->save();
+                    if ($peers['status']) {
+                        $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
+                        if ($status['status']) {
+                            SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
+                            $row->expired = 1;
+                            $row->save();
+                        }
+                    }
+                }
+
+            }
+        })->everyFourHours();
 
         $schedule->call(function () {
+
+
+            $data_no = User::whereHas('group',function ($query){
+                $query->where('group_type','expire');
+            })->where('service_group','l2tp_cisco')->get();
+
+            foreach ($data_no as $item){
+                RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
+                RadPostAuth::where('username',$item->username)->delete();
+            }
+
+
+
             $users = User::where('phonenumber','!=',null)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(3))->where('expire_date','>=',Carbon::now('Asia/Tehran')->subDays(3))->get();
             foreach ($users as $user){
                 if($user->expire_date) {

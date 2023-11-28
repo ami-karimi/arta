@@ -52,13 +52,6 @@ class ApiController extends Controller
     public function index(){
 
 
-        $data_no = User::whereHas('group',function ($query){
-            $query->where('group_type','expire');
-        })->where('service_group','l2tp_cisco')->get();
-
-        foreach ($data_no as $item){
-            RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
-        }
 
 
        // Helper::get_db_backup();
