@@ -17,6 +17,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Utility\SmsSend;
 use App\Utility\Ftp;
+use Illuminate\Support\Facades\DB;
 
 class Kernel extends ConsoleKernel
 {
@@ -60,15 +61,19 @@ class Kernel extends ConsoleKernel
 
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
-            })->where('limited',0)->get();
+            })->where('service_group','l2tp_cisco')->where('limited',0)->get();
             foreach ($data as $item){
-                $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
+                $findUser = DB::table('radacct')
+                    ->where('saved',0)
+                    ->where('acctstoptime','!=',NULL)
+                    ->where('username',$item->username)->get();
+                $download =  $findUser->sum('acctoutputoctets');
+                $upload =  $findUser->sum('acctinputoctets');
 
-                print_r($findUser);
-                if(count($findUser)) {
-                    $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
-                    $item->download_usage += $findUser[0]['download_sum'];
-                    $item->upload_usage += $findUser[0]['upload_sum'];
+                if(count($findUser) && ($upload + $download) > 0) {
+                    $item->usage += $download+ $upload;
+                    $item->download_usage +=  $download;
+                    $item->upload_usage += $upload;
                     if($item->usage >= $item->max_usage ){
                         $item->limited = 1;
                     }
@@ -76,10 +81,11 @@ class Kernel extends ConsoleKernel
                     RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
                 }
 
+
             }
 
 
-           // Helper::get_db_backup();
+            // Helper::get_db_backup();
 
 
 
