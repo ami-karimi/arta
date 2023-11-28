@@ -54,7 +54,7 @@ class Kernel extends ConsoleKernel
 
             }
 
-        })->everyMinute();
+        })->name('SaveUsageStats')->everyMinute();
 
         $schedule->call(function () {
             $job = 0;
@@ -66,7 +66,8 @@ class Kernel extends ConsoleKernel
             }
 
 
-        })->everyFiveMinutes();
+        })   ->name('GetDB_backup')
+            ->everyFiveMinutes();
         // Backup system
         $schedule->call(function () {
             $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
@@ -136,7 +137,7 @@ class Kernel extends ConsoleKernel
                 }
 
             }
-        })->everyFourHours();
+        })->name('CheckExpiredWireguardAccount')->everyFourHours();
         $schedule->call(function () {
 
 
@@ -158,7 +159,7 @@ class Kernel extends ConsoleKernel
                     $sms->SendSmsExpire(Carbon::now()->diffInDays($user->expire_date, false));
                 }
             }
-        })->everySixHours();
+        })->name('SendSmsExpire')->everySixHours();
 
 
     }
