@@ -66,18 +66,18 @@ class ApiController extends Controller
              echo $upload;
              echo "</br>";
 
-            /*
+
             if(count($findUser)) {
-                $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
-                $item->download_usage += $findUser[0]['download_sum'];
-                $item->upload_usage += $findUser[0]['upload_sum'];
+                $item->usage += $download+ $upload;
+                $item->download_usage +=  $download;
+                $item->upload_usage += $upload;
                 if($item->usage >= $item->max_usage ){
                     $item->limited = 1;
                 }
                 $item->save();
                 RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
             }
-            */
+
 
         }
 
