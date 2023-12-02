@@ -83,17 +83,17 @@ class MonitorigController extends Controller
 
 
     public function KillUser($server,$user){
-        $API        = new Mikrotik();
+        $API        = new Mikrotik($server);
         $API->debug = false;
-        if($API->connect($server, 'admin', 'Amir@###1401')){
-            $BRIDGEINFO = $API->comm('/ppp/active/print', array(
-                ".proplist" => ".id",
-                "?name" => "$user"
-            ));
+        if($API->connect()['ok']){
+            $BRIDGEINFO = $API->bs_mkt_rest_api_get('/ppp/active?.proplist=.id&name='.$user);
+            if(!$BRIDGEINFO['ok']){
+                return false;
+            }
+            foreach ($BRIDGEINFO['data'] as $row) {
+                $API->bs_mkt_rest_api_del("/ppp/active/" . $row['.id']);
 
-            $API->comm('/ppp/active/remove',  array(
-                ".id"=>$BRIDGEINFO[0]['.id'],
-            ));
+            }
             return true;
         }
 
