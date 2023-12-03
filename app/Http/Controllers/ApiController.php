@@ -59,10 +59,12 @@ class ApiController extends Controller
        // Helper::get_db_backup();
        // Helper::get_backup();
 
+        /*
         $monitorin = new MonitorigController();
         $re = $monitorin->KillUser((object) ['l2tp_address' => 's2.arta20.xyz'],'amirtld');
 
         print_r($re);
+        */
 
     }
 
