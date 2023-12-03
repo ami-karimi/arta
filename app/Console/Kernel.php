@@ -59,10 +59,8 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
 
 
-                Helper::get_db_backup();
+            Helper::get_db_backup();
             RadAcct::where('saved', 1)->delete();
-
-
 
         })   ->name('GetDB_backup')
             ->everyFiveMinutes();

@@ -27,6 +27,8 @@ use App\Utility\SshServer;
 use App\Utility\V2raySN;
 use App\Utility\Ftp;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Admin\MonitorigController;
+
 class ApiController extends Controller
 {
     public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
@@ -57,7 +59,10 @@ class ApiController extends Controller
        // Helper::get_db_backup();
        // Helper::get_backup();
 
+        $monitorin = new MonitorigController();
+        $re = $monitorin->KillUser((object) ['l2tp_address' => 's2.arta20.xyz'],'amirtld');
 
+        print_r($re);
 
     }
 
