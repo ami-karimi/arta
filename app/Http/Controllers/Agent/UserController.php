@@ -1051,7 +1051,7 @@ class UserController extends Controller
             ],403);
         }
         $monitor = new MonitorigController() ;
-        if($monitor->KillUser($find->nasipaddress,$find->username)) {
+        if($monitor->KillUser($find->servername->l2tp_address,$find->username)) {
             $find->acctstoptime = Carbon::now('Asia/Tehran');
             $find->save();
             return response()->json([
