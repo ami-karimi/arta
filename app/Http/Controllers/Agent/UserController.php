@@ -1699,7 +1699,7 @@ class UserController extends Controller
                 "PORT" =>  $findLocation->port_v2ray,
                 "USERNAME" => $findLocation->username_v2ray,
                 "PASSWORD"=> $findLocation->password_v2ray,
-                "CDN_ADDRESS"=> $find->v2ray_server->cdn_address_v2ray,
+                "CDN_ADDRESS"=> $findLocation->cdn_address_v2ray,
 
             ]
         );
