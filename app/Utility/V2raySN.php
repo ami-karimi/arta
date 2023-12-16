@@ -87,7 +87,7 @@ class V2raySN {
             $body = substr($response, $headerSize);
             $dataObject = json_decode($body,true);
             curl_close($ch);
-            if(is_null($http_code)){
+            if(is_null($response)){
                 return [
                     "msg" => "Status Code : $http_code",
                     "success" => false
