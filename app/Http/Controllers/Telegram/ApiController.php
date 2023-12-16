@@ -154,6 +154,7 @@ class ApiController extends Controller
         $order->server_id = $request->server_id;
         $order->order_type = $request->order_type;
         $order->price = $request->price;
+        $order->status = 'pending_payment';
         $order->ng_price = $request->ng_price;
         $order->sync_id = $user_id;
         if($request->build_id){
