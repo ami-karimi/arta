@@ -84,17 +84,18 @@ class V2raySN {
             $response = curl_exec($ch);
             $http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+             if(is_null($response)){
+               unlink($this->cookie_txt_path);
+                 curl_close($ch);
+                 return [
+                "msg" => "Status Code : 0",
+                "success" => false
+               ];
+            }
             $body = substr($response, $headerSize);
             $dataObject = json_decode($body,true);
             curl_close($ch);
-            if(is_null($response)){
-                unlink($this->cookie_txt_path);
 
-                return [
-                    "msg" => "Status Code : $http_code",
-                    "success" => false
-                ];
-            }
             return match ($http_code) {
                 200 => $dataObject,
                 0 => [
