@@ -162,6 +162,10 @@ class V2raySN {
 
     public function get_client($email = false){
         $get = $this->request("panel/api/inbounds/getClientTraffics/".$email,[],'GET');
+        if(is_null($get)){
+            unlink($this->cookie_txt_path);
+            return false;
+        }
         if(!$get['success']){
             return false;
         }
