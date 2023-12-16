@@ -50,7 +50,7 @@ class V2raySN {
 
 
     }
-    public function request(string $method, array | string $param = "",$type = "POST") : array
+    public function request(string $method, array | string $param = "",$type = "POST")
     {
         $URL = "http://".$this->Server['HOST'].":".$this->Server['PORT']."/$method";
 
@@ -88,6 +88,8 @@ class V2raySN {
             $dataObject = json_decode($body,true);
             curl_close($ch);
             if(is_null($response)){
+                unlink($this->cookie_txt_path);
+
                 return [
                     "msg" => "Status Code : $http_code",
                     "success" => false
