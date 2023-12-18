@@ -38,6 +38,7 @@ class MonitorigController extends Controller
 
     public function ether($ip){
         $FindRas = Ras::where('ipaddress',$ip)->first();
+        var_dump($FindRas);
         $API        = new Mikrotik((object)[
             'l2tp_address' => $FindRas->mikrotik_domain,
             'mikrotik_port' => $FindRas->mikrotik_port,
