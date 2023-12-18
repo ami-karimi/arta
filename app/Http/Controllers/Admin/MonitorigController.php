@@ -45,7 +45,6 @@ class MonitorigController extends Controller
             'password' => $FindRas->mikrotik_password,
         ]);
         $connect = $API->connect();
-        var_dump($connect);
         if(!$connect['ok']){
             return response()->json([
                 'status' => false,
