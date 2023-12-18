@@ -65,8 +65,7 @@ class ApiController extends Controller
         ]);
         header('Content-Type: application/json; charset=utf-8');
 
-        echo json_encode($V2ray->getOnlines());
-
+        echo json_encode($V2ray->get_user(2,'mywsp'));
 
        // Helper::get_db_backup();
        // Helper::get_backup();

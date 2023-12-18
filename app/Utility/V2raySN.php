@@ -84,16 +84,18 @@ class V2raySN {
             ));
 
             $response = curl_exec($ch);
-            $http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-             if(is_null($response)){
-               unlink($this->cookie_txt_path);
-                 curl_close($ch);
-                 return [
+           if(is_null($response)){
+              unlink($this->cookie_txt_path);
+               curl_close($ch);
+             return [
                 "msg" => "Status Code : 0",
                 "success" => false
-               ];
-            }
+            ];
+           }
+
+            $http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+
             $body = substr($response, $headerSize);
             $dataObject = json_decode($body,true);
             curl_close($ch);
