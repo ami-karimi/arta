@@ -94,6 +94,8 @@ class AgentUserCollection extends ResourceCollection
                             "PORT" => $item->v2ray_server->port_v2ray,
                             "USERNAME" => $item->v2ray_server->username_v2ray,
                             "PASSWORD" => $item->v2ray_server->password_v2ray,
+                            "CDN_ADDRESS"=> $item->v2ray_server->cdn_address_v2ray,
+
                         ]
                     );
 

@@ -184,6 +184,8 @@ class UserController extends Controller
                         "PORT" => $userDetial->v2ray_server->port_v2ray,
                         "USERNAME" => $userDetial->v2ray_server->username_v2ray,
                         "PASSWORD" => $userDetial->v2ray_server->password_v2ray,
+                        "CDN_ADDRESS"=> $userDetial->v2ray_server->cdn_address_v2ray,
+
                     ]
                 );
 
@@ -479,6 +481,8 @@ class UserController extends Controller
                     "PORT" => $find->v2ray_server->port_v2ray,
                     "USERNAME" => $find->v2ray_server->username_v2ray,
                     "PASSWORD" => $find->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $find->v2ray_server->cdn_address_v2ray,
+
                 ]
             );
             if($login->error['status']){
@@ -964,6 +968,8 @@ class UserController extends Controller
                     "PORT" => $find->v2ray_server->port_v2ray,
                     "USERNAME" => $find->v2ray_server->username_v2ray,
                     "PASSWORD" => $find->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $find->v2ray_server->cdn_address_v2ray,
+
                 ]
             );
             if($login->error['status']){
@@ -1084,6 +1090,8 @@ class UserController extends Controller
                     "PORT" => $find->v2ray_server->port_v2ray,
                     "USERNAME" => $find->v2ray_server->username_v2ray,
                     "PASSWORD" => $find->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $find->v2ray_server->cdn_address_v2ray,
+
                 ]
             );
             if($login->error['status']){
@@ -1690,6 +1698,8 @@ class UserController extends Controller
                 "PORT" =>  $findLocation->port_v2ray,
                 "USERNAME" => $findLocation->username_v2ray,
                 "PASSWORD"=> $findLocation->password_v2ray,
+                "CDN_ADDRESS"=> $find->v2ray_server->cdn_address_v2ray,
+
             ]
         );
         if($V2ray->error['status']){

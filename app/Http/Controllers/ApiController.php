@@ -55,6 +55,18 @@ class ApiController extends Controller
     public function index(){
 
 
+        /*
+        $V2ray = new V2raySN([
+            'HOST' =>  "85.133.151.94",
+            "PORT" =>  "2084",
+            "USERNAME" => "amirtld",
+            "PASSWORD"=> "Amir@###1401",
+            "CDN_ADDRESS"=> "v3.arta20.xyz",
+        ]);
+        header('Content-Type: application/json; charset=utf-8');
+
+        echo json_encode($V2ray->get_user(1,'qwehmcyh'));
+        */
 
        // Helper::get_db_backup();
        // Helper::get_backup();

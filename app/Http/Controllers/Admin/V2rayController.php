@@ -34,6 +34,8 @@ class V2rayController extends Controller
             "PORT" =>  $find_ras->port_v2ray,
             "USERNAME" => $find_ras->username_v2ray,
             "PASSWORD"=> $find_ras->password_v2ray,
+            "CDN_ADDRESS"=> $find_ras->cdn_address_v2ray,
+
         ]);
         if(!$V2ray->error['status']){
             $list = $V2ray->InBoandList();

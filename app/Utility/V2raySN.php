@@ -22,6 +22,7 @@ class V2raySN {
     public mixed $empty_object;
 
 
+
     public function __construct($server = [])
     {
         $this->Server = $server;
@@ -29,6 +30,7 @@ class V2raySN {
         $this->cookies_directory = public_path('.cookies/');
         $HOST = $this->Server['HOST'];
         $PORT = $this->Server['PORT'];
+        $CDN = $this->Server['CDN_ADDRESS'];
         $this->empty_object = new \stdClass();
         $this->cookies_directory = public_path('.cookies/');
         $this->cookie_txt_path = "$this->cookies_directory$HOST.$PORT.txt";
@@ -295,73 +297,180 @@ class V2raySN {
                 $user = $client;
             }
 
-            $user['url'] =  $this->url($inBound['port'],$inBound['protocol'],$UUid,$remark,json_decode($item['streamSettings'],true)['network'],json_decode($item['streamSettings'],true));
-            $user['url_encode'] =  urlencode($this->url($inBound['port'],$inBound['protocol'],$UUid,$remark,json_decode($item['streamSettings'],true)['network'],json_decode($item['streamSettings'],true)));
+
+            $user['url'] =  $this->getConnectionLink(json_encode($item), $user)[0];
+            $user['url_encode'] =  urlencode($this->getConnectionLink( json_encode($item), $user)[0]);
 
 
 
 
         return ['inbound' => $inBound ,'user' => $user];
     }
-
-    public function url(
-        int $port,
-        string $protocol = "",
-        string $uid = "",
-        string $remark = "",
-        string $transmission,
-        array $network
-    ) : string
+    public function getConnectionLink($row,$client,$sni = false)
     {
-        $protocol = $protocol;
-        $uid = $uid;
-        $remark = $remark;
-        $transmission = $transmission;
-        $path = $transmission == "ws" ? "/" : "";
 
-        switch ($protocol) {
-            case "vmess":
-                $vmess_url = "vmess://";
-                $vmess_settings = [
-                    "v" => "2",
-                    "ps" => $remark,
-                    "add" => $network['serverName'],
-                    "port" => $port,
-                    "id" => $uid,
-                    "aid" => 0,
-                    "net" => $transmission,
-                    "type" => "none",
-                    "host" => "",
-                    "path" => $path,
-                    "tls" => "none"
-                ];
-                $vmess_base = base64_encode(json_encode($vmess_settings));
-                return $vmess_url . $vmess_base;
+        $uniqid = $client['id'];
+        $row = json_decode($row);
+        $port = $row->port;
 
-            case "vless":
-                $vless_url = "vless://$uid";
-                $vless_url .= "@" . $network['tlsSettings']['serverName'] . ":$port";
-                $vless_url .= "?mode=gun";
-                if (isset($network['security'])) {
-                    $vless_url .= "&security=" . $network['security'];
-                }
-                $vless_url .= "&type=$transmission";
-                $vless_url .= "&encryption=none";
+        $protocol = $row->protocol;
 
-                if (isset($network['tlsSettings'])) {
-                    if (isset($network['tlsSettings']['fingerprint'])) {
-                        $vless_url .= "&fp=" . $network['tlsSettings']['fingerprint'];
+
+                    $email = $client['email'];
+                     $remark = $row->remark;
+
+                    $tlsStatus = json_decode($row->streamSettings)->security;
+                     $tlsSetting = false;
+                    if(isset(json_decode($row->streamSettings)->tlsSettings)) {
+                        $tlsSetting = json_decode($row->streamSettings)->tlsSettings;
                     }
-                    if (isset($network['tlsSettings']['alpn'])) {
-                        $vless_url .= "&alpn=" . implode(',', $network['tlsSettings']['alpn']);
+                    $xtlsSetting  = false;
+                    if(isset(json_decode($row->streamSettings)->xtlsSettings)){
+                        $xtlsSetting = json_decode($row->streamSettings)->xtlsSettings;
                     }
-                }
-                $vless_url .= "&serviceName=#$remark";
-                return $vless_url;
+                    $netType = json_decode($row->streamSettings)->network;
+                    if ($netType == 'tcp') {
+                        $header_type = json_decode($row->streamSettings)->tcpSettings->header->type;
+                        $path = json_decode($row->streamSettings)->tcpSettings->header->request->path[0];
+                        $host = json_decode($row->streamSettings)->tcpSettings->header->request->headers->Host[0];
 
-            default:
-                return "Error, url could not be created";
+                        if ($tlsStatus == "reality") {
+                            $realitySettings = json_decode($row->streamSettings)->realitySettings;
+                            $fp = $realitySettings->settings->fingerprint;
+                            $spiderX = $realitySettings->settings->spiderX;
+                            $pbk = $realitySettings->settings->publicKey;
+                            $sni = $realitySettings->serverNames[0];
+                            $flow = $client['flow'];
+                            $sid = $realitySettings->shortIds[0];
+                        }
+                    }
+                    if ($netType == 'ws') {
+                        $header_type = json_decode($row->streamSettings)->wsSettings->header->type;
+                        $path = json_decode($row->streamSettings)->wsSettings->path;
+                        $host = json_decode($row->streamSettings)->wsSettings->headers->Host;
+                    }
+                    /*
+                    if ($header_type == 'http' && empty($host)) {
+                        $request_header = explode(':', $request_header);
+                        $host = $request_header[1];
+                    }
+                    */
+                    if ($netType == 'grpc') {
+                        if ($tlsStatus == 'tls') {
+                            $alpn = "";
+                            if(isset($tlsSetting->certificates->alpn)) {
+                                $alpn = $tlsSetting->certificates->alpn;
+                            }
+                            if (isset($tlsSetting->settings->serverName)) $sni = $tlsSetting->settings->serverName;
+                        } elseif ($tlsStatus == "reality") {
+                            $realitySettings = json_decode($row->streamSettings)->realitySettings;
+                            $fp = $realitySettings->settings->fingerprint;
+                            $spiderX = $realitySettings->settings->spiderX;
+                            $pbk = $realitySettings->settings->publicKey;
+                            $sni = $realitySettings->serverNames[0];
+                            $flow = $settings['clients'][0]['flow'];
+                            $sid = $realitySettings->shortIds[0];
+                        }
+                        $serviceName = json_decode($row->streamSettings)->grpcSettings->serviceName;
+                        $grpcSecurity = json_decode($row->streamSettings)->security;
+                    }
+                    if ($tlsStatus == 'tls') {
+                        $serverName = $tlsSetting->serverName;
+                        if (isset($tlsSetting->settings->serverName)) $sni = $tlsSetting->settings->serverName;
+                    }
+                    if ($tlsStatus == "xtls") {
+                        $serverName = $xtlsSetting->serverName;
+                        $alpn = $xtlsSetting->alpn;
+                        if (isset($xtlsSetting->settings->serverName)) $sni = $xtlsSetting->settings->serverName;
+                    }
+                    if ($netType == 'kcp') {
+                        $kcpSettings = json_decode($row->streamSettings)->kcpSettings;
+                        $kcpType = $kcpSettings->header->type;
+                        $kcpSeed = $kcpSettings->seed;
+                    }
+
+
+
+
+
+
+        $protocol = strtolower($protocol);
+        $serverIp = [$this->Server['CDN_ADDRESS']];
+        $outputLink = array();
+        foreach ($serverIp as $server_ip) {
+                 $server_ip = str_replace("\r", "", ($server_ip));
+                if ($protocol == 'vless') {
+
+                    if (strlen($sni) > 1 && $tlsStatus != "reality") $psting = "&sni=$sni"; else $psting = '';
+                    if ($netType == 'tcp') {
+                        if ($netType == 'tcp' and $header_type == 'http') $psting .= '&headerType=http';
+                        if ($tlsStatus == "xtls") $psting .= "&flow=xtls-rprx-direct";
+                        if ($tlsStatus == "reality") $psting .= "&fp=$fp&pbk=$pbk&sni=$sni" . ($flow != "" ? "&flow=$flow" : "") . "&sid=$sid&spx=$spiderX";
+                        if ($header_type == "http") $psting .= "&path=/&host=$host";
+                        $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus{$psting}#$remark";
+                    } elseif ($netType == 'ws') {
+                         $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus&path=/&host=$host{$psting}#$remark";
+                    } elseif ($netType == 'kcp')
+                        $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus&headerType=$kcpType&seed=$kcpSeed#$remark";
+                    elseif ($netType == 'grpc') {
+                        if ($tlsStatus == 'tls') {
+                            $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus&serviceName=$serviceName&sni=$serverName#$remark";
+                        } elseif ($tlsStatus == "reality") {
+                            $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus&serviceName=$serviceName&fp=$fp&pbk=$pbk&sni=$sni" . ($flow != "" ? "&flow=$flow" : "") . "&sid=$sid&spx=$spiderX#$remark";
+                        } else {
+                            $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus&serviceName=$serviceName#$remark";
+                        }
+                    }
+                } elseif ($protocol == 'trojan') {
+                    $psting = '';
+                    if ($header_type == 'http') $psting .= "&path=/&host=$host";
+                    if ($netType == 'tcp' and $header_type == 'http') $psting .= '&headerType=http';
+                    if (strlen($sni) > 1) $psting .= "&sni=$sni";
+                    $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus{$psting}#$remark";
+
+                    if ($netType == 'grpc') {
+                        if ($tlsStatus == 'tls') {
+                            $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus&serviceName=$serviceName&sni=$sni#$remark";
+                        } else {
+                            $outputlink = "$protocol://$uniqid@$server_ip:$port?type=$netType&security=$tlsStatus&serviceName=$serviceName#$remark";
+                        }
+
+                    }
+                } elseif ($protocol == 'vmess') {
+                    $vmessArr = [
+                        "v" => "2",
+                        "ps" => $remark,
+                        "add" => $server_ip,
+                        "port" =>  $port,
+                        "id" => $uniqid,
+                        "aid" => 0,
+                        "net" => $netType,
+                        "type" => ($header_type) ? $header_type : ($kcpType ? $kcpType : "none"),
+                        "host" => $host,
+                        "path" => (is_null($path) and $path != '') ? '/' : (is_null($path) ? '' : $path),
+                        "tls" => ((is_null($tlsStatus)) ? 'none' : $tlsStatus)
+                    ];
+                    if ($netType == 'grpc') {
+                        if (!is_null($alpn) and json_encode($alpn) != '[]' and $alpn != '') $vmessArr['alpn'] = $alpn;
+                        if (strlen($serviceName) > 1) $vmessArr['path'] = $serviceName;
+                        $vmessArr['type'] = $grpcSecurity;
+                        $vmessArr['scy'] = 'auto';
+                    }
+                    if ($netType == 'kcp') {
+                        $vmessArr['path'] = $kcpSeed ? $kcpSeed : $vmessArr['path'];
+                    }
+
+                    if (strlen($sni) > 1) $vmessArr['sni'] = $sni;
+                    $urldata = base64_encode(json_encode($vmessArr, JSON_UNESCAPED_SLASHES, JSON_PRETTY_PRINT));
+                    $outputlink = "vmess://$urldata";
+                }
+
+            $outputLink[] = $outputlink;
         }
+
+        return $outputLink;
     }
+
+
 
 }

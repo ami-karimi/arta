@@ -122,6 +122,7 @@ class UserController extends Controller
                     "PORT" =>  $findLocation->port_v2ray,
                     "USERNAME" => $findLocation->username_v2ray,
                     "PASSWORD"=> $findLocation->password_v2ray,
+                    "CDN_ADDRESS"=> $findLocation->cdn_address_v2ray,
                 ]
             );
             if($V2ray->error['status']){
@@ -711,6 +712,7 @@ class UserController extends Controller
                     "PORT" => $findUser->v2ray_server->port_v2ray,
                     "USERNAME" => $findUser->v2ray_server->username_v2ray,
                     "PASSWORD" => $findUser->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $findUser->v2ray_server->cdn_address_v2ray,
                 ]
             );
             if($login->error['status']){
@@ -798,6 +800,8 @@ class UserController extends Controller
                         "PORT" => $userDetial->v2ray_server->port_v2ray,
                         "USERNAME" => $userDetial->v2ray_server->username_v2ray,
                         "PASSWORD" => $userDetial->v2ray_server->password_v2ray,
+                        "CDN_ADDRESS"=> $userDetial->v2ray_server->cdn_address_v2ray,
+
                     ]
                 );
 
@@ -1244,6 +1248,8 @@ class UserController extends Controller
                     "PORT" => $user->v2ray_server->port_v2ray,
                     "USERNAME" => $user->v2ray_server->username_v2ray,
                     "PASSWORD" => $user->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $user->v2ray_server->cdn_address_v2ray,
+
                 ]
             );
             if($login->error['status']){
