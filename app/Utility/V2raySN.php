@@ -317,7 +317,7 @@ class V2raySN {
 
 
                     $email = $client['email'];
-                     $remark = $row->remark;
+                     $remark = $row->remark."_".$client['email'];
 
                     $tlsStatus = json_decode($row->streamSettings)->security;
                      $tlsSetting = false;
