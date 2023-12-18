@@ -675,6 +675,7 @@ class UserController extends Controller
                 $findUser->expire_set = 0;
                 $findUser->first_login = NULL;
                 $findUser->expire_date = NULL;
+                $findUser->max_usage = @round((((int) $findUser->group->group_volume *1024) * 1024) * 1024 );
                 $findUser->expired = 0;
             }
             if($findUser->service_group == 'wireguard') {

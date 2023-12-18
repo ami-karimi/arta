@@ -345,6 +345,10 @@ class UserController extends Controller
        if($findGroup->group_type == 'volume'){
            if($findGroup->group_volume > 0){
                $find->max_usage = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024)) ;
+               $find->upload_usage = 0 ;
+               $find->download_usage = 0 ;
+               $find->usage = 0 ;
+
            }
        }
 
