@@ -137,7 +137,7 @@ class V2raySN {
             return [];
         }
         if($result['success']){
-            return $result['obj'];
+            return (!is_array($result['obj']) ? [] : $result['obj']);
         }
         unlink($this->cookie_txt_path);
         return [];
