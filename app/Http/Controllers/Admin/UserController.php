@@ -464,6 +464,8 @@ class UserController extends Controller
                     "PORT" => $find->v2ray_server->port_v2ray,
                     "USERNAME" => $find->v2ray_server->username_v2ray,
                     "PASSWORD" => $find->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $find->v2ray_server->cdn_address_v2ray,
+
                 ]
             );
             if($login->error['status']){
@@ -1250,7 +1252,6 @@ class UserController extends Controller
                     "USERNAME" => $user->v2ray_server->username_v2ray,
                     "PASSWORD" => $user->v2ray_server->password_v2ray,
                     "CDN_ADDRESS"=> $user->v2ray_server->cdn_address_v2ray,
-
                 ]
             );
             if($login->error['status']){
