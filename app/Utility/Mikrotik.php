@@ -34,9 +34,9 @@ class Mikrotik
     var $mkt = array();  // mikrotik login info
     // Asign variables from class input
     function __construct( $mkt ) {
-        $this->rtr_user= (isset($mkt->ip) ? $mkt->ip : 'admin');
+        $this->rtr_user= (isset($mkt->username) ? $mkt->username : 'admin');
         $this->rtr_pass= (isset($mkt->password) ? $mkt->password : 'Amir@###1401');
-        $this->rtr_ip= $mkt->l2tp_address ;
+        $this->rtr_ip=  $mkt->l2tp_address ;
         $this->rtr_port=  (isset($mkt->mikrotik_port) ? $mkt->mikrotik_port : '3232');
         $this->rtr_ver= "7.12.1";
     }
