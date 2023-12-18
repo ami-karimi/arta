@@ -39,7 +39,14 @@ class WireGuard
     }
 
     public function removeConfig($public_key){
-        $API        = new Mikrotik($this->server);
+        $API        = new Mikrotik(
+            (object)[
+                'l2tp_address' => $this->server->mikrotik_domain,
+                'mikrotik_port' => $this->server->mikrotik_port,
+                'username' => $this->server->mikrotik_username,
+                'password' => $this->server->mikrotik_password,
+            ]
+        );
         $API->debug = false;
         $res=$API->connect();
         $this->ROS = $API;
@@ -99,7 +106,12 @@ class WireGuard
     }
 
     public function ChangeConfigStatus($public_key,$status ){
-        $API        = new Mikrotik($this->server);
+        $API        = new Mikrotik( (object)[
+            'l2tp_address' => $this->server->mikrotik_domain,
+            'mikrotik_port' => $this->server->mikrotik_port,
+            'username' => $this->server->mikrotik_username,
+            'password' => $this->server->mikrotik_password,
+        ]);
         $API->debug = false;
         $res=$API->connect();
         $this->ROS = $API;
@@ -121,7 +133,12 @@ class WireGuard
 
     }
     public function getUser($public_key){
-        $API        = new Mikrotik($this->server);
+        $API        = new Mikrotik( (object)[
+            'l2tp_address' => $this->server->mikrotik_domain,
+            'mikrotik_port' => $this->server->mikrotik_port,
+            'username' => $this->server->mikrotik_username,
+            'password' => $this->server->mikrotik_password,
+        ]);
         $API->debug = false;
         if(!$this->server){
             return ['status' => false, 'message' => 'Nots Can Connect To Server'];
@@ -172,7 +189,12 @@ class WireGuard
 
 
     public function getInterface(){
-        $API        = new Mikrotik($this->server);
+        $API        = new Mikrotik( (object)[
+            'l2tp_address' => $this->server->mikrotik_domain,
+            'mikrotik_port' => $this->server->mikrotik_port,
+            'username' => $this->server->mikrotik_username,
+            'password' => $this->server->mikrotik_password,
+        ]);
         $API->debug = false;
         if(!$this->server){
             return ['status' => false, 'message' => 'Nots Can Connect To Server'];

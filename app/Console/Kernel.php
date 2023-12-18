@@ -66,10 +66,16 @@ class Kernel extends ConsoleKernel
             ->everyFiveMinutes();
         // Backup system
         $schedule->call(function () {
-            $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
+            $Servers = Ras::where('mikrotik_server',1)->where('is_enabled',1)->get();
             $user_list = [];
             foreach ($Servers as $sr) {
-                $API = new Mikrotik($sr);
+
+                $API = new Mikrotik((object)[
+                    'l2tp_address' => $sr->mikrotik_domain,
+                    'mikrotik_port' => $sr->mikrotik_port,
+                    'username' => $sr->mikrotik_username,
+                    'password' => $sr->mikrotik_password,
+                ]);
                 $API->connect();
 
                 $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");

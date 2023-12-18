@@ -38,7 +38,12 @@ class MonitorigController extends Controller
 
     public function ether($ip){
         $FindRas = Ras::where('ipaddress',$ip)->first();
-        $API        = new Mikrotik($FindRas);
+        $API        = new Mikrotik((object)[
+            'l2tp_address' => $FindRas->mikrotik_domain,
+            'mikrotik_port' => $FindRas->mikrotik_port,
+            'username' => $FindRas->mikrotik_username,
+            'password' => $FindRas->mikrotik_password,
+        ]);
         $connect = $API->connect();
         if(!$connect['ok']){
             return response()->json([
@@ -83,7 +88,13 @@ class MonitorigController extends Controller
 
 
     public function KillUser($server,$user){
-        $API        = new Mikrotik($server);
+
+        $API        = new Mikrotik((object)[
+            'l2tp_address' => $server->mikrotik_domain,
+            'mikrotik_port' => $server->mikrotik_port,
+            'username' => $server->mikrotik_username,
+            'password' => $server->mikrotik_password,
+        ]);
         $API->debug = false;
         if($API->connect()['ok']){
             $BRIDGEINFO = $API->bs_mkt_rest_api_get('/ppp/active?.proplist=.id&name='.$user);
