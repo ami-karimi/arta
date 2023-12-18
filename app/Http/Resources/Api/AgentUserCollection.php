@@ -85,6 +85,7 @@ class AgentUserCollection extends ResourceCollection
                         $usage = $item->usage;
                     }
                 }
+                $online = ($item->isOnline ? 'online': 'offline');
                 $total = $item->max_usage;
                 if($item->service_group == 'v2ray') {
                     $v2ray_user = true;
@@ -106,6 +107,10 @@ class AgentUserCollection extends ResourceCollection
                                 $usage = $client['up'] + $client['down'];
                                 $total = $client['total'];
                                 $v2ray_user = $client;
+                                $v2ray_user['online'] = in_array($item->username,$V2ray->getOnlines()) ? true : false;
+                                if($v2ray_user['online']){
+                                    $online = "online";
+                                }
                                 $v2ray_user['url'] = $item->v2ray_config_uri;
                                 $v2ray_user['url_encode'] = urlencode($item->v2ray_config_uri);
 
@@ -134,7 +139,7 @@ class AgentUserCollection extends ResourceCollection
                     'group_id' => $item->group_id,
                     'expire_date' => ($item->expire_date !== NULL ? Jalalian::forge($item->expire_date)->__toString() : '---'),
                     'time_left' => ($item->expire_date !== NULL ? Carbon::now()->diffInDays($item->expire_date, false) : false),
-                    'status' => ($item->isOnline ? 'online': 'offline'),
+                    'status' => $online,
                     'first_login' =>($item->first_login !== NULL ? Jalalian::forge($item->first_login)->__toString() : '---'),
                     'is_enabled' => $item->is_enabled ,
                     'created_at' => Jalalian::forge($item->created_at)->__toString(),

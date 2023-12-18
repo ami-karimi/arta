@@ -832,6 +832,7 @@ class UserController extends Controller
                              $expire_time = $jalali." - ".$left;
                          }
                         $v2ray_user = $client['user'];
+                        $v2ray_user['online'] = in_array($userDetial->username,$V2ray->getOnlines()) ? true : false;
                         $usage = $clients['up'] +  $clients['down'];
                         $enable = $clients['enable'];
                         $total = $clients['total'];

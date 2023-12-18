@@ -55,7 +55,7 @@ class ApiController extends Controller
     public function index(){
 
 
-        /*
+
         $V2ray = new V2raySN([
             'HOST' =>  "85.133.151.94",
             "PORT" =>  "2084",
@@ -65,8 +65,8 @@ class ApiController extends Controller
         ]);
         header('Content-Type: application/json; charset=utf-8');
 
-        echo json_encode($V2ray->get_user(1,'qwehmcyh'));
-        */
+        echo json_encode($V2ray->getOnlines());
+
 
        // Helper::get_db_backup();
        // Helper::get_backup();

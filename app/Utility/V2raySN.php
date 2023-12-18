@@ -125,6 +125,16 @@ class V2raySN {
     {
         return $this->request("panel/api/inbounds/list",[],'GET');
     }
+    public function getOnlines()
+    {
+        $result =  $this->request("panel/api/inbounds/onlines",[],'POST');
+
+        if($result['success']){
+            return $result['obj'];
+        }
+        unlink($this->cookie_txt_path);
+        return [];
+    }
     public function add_client(int $service_id,string $email,int $limit_ip = 2,int $totalGB,float $expiretime,bool $enable = true)
     {
 

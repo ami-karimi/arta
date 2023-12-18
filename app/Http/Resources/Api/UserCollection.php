@@ -59,6 +59,8 @@ class UserCollection extends ResourceCollection
                 }
                 $total = $item->max_usage;
 
+                $online = ($item->isOnline ? 'online': 'offline');
+
                 if($item->service_group == 'v2ray') {
                     $v2ray_user = true;
                     $V2ray = new V2raySN(
@@ -78,6 +80,10 @@ class UserCollection extends ResourceCollection
                             $usage = $client['up'] +  $client['down'];
                             $total = $client['total'];
                             $v2ray_user = $client;
+                            $v2ray_user['online'] = in_array($item->username,$V2ray->getOnlines()) ? true : false;
+                            if($v2ray_user['online']){
+                               $online = "online";
+                             }
                             $v2ray_user['url'] = $item->v2ray_config_uri;
                             $v2ray_user['url_encode'] = urlencode($item->v2ray_config_uri);
 
@@ -106,7 +112,7 @@ class UserCollection extends ResourceCollection
                     'group_type' => ($item->group ? $item->group->group_type : false),
                     'expire_date' => ($item->expire_date !== NULL ? Jalalian::forge($item->expire_date)->__toString() : '---'),
                     'time_left' => ($item->expire_date !== NULL ? Carbon::now()->diffInDays($item->expire_date, false) : false),
-                    'status' => ($item->isOnline ? 'online': 'offline'),
+                    'status' => $online,
                     'first_login' =>($item->first_login !== NULL ? Jalalian::forge($item->first_login)->__toString() : '---'),
                     'is_enabled' => $item->is_enabled ,
                     'created_at' => Jalalian::forge($item->created_at)->__toString(),
