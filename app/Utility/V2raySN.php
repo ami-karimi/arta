@@ -185,7 +185,9 @@ class V2raySN {
             return $this->get_client($email);
         }
         if(!$get['success']){
-            return false;
+            unlink($this->cookie_txt_path);
+            $this->login();
+            return $this->get_client($email);
         }
 
         return $get['obj'];
