@@ -39,7 +39,6 @@ class Mikrotik
         $this->rtr_ip=  $mkt->l2tp_address ;
         $this->rtr_port=  (isset($mkt->mikrotik_port) ? $mkt->mikrotik_port : '3232');
         $this->rtr_ver= "7.12.1";
-        var_dump($mkt);
     }
 
     // Prepare the option array for cURL
