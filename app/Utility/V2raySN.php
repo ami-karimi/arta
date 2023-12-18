@@ -132,7 +132,10 @@ class V2raySN {
     public function getOnlines()
     {
         $result =  $this->request("panel/api/inbounds/onlines",[],'POST');
-
+        if(!is_array($result)){
+            unlink($this->cookie_txt_path);
+            return [];
+        }
         if($result['success']){
             return $result['obj'];
         }
