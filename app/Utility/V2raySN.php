@@ -46,9 +46,10 @@ class V2raySN {
                 unlink($this->cookie_txt_path);
                 return false;
             }else{
-
                 $this->error = ['status' => false,'message' => ''];
             }
+        }else{
+           $this->InBoandList();
         }
 
 
@@ -136,8 +137,7 @@ class V2raySN {
             return $result['obj'];
         }
         unlink($this->cookie_txt_path);
-        $this->login();
-        return $this->getOnlines();
+        return [];
     }
     public function add_client(int $service_id,string $email,int $limit_ip = 2,int $totalGB,float $expiretime,bool $enable = true)
     {
@@ -181,13 +181,10 @@ class V2raySN {
         $get = $this->request("panel/api/inbounds/getClientTraffics/".$email,[],'GET');
         if(is_null($get)){
             unlink($this->cookie_txt_path);
-            $this->login();
-            return $this->get_client($email);
+            return false;
         }
         if(!$get['success']){
-            unlink($this->cookie_txt_path);
-            $this->login();
-            return $this->get_client($email);
+            return false;
         }
 
         return $get['obj'];
