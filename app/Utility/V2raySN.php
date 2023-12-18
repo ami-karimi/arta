@@ -368,7 +368,7 @@ class V2raySN {
                             $spiderX = $realitySettings->settings->spiderX;
                             $pbk = $realitySettings->settings->publicKey;
                             $sni = $realitySettings->serverNames[0];
-                            $flow = $settings['clients'][0]['flow'];
+                            $flow = $client['flow'];
                             $sid = $realitySettings->shortIds[0];
                         }
                         $serviceName = json_decode($row->streamSettings)->grpcSettings->serviceName;
