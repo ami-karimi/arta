@@ -7,6 +7,7 @@ use App\Models\Financial;
 use App\Models\User;
 use App\Models\WireGuardUsers;
 use App\Utility\SaveActivityUser;
+use App\Utility\V2raySN;
 use App\Utility\WireGuard;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -24,6 +25,27 @@ use App\Http\Resources\Telegram\ServiceResource;
 
 class ApiController extends Controller
 {
+    public function formatBytes(int $size,int $format = 2, int $precision = 2) : string
+    {
+        $base = log($size, 1024);
+
+        if($format == 1) {
+            $suffixes = ['بایت', 'کلوبایت', 'مگابایت', 'گیگابایت', 'ترابایت']; # Persian
+        } elseif ($format == 2) {
+            $suffixes = ["B", "KB", "MB", "GB", "TB"];
+        } else {
+            $suffixes = ['B', 'K', 'M', 'G', 'T'];
+        }
+
+        if($size <= 0) return "0 ".$suffixes[1];
+
+        $result = pow(1024, $base - floor($base));
+        $result = round($result, $precision);
+        $suffixes = $suffixes[floor($base)];
+
+        return $result ." ". $suffixes;
+    }
+
     public function get_service(){
         $services = ServiceGroup::select(['name','type','id'])->where('is_enabled',1)->get();
 
@@ -242,7 +264,7 @@ class ApiController extends Controller
         $req_all['role'] = 'user';
         $req_all['tg_group_id'] = $find_order->child->id;
         $user = User::create($req_all);
-
+        $v2_current = false;
         if($user && $service_type == 'wireguard') {
             $create_wr = new WireGuard($find_order->server_id, $req_all['username']);
 
@@ -261,7 +283,39 @@ class ApiController extends Controller
                 return response()->json(['status' => false,'result' => 'cant Create Account In Server']);
             }
         }
+        if($user && $service_type == 'v2ray') {
+            $findServer = Ras::where('id',$find_order->server_id)->first();
+            $login = new V2raySN(
+                [
+                    'HOST' => $findServer->ipaddress,
+                    "PORT" => $findServer->port_v2ray,
+                    "USERNAME" => $findServer->username_v2ray,
+                    "PASSWORD" => $findServer->password_v2ray,
+                    "CDN_ADDRESS"=> $findServer->cdn_address_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'result' => 'Not Can Connect Server'],404);
+            }
+            $expire_date = 0;
+            $user->v2ray_location = $find_order->server_id;
+            $user->protocol_v2ray = 1;
+            $user->save();
 
+            if($find_order->child->days > 0){
+                $expire_date = $find_order->child->days;
+            }
+            $client = $login->add_client(1,$user->username,100,$find_order->child->volume,$expire_date,true);
+            if(!$client['success']){
+                return response()->json(['status' => false,'result' => 'Not Can Create User'],404);
+            }
+            $user->uuid_v2ray = $client['uuid'];
+            $user->save();
+            $v2_current = $login->get_user(1,$user->username);
+            if(!$v2_current['success']){
+                return response()->json(['status' => false,'result' => 'Not Can Get User'],404);
+            }
+        }
         $new =  new Financial;
         $new->type = 'plus';
         $new->price = $find_order->price;
@@ -295,7 +349,10 @@ class ApiController extends Controller
             $response_result['config_qr'] = url('/configs/'.$user_wi['config_file'].".png");
             $response_result['config_file'] = url('/configs/'.$user_wi['config_file'].".conf");
         }
-
+        if($service_type == 'v2ray' ) {
+            $response_result['config_link'] = $v2_current['user']['url'];
+            $response_result['config_qr_encode'] = $v2_current['user']['url_encode'];
+        }
 
         return  response()->json(
             [
@@ -427,6 +484,37 @@ class ApiController extends Controller
                 SaveActivityUser::send($findUser->id,0,'add_left_day',['day' => $last_time_s]);
             }
         }
+        if($findUser->service_group == 'v2ray'){
+            $login = new V2raySN(
+                [
+                    'HOST' => $findUser->v2ray_server->ipaddress,
+                    "PORT" => $findUser->v2ray_server->port_v2ray,
+                    "USERNAME" => $findUser->v2ray_server->username_v2ray,
+                    "PASSWORD" => $findUser->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $findUser->v2ray_server->cdn_address_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                return response()->json(['status' => false,'result' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
+            }
+            $tm = (86400 * 1000);
+            $expiretime = $tm * $order->child->days;
+            $v2_current = $login->get_client($findUser->username);
+            $Usage = $v2_current['total']  - $v2_current['up'] + $v2_current['down'];
+            if($Usage > 0) {
+                SaveActivityUser::send($findUser->id, 0, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
+            }
+
+            $login->update_client($findUser->uuid_v2ray, [
+                'service_id' => $findUser->protocol_v2ray,
+                'username' => $findUser->username,
+                'multi_login' => $findUser->group->multi_login,
+                'totalGB' =>  $Usage + $findUser->max_usage,
+                'expiryTime' => "-$expiretime",
+                'enable' => ($findUser->is_enabled ? true : false),
+            ]);
+        }
+
 
 
         SaveActivityUser::send($findUser->id,0,'re_charge');

@@ -321,7 +321,7 @@ class V2raySN {
 
 
 
-        return ['inbound' => $inBound ,'user' => $user];
+        return ['success' => true,'inbound' => $inBound ,'user' => $user];
     }
     public function getConnectionLink($row,$client,$sni = false)
     {
