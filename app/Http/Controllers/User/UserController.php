@@ -468,7 +468,7 @@ class UserController extends Controller
         }
         $decode = base64_decode($username);
 
-       $data = cache()->remember('V2ray_Subs_'.$username, 180, function () use($decode) {
+       $data = cache()->remember('V2ray_Subs_'.$username, 1, function () use($decode) {
            $userDetial = User::where('username',$decode)->where('service_group','v2ray')->first();
            if(!$userDetial){
                return ['status' => false,'message' => 'Not Find User'];
@@ -517,8 +517,8 @@ class UserController extends Controller
                $ts .= "⏱".$expire_time;
            }
            $re = [];
-           $re[] = $ts;
-           $re[] = $url;
+           $re[] = urlencode($ts);
+           $re[] = urlencode($url);
 
 
            return ['status' => true,'data' => $re];
