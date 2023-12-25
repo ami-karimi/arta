@@ -517,6 +517,7 @@ class UserController extends Controller
                $ts .= "⏱".$expire_time;
            }
            $re = [];
+           $re[] = $ts;
            $re[] = $url;
 
 
@@ -526,8 +527,9 @@ class UserController extends Controller
 
        if($data['status']){
            foreach ($data['data'] as $row){
-               echo $row ." </br>";
+               echo base64_encode($row) .PHP_EOL;
            }
+           die('');
 
        }
 
