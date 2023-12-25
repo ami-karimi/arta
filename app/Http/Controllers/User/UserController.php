@@ -507,7 +507,7 @@ class UserController extends Controller
 
 
            $ts = "vless://accountdetil-ss@".$userDetial->v2ray_server->cdn_address_v2ray.":80?mode=gun&security=tls&encryption=none&type=grpc&serviceName=#";
-           $ts .= "🔸 Information ";
+           $ts .= "🔸 Info- ";
            $ts .= $userDetial->username;
            $ts .= " - ";
            $ts .= ($preg_left > 20 ? '🔋' : '🪫');
