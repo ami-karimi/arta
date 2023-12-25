@@ -86,6 +86,7 @@ class UserCollection extends ResourceCollection
                              }
                             $v2ray_user['url'] = $item->v2ray_config_uri;
                             $v2ray_user['url_encode'] = urlencode($item->v2ray_config_uri);
+                            $v2ray_user['sub_link'] = url('/sub/'.base64_encode($item->username));
 
                         }
                     }

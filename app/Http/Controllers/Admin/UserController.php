@@ -836,6 +836,8 @@ class UserController extends Controller
                          }
                         $v2ray_user = $client['user'];
                         $v2ray_user['online'] = in_array($userDetial->username,$V2ray->getOnlines()) ? true : false;
+                        $v2ray_user['sub_link'] = url('/sub/'.base64_encode($userDetial->username));
+
                         $usage = $clients['up'] +  $clients['down'];
                         $enable = $clients['enable'];
                         $total = $clients['total'];
