@@ -526,7 +526,9 @@ class UserController extends Controller
 
 
        if($data['status']){
-           return response()->json($data['data']);
+           foreach ($data['data'] as $row){
+               echo $row ." </br>";
+           }
        }
        return response()->json(['status' => 'Not Validate'],502);
 
