@@ -231,6 +231,7 @@ class UserController extends Controller
                 }
             }
 
+            $V2rayGroup = Groups::select('id','name')->where('name','like','%v2ray%')->get();
             return  response()->json([
                 'status' => true,
                 'user' => [
@@ -265,7 +266,7 @@ class UserController extends Controller
                     'is_enabled' => $userDetial->is_enabled ,
                     'created_at' => Jalalian::forge($userDetial->created_at)->__toString(),
                 ],
-                'groups' => Groups::select('name','id')->get(),
+                'groups' => $V2rayGroup,
                 'v2ray_servers' => Ras::select(['id','server_type','name','server_location'])->where('server_type','v2ray')->where('is_enabled',1)->get(),
                 'admins' => User::select('name','id')->where('role','!=','user')->where('is_enabled','1')->get(),
             ]);
@@ -507,7 +508,7 @@ class UserController extends Controller
             ]);
         }
 
-        if($find->expire_date !== NULL) {
+        if($find->expire_date !== NULL && $findGroup->group_type !== 'volume') {
             $last_time_s = (int) Carbon::now()->diffInDays($find->expire_date, false);
             if ($last_time_s > 0) {
                 $find->exp_val_minute += floor($last_time_s * 1440);
