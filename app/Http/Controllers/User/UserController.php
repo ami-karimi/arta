@@ -499,7 +499,7 @@ class UserController extends Controller
                $expire_time = $jalali." - ".$left;
            }
 
-           $url  = $client['user']['url'];
+           $url  = $client['user']['url'][0];
            $usage = $clients['up'] +  $clients['down'];
            $total = $clients['total'];
            $preg_left = ($total > 0 ? ($usage * 100 / $total) : 0);
