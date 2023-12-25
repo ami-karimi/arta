@@ -515,9 +515,9 @@ class UserController extends Controller
                $ts .= " - ";
                $ts .= "⏱".$expire_time;
            }
-           $re = [base64_encode($ts)];
+           $re = [urlencode($ts)];
 
-           $re[] = [base64_encode($url)];
+           $re[] = [urlencode($url)];
 
 
            return ['status' => true,'data' => $re];
