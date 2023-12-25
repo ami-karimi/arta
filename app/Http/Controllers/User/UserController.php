@@ -517,8 +517,8 @@ class UserController extends Controller
                $ts .= "⏱".$expire_time;
            }
            $re = [];
-           $re[] = urlencode($ts);
-           $re[] = urlencode($url);
+           $re[] = $ts;
+           $re[] = $url;
 
 
            return ['status' => true,'data' => $re];
