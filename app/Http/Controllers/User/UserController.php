@@ -494,9 +494,8 @@ class UserController extends Controller
            $expire_time = ((int) $clients['expiryTime'] > 0 ? (int) $clients['expiryTime'] /1000 : 0);
            if($expire_time  > 0){
                $ex = date('Y-m-d H:i:s', $expire_time);
-               $jalali = Jalalian::forge($ex)->toString();
                $left = "(".Carbon::now()->diffInDays($ex, false)." روز)";
-               $expire_time = $jalali." - ".$left;
+               $expire_time = $left;
            }
 
            $url  = $client['user']['url'];
