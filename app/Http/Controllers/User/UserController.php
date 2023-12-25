@@ -528,7 +528,7 @@ class UserController extends Controller
 
        if($data['status']){
            foreach ($data['data'] as $row){
-               echo base64_encode($row) .PHP_EOL;
+               echo $row .PHP_EOL;
            }
            die('');
 
