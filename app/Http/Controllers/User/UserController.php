@@ -527,7 +527,7 @@ class UserController extends Controller
 
        if($data['status']){
            foreach ($data['data'] as $row){
-               echo $row ." </br>";
+               echo base64_encode($row) ." </br>";
            }
 
        }
