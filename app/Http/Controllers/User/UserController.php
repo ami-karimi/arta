@@ -9,12 +9,14 @@ use App\Models\Financial;
 use App\Models\UserGraph;
 use App\Utility\SendNotificationAdmin;
 use App\Utility\V2rayApi;
+use App\Utility\V2raySN;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Ras;
 use App\Models\Groups;
 use App\Models\RadAcct;
+use Illuminate\Support\Facades\Cache;
 use Morilog\Jalali\Jalalian;
 use App\Models\RadPostAuth;
 use App\Models\UserMetas;
@@ -444,6 +446,88 @@ class UserController extends Controller
        ]);
 
 
+
+   }
+    public function is_base64($s)
+    {
+        // Check if there are valid base64 characters
+        if (!preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $s)) return false;
+
+        // Decode the string in strict mode and check the results
+        $decoded = base64_decode($s, true);
+        if(false === $decoded) return false;
+
+        // Encode the string again
+        if(base64_encode($decoded) != $s) return false;
+
+        return true;
+    }
+   public function v2ray_subs($username){
+        if(!$this->is_base64($username)){
+            return response()->json(['status' => 'Not Validate'],502);
+        }
+        $decode = base64_decode($username);
+       $data = cache()->remember('V2ray_Subs_'.$username, 180, function () use($decode) {
+           $userDetial = User::where('username',$decode)->where('service_group','v2ray')->first();
+           if(!$userDetial){
+               return ['status' => false,'message' => 'Not Find User'];
+           }
+
+           $V2ray = new V2raySN(
+               [
+                   'HOST' => $userDetial->v2ray_server->ipaddress,
+                   "PORT" => $userDetial->v2ray_server->port_v2ray,
+                   "USERNAME" => $userDetial->v2ray_server->username_v2ray,
+                   "PASSWORD" => $userDetial->v2ray_server->password_v2ray,
+                   "CDN_ADDRESS"=> $userDetial->v2ray_server->cdn_address_v2ray,
+
+               ]
+           );
+
+           if($V2ray->error['status']){
+               return ['status' => false,'message' => 'Not Connect V2ray Server'];
+           }
+
+           $client = $V2ray->get_user((int) $userDetial->protocol_v2ray,$userDetial->username);
+           $clients = $V2ray->get_client($userDetial->username);
+           $expire_time = ((int) $clients['expiryTime'] > 0 ? (int) $clients['expiryTime'] /1000 : 0);
+           if($expire_time  > 0){
+               $ex = date('Y-m-d H:i:s', $expire_time);
+               $jalali = Jalalian::forge($ex)->toString();
+               $left = "(".Carbon::now()->diffInDays($ex, false)." روز)";
+               $expire_time = $jalali." - ".$left;
+           }
+
+           $url  = $client['user']['url'];
+           $usage = $clients['up'] +  $clients['down'];
+           $total = $clients['total'];
+           $preg_left = ($total > 0 ? ($usage * 100 / $total) : 0);
+           $preg_left = 100  - $preg_left  ;
+           $left_usage = $this->formatBytes($total - $usage);
+
+
+           $ts = "vless://accountdetil-ss@".$userDetial->v2ray_server->cdn_address_v2ray."?mode=gun&security=tls&encryption=none&type=grpc&serviceName=#";
+           $ts .= "🔸 اطلاعات اکانت ";
+           $ts .= " - ";
+           $ts .= ($preg_left > 20 ? '🔋' : '🪫');
+           $ts .= $left_usage;
+           if($expire_time){
+               $ts .= " - ";
+               $ts .= "⏱".$expire_time;
+           }
+           $re = [base64_encode($ts)];
+
+           $re[] = [base64_encode($url)];
+
+
+           return ['status' => true,'data' => $re];
+       });
+
+
+       if($data['status']){
+           return response()->json($data['data']);
+       }
+       return response()->json(['status' => 'Not Validate'],502);
 
    }
 
