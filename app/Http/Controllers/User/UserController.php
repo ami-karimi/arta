@@ -494,7 +494,7 @@ class UserController extends Controller
            $expire_time = ((int) $clients['expiryTime'] > 0 ? (int) $clients['expiryTime'] /1000 : 0);
            if($expire_time  > 0){
                $ex = date('Y-m-d H:i:s', $expire_time);
-               $left = "(".Carbon::now()->diffInDays($ex, false)." روز)";
+               $left = "(".Carbon::now()->diffInDays($ex, false)." Day)";
                $expire_time = $left;
            }
 
@@ -506,8 +506,8 @@ class UserController extends Controller
            $left_usage = $this->formatBytes($total - $usage);
 
 
-           $ts = "vless://accountdetil-ss@".$userDetial->v2ray_server->cdn_address_v2ray."?mode=gun&security=tls&encryption=none&type=grpc&serviceName=#";
-           $ts .= "🔸 اطلاعات اکانت ";
+           $ts = "vless://accountdetil-ss@".$userDetial->v2ray_server->cdn_address_v2ray.":80?mode=gun&security=tls&encryption=none&type=grpc&serviceName=#";
+           $ts .= "🔸 Information ";
            $ts .= $userDetial->username;
            $ts .= " - ";
            $ts .= ($preg_left > 20 ? '🔋' : '🪫');
