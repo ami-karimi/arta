@@ -526,7 +526,7 @@ class UserController extends Controller
 
 
        if($data['status']){
-           return response()->json(implode(PHP_EOL,$data['data']));
+           return response()->json($data['data']);
        }
        return response()->json(['status' => 'Not Validate'],502);
 
