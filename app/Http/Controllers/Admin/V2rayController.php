@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Utility\Helper;
 use Illuminate\Http\Request;
 use App\Utility\V2raySN;
 use App\Models\Ras;
@@ -66,7 +67,7 @@ class V2rayController extends Controller
             ->encoding(new Encoding('UTF-8'))
             ->errorCorrectionLevel(ErrorCorrectionLevel::High)
             ->size(300)
-            ->labelText('CmorghVPN')
+            ->labelText(Helper::s('QR_WATRMARK'))
             ->labelFont(new NotoSans(20))
             ->labelAlignment(LabelAlignment::Center)
             ->validateResult(false)

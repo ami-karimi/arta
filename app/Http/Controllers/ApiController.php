@@ -94,4 +94,15 @@ class ApiController extends Controller
 
         return response()->json(['status' => true]);
     }
+
+    public function getSetting(){
+        return [
+          'title' =>  Helper::s('SITE_TITLE'),
+          'fav_icon' =>  Helper::s('FAV_ICON'),
+          'site_logo' =>  Helper::s('SITE_LOGO'),
+          'maintenance_status' => (int) Helper::s('MAINTENANCE_STATUS'),
+          'maintenance_text' => (int) Helper::s('MAINTENANCE_TEXT'),
+
+        ];
+    }
 }

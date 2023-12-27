@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::get('/ping', [\App\Http\Controllers\ApiController::class, 'index']);
+Route::get('/setting', [\App\Http\Controllers\ApiController::class, 'getSetting']);
+
 
 
 Route::post('/login_user', [\App\Http\Controllers\AuthController::class, 'login_user'])->name('login_user');
