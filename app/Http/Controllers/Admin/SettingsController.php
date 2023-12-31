@@ -71,7 +71,7 @@ class SettingsController extends Controller
             foreach ($request->all() as $key => $value) {
                 if (in_array($key, $allow_General)) {
 
-                    if ($key === "FAV_ICON") {
+                    if ($key == "FAV_ICON") {
                         if ($request->has('FAV_ICON')) {
 
                             if ($request->file('FAV_ICON')) {
@@ -83,7 +83,7 @@ class SettingsController extends Controller
 
                         }
                     }
-                    if ($key === "SITE_LOGO") {
+                    if ($key == "SITE_LOGO") {
                         if ($request->has('SITE_LOGO')) {
 
                             if ($request->file('SITE_LOGO')) {
