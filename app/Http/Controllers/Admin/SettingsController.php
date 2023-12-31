@@ -25,6 +25,8 @@ class SettingsController extends Controller
     }
 
     public function save_setting(Request $request){
+        Cache::forget('settings');
+
         if($request->ftp){
             foreach ($request->ftp as $key => $value){
                 Settings::updateOrCreate([
@@ -109,7 +111,6 @@ class SettingsController extends Controller
         }
 
 
-        Cache::forget('settings');
 
     }
     public function test_ftp(Request $request){
