@@ -157,7 +157,7 @@ class V2raySN {
                     'email' => $email,
                     'limitIp' => $limit_ip,
                     'totalGB' => $totalGB * 1024 * 1024 * 1024,
-                    'expiryTime' => "-$expiretime",
+                    'expiryTime' => "$expiretime",
                     'enable' => $enable,
                     'tgId' => '',
                     'subId' => '',
