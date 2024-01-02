@@ -205,11 +205,19 @@ class V2raySN {
                     'totalGB' => (int)  $data['totalGB'] ,
                     'expiryTime' =>   $data['expiryTime'],
                     'enable' => (boolean) $data['enable'],
-                    'reset' => (isset($data['reset']) ? $data['reset'] : 0),
                     'tgId' => '',
                     'subId' => '',
                 ]]
             ])]);
+        if(!$get['success']){
+            return false;
+        }
+
+        return true;
+    }
+
+    public function reset_client($username,$inboundId){
+        $get = $this->request("inbounds/$inboundId/resetClientTraffic/".$username);
         if(!$get['success']){
             return false;
         }

@@ -523,6 +523,7 @@ class UserController extends Controller
                 'expiryTime' => $expiretime,
                 'enable' => ($find->is_enabled ? true : false),
             ]);
+            $login->reset_client($find->username,$find->protocol_v2ray);
         }
 
         if($find->expire_date !== NULL && $findGroup->group_type !== 'volume') {
@@ -1044,8 +1045,8 @@ class UserController extends Controller
                     'totalGB' => $v2_current['total'],
                     'expiryTime' => $v2_current['expiryTime'],
                     'enable' => $request->is_enabled,
-                    'reset' => 1,
                 ]);
+
 
             }
         }
