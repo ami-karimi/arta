@@ -726,13 +726,15 @@ class UserController extends Controller
             $v2_current = $login->get_client($findUser->username);
             $expire_time = ((int) $v2_current['expiryTime'] > 0 ? (int) $v2_current['expiryTime'] /1000 : 0);
             $left = 0;
+            $max_usage = $findUser->max_usage;
             if($expire_time  > 0){
                 $ex = date('Y-m-d H:i:s', $expire_time);
                 $left = Carbon::now()->diffInDays($ex, false);
             }
-            $Usage = $v2_current['total']  - ($v2_current['up'] + $v2_current['down']);
-            if($Usage > 0 && $left > 0) {
+            $left_Usage = $v2_current['total']  - ($v2_current['up'] + $v2_current['down']);
+            if($left_Usage > 0 && $left > 0) {
                 SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
+                $max_usage += $left_Usage;
             }
             if($left > 0){
                 $days += ($left > 5 ? 5 : $left);
@@ -745,7 +747,7 @@ class UserController extends Controller
                 'service_id' => $findUser->protocol_v2ray,
                 'username' => $findUser->username,
                 'multi_login' => $findUser->group->multi_login,
-                'totalGB' =>  $findUser->max_usage,
+                'totalGB' =>  $max_usage,
                 'expiryTime' => $expiretime,
                 'enable' => ($findUser->is_enabled ? true : false),
             ]);
