@@ -145,8 +145,9 @@ class V2raySN {
     public function add_client(int $service_id,string $email,int $limit_ip = 2,int $totalGB,float $expiretime,bool $enable = true)
     {
 
-        $tm = (86400 * 1000);
-        $expiretime = $tm * $expiretime;
+        $tm = floor(microtime(true) * 1000);
+        $expiretime = $tm + (864000 * $expiretime * 100) ;
+
         $user_id = $this->genUserId();
         $data = $this->request("panel/api/inbounds/addClient",[
             'id' => $service_id,
