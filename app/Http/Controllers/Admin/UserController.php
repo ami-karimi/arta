@@ -731,14 +731,15 @@ class UserController extends Controller
                 $ex = date('Y-m-d H:i:s', $expire_time);
                 $left = Carbon::now()->diffInDays($ex, false);
             }
-            $left_Usage = $v2_current['total']  - ($v2_current['up'] + $v2_current['down']);
+            $left_Usage = $v2_current['total'];
+            $left_Usage -= ($v2_current['up'] + $v2_current['down']);
             if($left_Usage > 0 && $left > 0) {
                 SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($left_Usage)]);
                 $max_usage += $left_Usage;
             }
             if($left > 0){
                 $days += ($left > 5 ? 5 : $left);
-                SaveActivityUser::send($findUser->id,auth()->user()->id,'add_left_day',['day' => $days]);
+                SaveActivityUser::send($findUser->id,auth()->user()->id,'add_left_day',['day' => ($left > 5 ? 5 : $left)]);
             }
 
             $expiretime = $tm + (864000 * $days * 100) ;
