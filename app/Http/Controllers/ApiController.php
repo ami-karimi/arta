@@ -67,7 +67,7 @@ class ApiController extends Controller
                         'service_id' => $row->protocol_v2ray,
                         'username' => $row->username,
                         'multi_login' => $row->group->multi_login,
-                        'totalGB' =>  $row->group->group_volume,
+                        'totalGB' =>   @round((((int) $row->group->group_volume *1024) * 1024) * 1024 ),
                         'expiryTime' => $expiretime,
                         'enable' => ($row->is_enabled ? true : false),
                     ]);
