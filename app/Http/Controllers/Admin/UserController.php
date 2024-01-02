@@ -730,7 +730,7 @@ class UserController extends Controller
                 SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
             }
             */
-            $pl = strtotime(date("Y-m-d H:i:s")." +$expiretime seconds");
+            $pl = strtotime(Carbon::now()->addSecond($expiretime));
             $login->update_client($findUser->uuid_v2ray, [
                 'service_id' => $findUser->protocol_v2ray,
                 'username' => $findUser->username,
