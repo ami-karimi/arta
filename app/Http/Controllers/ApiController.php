@@ -54,9 +54,24 @@ class ApiController extends Controller
             if($v2_current) {
                 $expire_time = ((int)$v2_current['expiryTime'] > 0 ? (int)$v2_current['expiryTime'] / 1000 : 0);
                 if (!$expire_time) {
+
                     $create_date = Carbon::now()->diffInDays($row->created_at, false);
 
-                    echo $create_date;
+
+                    $days = $create_date;
+                    $tm = floor(microtime(true) * 1000);
+                    $expiretime = $tm + (864000 * $days * 100) ;
+                    $max_usage = $row->max_usage;
+
+
+                    $login->update_client($row->uuid_v2ray, [
+                        'service_id' => $row->protocol_v2ray,
+                        'username' => $row->username,
+                        'multi_login' => $row->group->multi_login,
+                        'totalGB' =>  $max_usage,
+                        'expiryTime' => $expiretime,
+                        'enable' => ($row->is_enabled ? true : false),
+                    ]);
                 }
             }
         }
