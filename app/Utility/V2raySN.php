@@ -217,7 +217,7 @@ class V2raySN {
     }
 
     public function reset_client($username,$inboundId){
-        $get = $this->request("inbounds/$inboundId/resetClientTraffic/".$username);
+        $get = $this->request("panel/api/inbounds/$inboundId/resetClientTraffic/".$username);
         if(!$get['success']){
             return false;
         }
