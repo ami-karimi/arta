@@ -730,13 +730,13 @@ class UserController extends Controller
                 SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
             }
             */
-            $pl = strtotime(Carbon::now()->addSecond($expiretime));
+            $pl = Carbon::now()->addMinute($expiretime);
             $login->update_client($findUser->uuid_v2ray, [
                 'service_id' => $findUser->protocol_v2ray,
                 'username' => $findUser->username,
                 'multi_login' => $findUser->group->multi_login,
                 'totalGB' =>  $findUser->max_usage,
-                'expiryTime' => date('Y-m-d H:i:s',$pl),
+                'expiryTime' => $pl,
                 'enable' => ($findUser->is_enabled ? true : false),
             ]);
         }
