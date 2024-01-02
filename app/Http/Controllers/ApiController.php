@@ -55,17 +55,32 @@ class ApiController extends Controller
     public function index(){
 
 
+        $v2ray_users = User::where('service_group','v2ray')->get();
+        foreach ($v2ray_users as $row){
+            $login = new V2raySN(
+                [
+                    'HOST' => $row->v2ray_server->ipaddress,
+                    "PORT" => $row->v2ray_server->port_v2ray,
+                    "USERNAME" => $row->v2ray_server->username_v2ray,
+                    "PASSWORD" => $row->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $row->v2ray_server->cdn_address_v2ray,
+                ]
+            );
+            if($login->error['status']){
+                continue;
+            }
+            $v2_current = $login->get_client($row->username);
+            $expire_time = ((int) $v2_current['expiryTime'] > 0 ? (int) $v2_current['expiryTime'] /1000 : 0);
+            if(!$expire_time){
+                $create_date =  $left = Carbon::now()->diffInDays($row->created_at, false);
 
-        $V2ray = new V2raySN([
-            'HOST' =>  "85.133.151.94",
-            "PORT" =>  "2084",
-            "USERNAME" => "amirtld",
-            "PASSWORD"=> "Amir@###1401",
-            "CDN_ADDRESS"=> "v3.arta20.xyz",
-        ]);
-        header('Content-Type: application/json; charset=utf-8');
+                echo $create_date;
+            }
+        }
 
-        echo json_encode($V2ray->get_user(2,'mywsp'));
+        //header('Content-Type: application/json; charset=utf-8');
+
+       // echo json_encode($V2ray->get_user(2,'mywsp'));
 
        // Helper::get_db_backup();
        // Helper::get_backup();
