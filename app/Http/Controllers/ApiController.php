@@ -72,7 +72,7 @@ class ApiController extends Controller
             $v2_current = $login->get_client($row->username);
             $expire_time = ((int) $v2_current['expiryTime'] > 0 ? (int) $v2_current['expiryTime'] /1000 : 0);
             if(!$expire_time){
-                $create_date =  $left = Carbon::now()->diffInDays($row->created_at, false);
+                $create_date =  Carbon::now()->diffInDays($row->created_at, false);
 
                 echo $create_date;
             }
