@@ -778,7 +778,7 @@ class UserController extends Controller
 
         $findUser->save();
 
-        return response()->json(['status' => false,'message' => 'کاربر با نام کاربری '.$findUser->username." با موفقیت شارژ شد.".$expiretime]);
+        return response()->json(['status' => false,'message' => 'کاربر با نام کاربری '.$findUser->username." با موفقیت شارژ شد."]);
 
 
     }
