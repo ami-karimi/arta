@@ -1376,8 +1376,8 @@ class UserController extends Controller
                return response()->json(['status' => false,'message' => 'لطفا کلمه عبور را وارد نمایید'],403);
            }
 
-            if(strlen($request->password) < 4 || strlen($request->password) > 8 ){
-                return response()->json(['status' => false,'message' => 'کلمه عبور میبایست کمتر از 4 کارکتر و بیشتر از 8 کاراکتر باشد.'],403);
+            if(strlen($request->password) < 4  ){
+                return response()->json(['status' => false,'message' => 'کلمه عبور نبایست کمتر از 4 کارکتر باشد'],403);
             }
        }
 
