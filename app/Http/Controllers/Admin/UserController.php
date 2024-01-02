@@ -764,6 +764,7 @@ class UserController extends Controller
                 'totalGB' =>  $max_usage,
                 'expiryTime' => $expiretime,
                 'enable' => ($findUser->is_enabled ? true : false),
+                'reset' => 1,
             ]);
         }
 

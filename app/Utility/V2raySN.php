@@ -205,6 +205,7 @@ class V2raySN {
                     'totalGB' => (int)  $data['totalGB'] ,
                     'expiryTime' =>   $data['expiryTime'],
                     'enable' => (boolean) $data['enable'],
+                    'reset' => (isset($data['reset']) ? $data['reset'] : 0),
                     'tgId' => '',
                     'subId' => '',
                 ]]

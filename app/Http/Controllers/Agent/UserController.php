@@ -1044,6 +1044,7 @@ class UserController extends Controller
                     'totalGB' => $v2_current['total'],
                     'expiryTime' => $v2_current['expiryTime'],
                     'enable' => $request->is_enabled,
+                    'reset' => 1,
                 ]);
 
             }
