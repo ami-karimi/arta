@@ -765,7 +765,7 @@ class UserController extends Controller
                 'expiryTime' => $expiretime,
                 'enable' => ($findUser->is_enabled ? true : false),
             ]);
-            $login->reset_client($find->username,$find->protocol_v2ray);
+            $login->reset_client($findUser->username,$findUser->protocol_v2ray);
         }
 
 
