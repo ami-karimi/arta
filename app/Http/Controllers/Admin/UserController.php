@@ -724,17 +724,19 @@ class UserController extends Controller
             $tm = (86400 * 1000);
             $expiretime = $tm * $findUser->group->expire_value;
             $v2_current = $login->get_client($findUser->username);
-            $Usage = $v2_current['total']  - $v2_current['up'] + $v2_current['down'];
+            /*
+            $Usage = $v2_current['total']  - ($v2_current['up'] + $v2_current['down']);
             if($Usage > 0) {
                 SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
             }
+            */
 
             $login->update_client($findUser->uuid_v2ray, [
                 'service_id' => $findUser->protocol_v2ray,
                 'username' => $findUser->username,
                 'multi_login' => $findUser->group->multi_login,
-                'totalGB' =>  $Usage + $findUser->max_usage,
-                'expiryTime' => "-$expiretime",
+                'totalGB' =>  $findUser->max_usage,
+                'expiryTime' => $expiretime,
                 'enable' => ($findUser->is_enabled ? true : false),
             ]);
         }
