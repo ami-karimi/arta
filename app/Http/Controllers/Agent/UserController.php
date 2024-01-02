@@ -492,19 +492,35 @@ class UserController extends Controller
                 return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
             }
 
-            $tm = (86400 * 1000);
-            $expiretime = $tm * $findGroup->expire_value;
+            $days = $find->group->expire_value;
+            $tm = floor(microtime(true) * 1000);
             $v2_current = $login->get_client($find->username);
-            $Usage = $v2_current['total']  - $v2_current['up'] + $v2_current['down'];
-            if($Usage > 0) {
-                SaveActivityUser::send($find->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
+            $expire_time = ((int) $v2_current['expiryTime'] > 0 ? (int) $v2_current['expiryTime'] /1000 : 0);
+            $left = 0;
+            $max_usage = $find->max_usage;
+            if($expire_time  > 0){
+                $ex = date('Y-m-d H:i:s', $expire_time);
+                $left = Carbon::now()->diffInDays($ex, false);
             }
+            $left_Usage = $v2_current['total'];
+            $left_Usage -= ($v2_current['up'] + $v2_current['down']);
+            if($left_Usage > 0 && $left > 0) {
+                SaveActivityUser::send($find->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($left_Usage)]);
+                $max_usage += $left_Usage;
+            }
+            if($left > 0){
+                $days += ($left > 5 ? 5 : $left);
+                SaveActivityUser::send($find->id,auth()->user()->id,'add_left_day',['day' => ($left > 5 ? 5 : $left)]);
+            }
+
+            $expiretime = $tm + (864000 * $days * 100) ;
+
             $login->update_client($find->uuid_v2ray, [
                 'service_id' => $find->protocol_v2ray,
                 'username' => $find->username,
                 'multi_login' => $find->group->multi_login,
-                'totalGB' => $Usage + $find->max_usage,
-                'expiryTime' => "-$expiretime",
+                'totalGB' => $max_usage,
+                'expiryTime' => $expiretime,
                 'enable' => ($find->is_enabled ? true : false),
             ]);
         }
