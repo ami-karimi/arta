@@ -202,7 +202,7 @@ class V2raySN {
                     'email' => $data['username'],
                     'limitIp' => (int) $data['multi_login'],
                     'totalGB' => (int)  $data['totalGB'] ,
-                    'expiryTime' => (int)  $data['expiryTime'],
+                    'expiryTime' =>   $data['expiryTime'],
                     'enable' => (boolean) $data['enable'],
                     'tgId' => '',
                     'subId' => '',
