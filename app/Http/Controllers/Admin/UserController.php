@@ -721,8 +721,8 @@ class UserController extends Controller
             if($login->error['status']){
                 return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
             }
-            $tm = (86400 * 1000);
-            $expiretime = $tm * $findUser->group->expire_value;
+            $tm = floor(microtime(true) * 1000);
+            $expiretime = $tm + (864000 * $findUser->group->expire_value * 100) ;
             $v2_current = $login->get_client($findUser->username);
             /*
             $Usage = $v2_current['total']  - ($v2_current['up'] + $v2_current['down']);
