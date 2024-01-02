@@ -721,15 +721,26 @@ class UserController extends Controller
             if($login->error['status']){
                 return response()->json(['status' => false,'message' => 'خطا در برقراری ارتباط با سرور V2ray مجددا تلاش نمایید'],502);
             }
+            $days = $findUser->group->expire_value;
             $tm = floor(microtime(true) * 1000);
-            $expiretime = $tm + (864000 * $findUser->group->expire_value * 100) ;
             $v2_current = $login->get_client($findUser->username);
-            /*
+            $expire_time = ((int) $v2_current['expiryTime'] > 0 ? (int) $v2_current['expiryTime'] /1000 : 0);
+            $left = 0;
+            if($expire_time  > 0){
+                $ex = date('Y-m-d H:i:s', $expire_time);
+                $left = Carbon::now()->diffInDays($ex, false);
+            }
             $Usage = $v2_current['total']  - ($v2_current['up'] + $v2_current['down']);
-            if($Usage > 0) {
+            if($Usage > 0 && $left > 0) {
                 SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
             }
-            */
+            if($left > 0){
+                $days += ($left > 5 ? 5 : $left);
+                SaveActivityUser::send($findUser->id,auth()->user()->id,'add_left_day',['day' => $days]);
+            }
+
+            $expiretime = $tm + (864000 * $days * 100) ;
+
             $login->update_client($findUser->uuid_v2ray, [
                 'service_id' => $findUser->protocol_v2ray,
                 'username' => $findUser->username,
