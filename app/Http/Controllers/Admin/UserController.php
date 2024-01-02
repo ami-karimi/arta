@@ -733,7 +733,7 @@ class UserController extends Controller
             }
             $left_Usage = $v2_current['total']  - ($v2_current['up'] + $v2_current['down']);
             if($left_Usage > 0 && $left > 0) {
-                SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($Usage)]);
+                SaveActivityUser::send($findUser->id, auth()->user()->id, 'add_left_volume',['new' => $this->formatBytes($left_Usage)]);
                 $max_usage += $left_Usage;
             }
             if($left > 0){
