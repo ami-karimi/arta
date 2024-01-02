@@ -1036,7 +1036,17 @@ class UserController extends Controller
             }
             SaveActivityUser::send($find->id, auth()->user()->id, 'change_username', ['last' =>$find->username, 'new' => $request->username]);
             $find->username = $request->username;
+            if($login){
+                $login->update_client($find->uuid_v2ray, [
+                    'service_id' => $find->protocol_v2ray,
+                    'username' => $request->username,
+                    'multi_login' => $find->group->multi_login,
+                    'totalGB' => $v2_current['total'],
+                    'expiryTime' => $v2_current['expiryTime'],
+                    'enable' => $request->is_enabled,
+                ]);
 
+            }
         }
 
         $find->save();
