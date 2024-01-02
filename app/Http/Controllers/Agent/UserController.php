@@ -1408,8 +1408,8 @@ class UserController extends Controller
             $group_account = true;
         }
 
-        if(strlen($request->username) < 3 || strlen($request->username) > 10 ){
-            return response()->json(['status' => false,'message' => 'کلمه عبور میبایست کمتر از 3 کارکتر و بیشتر از 10 کاراکتر باشد.'],403);
+        if(strlen($request->username) < 3 || strlen($request->username) > 42 ){
+            return response()->json(['status' => false,'message' => 'نام کاربری میبایست بیشتر از 3 کارکتر و کمتر از 42 کاراکتر باشد.'],403);
         }
 
         if($request->phone_number){
