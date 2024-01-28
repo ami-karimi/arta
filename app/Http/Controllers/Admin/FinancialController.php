@@ -292,4 +292,12 @@ class FinancialController extends Controller
         */
     }
 
+    public function destory($id){
+        Financial::where('id',$id)->delete();
+
+        return response()->json([
+            'message' => 'عملیات با موفقیت انجام شد!',
+        ]);
+    }
+
 }

@@ -205,6 +205,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/create', [\App\Http\Controllers\Admin\FinancialController::class, 'create']);
             Route::post('/edit/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'edit']);
             Route::post('/save_custom_price/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'save_custom_price']);
+            Route::DELETE('destory/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'destory']);
 
         });
 
