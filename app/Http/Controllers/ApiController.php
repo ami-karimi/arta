@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Utility\Helper;
+use App\Utility\SaveActivityUser;
+use App\Utility\WireGuard;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Stogram;
@@ -35,6 +37,7 @@ class ApiController extends Controller
 
     public function index(){
 
+        /*
 
         $v2ray_users = User::where('service_group','v2ray')->get();
         foreach ($v2ray_users as $row){
@@ -72,6 +75,7 @@ class ApiController extends Controller
 
             }
         }
+        */
 
         //header('Content-Type: application/json; charset=utf-8');
 
@@ -87,6 +91,27 @@ class ApiController extends Controller
         print_r($re);
         */
 
+        $now = Carbon::now()->format('Y-m-d');
+        $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->get();
+
+        foreach ($findWgExpired as $row){
+            echo $row->username;
+            foreach($row->wgs as $row_wg) {
+                $mik = new WireGuard($row_wg->server_id, 'null');
+                $peers = $mik->getUser($row_wg->public_key);
+                $row_wg->is_enabled = 0;
+                $row_wg->save();
+                if ($peers['status']) {
+                    $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
+                    if ($status['status']) {
+                        SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
+                        $row->expired = 1;
+                        $row->save();
+                    }
+                }
+            }
+
+        }
     }
 
     public function ping(){
