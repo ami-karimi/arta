@@ -39,7 +39,7 @@ class MonitorigController extends Controller
     public function ether($ip){
         $FindRas = Ras::where('ipaddress',$ip)->first();
         $API        = new Mikrotik((object)[
-            'l2tp_address' => $FindRas->mikortik_domain,
+            'l2tp_address' => $FindRas->mikrotik_domain,
             'mikrotik_port' => $FindRas->mikrotik_port,
             'username' => $FindRas->mikrotik_username,
             'password' => $FindRas->mikrotik_password,
@@ -90,7 +90,7 @@ class MonitorigController extends Controller
     public function KillUser($server,$user){
 
         $API        = new Mikrotik((object)[
-            'l2tp_address' => $server->mikortik_domain,
+            'l2tp_address' => $server->mikrotik_domain,
             'mikrotik_port' => $server->mikrotik_port,
             'username' => $server->mikrotik_username,
             'password' => $server->mikrotik_password,

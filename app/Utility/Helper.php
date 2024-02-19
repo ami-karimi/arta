@@ -378,7 +378,7 @@ class Helper
 
                         // Save Mikrotik BackUp File
                         $API = new Mikrotik((object)[
-                            'l2tp_address' => $server['mikortik_domain'],
+                            'l2tp_address' => $server['mikrotik_domain'],
                             'mikrotik_port' => $server['mikrotik_port'],
                             'username' => $server['username'],
                             'password' => $server['password'],

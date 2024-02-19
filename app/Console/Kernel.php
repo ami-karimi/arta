@@ -71,7 +71,7 @@ class Kernel extends ConsoleKernel
             foreach ($Servers as $sr) {
 
                 $API = new Mikrotik((object)[
-                    'l2tp_address' => $sr->mikortik_domain,
+                    'l2tp_address' => $sr->mikrotik_domain,
                     'mikrotik_port' => $sr->mikrotik_port,
                     'username' => $sr->mikrotik_username,
                     'password' => $sr->mikrotik_password,

@@ -39,7 +39,7 @@ class RasResources extends ResourceCollection
                     'ipaddress' => $item->ipaddress,
                     'server_location' => $item->server_location,
                     'mikrotik_server' => $item->mikrotik_server,
-                    'mikortik_domain' => $item->mikortik_domain,
+                    'mikrotik_domain' => $item->mikrotik_domain,
                     'mikrotik_port' => $item->mikrotik_port,
                     'mikrotik_username' => $item->mikrotik_username,
                     'mikrotik_password' => $item->mikrotik_password,
