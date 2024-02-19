@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-//Route::get('/ping', [\App\Http\Controllers\ApiController::class, 'index']);
+Route::get('/ping', [\App\Http\Controllers\ApiController::class, 'index']);
 
 
 Route::get('/setting', [\App\Http\Controllers\ApiController::class, 'getSetting']);
