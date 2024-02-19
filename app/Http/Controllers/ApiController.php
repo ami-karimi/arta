@@ -101,6 +101,7 @@ class ApiController extends Controller
                 $peers = $mik->getUser($row_wg->public_key);
                 $row_wg->is_enabled = 0;
                 $row_wg->save();
+                print_r($peers);
                 if ($peers['status']) {
                     $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
                     if ($status['status']) {
