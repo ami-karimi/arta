@@ -3,9 +3,12 @@
 namespace App\Console;
 
 use App\Models\RadAcct;
+use App\Models\RadPostAuth;
 use App\Models\Ras;
+use App\Models\Settings;
 use App\Models\User;
 use App\Models\UserGraph;
+use App\Utility\Helper;
 use App\Utility\Mikrotik;
 use App\Utility\SaveActivityUser;
 use App\Utility\WireGuard;
@@ -14,6 +17,8 @@ use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Utility\SmsSend;
+use App\Utility\Ftp;
+use Illuminate\Support\Facades\DB;
 
 class Kernel extends ConsoleKernel
 {
@@ -23,31 +28,68 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->call(function () {
-            RadAcct::where('saved',1)->delete();
-        })->everySixHours();
-
-        $schedule->call(function () {
 
             $data = User::whereHas('group',function ($query){
                 $query->where('group_type','volume');
-            })->where('limited',0)->get();
+            })->where('service_group','l2tp_cisco')->where('limited',0)->get();
             foreach ($data as $item){
-                $findUser = RadAcct::where('acctstoptime','!=',NULL)->where('saved',0)->where('username',$item->username)->selectRaw('sum(acctoutputoctets) as upload_sum, sum(acctinputoctets) as download_sum, sum(acctinputoctets + acctoutputoctets) as total_sum,username,radacctid')->groupBy('username')->limit(1000)->get();
-                if(count($findUser)) {
-                        $item->usage += $findUser[0]['download_sum'] + $findUser[0]['upload_sum'];
-                        $item->download_usage += $findUser[0]['download_sum'];
-                        $item->upload_usage += $findUser[0]['upload_sum'];
-                        if($item->usage >= $item->max_usage ){
-                            $item->limited = 1;
-                        }
-                        $item->save();
+                $findUser = DB::table('radacct')
+                    ->where('saved',0)
+                    ->where('acctstoptime','!=',NULL)
+                    ->where('username',$item->username)->get();
+                $download =  $findUser->sum('acctoutputoctets');
+                $upload =  $findUser->sum('acctinputoctets');
+
+                if(count($findUser) && ($upload + $download) > 0) {
+                    $item->usage += $download+ $upload;
+                    $item->download_usage +=  $download;
+                    $item->upload_usage += $upload;
+                    if($item->usage >= $item->max_usage ){
+                        $item->limited = 1;
+                    }
+                    $item->save();
                     RadAcct::where('username',$item->username)->where('saved',0)->update(['saved' => 1]);
                 }
 
+
+            }
+
+        })->name('SaveUsageStats')->everyMinute();
+
+        $schedule->call(function () {
+
+
+            Helper::get_db_backup();
+            RadAcct::where('saved', 1)->delete();
+
+        })   ->name('GetDB_backup')
+            ->everyFiveMinutes();
+        // Backup system
+        $schedule->call(function () {
+            $Servers = Ras::where('mikrotik_server',1)->where('is_enabled',1)->get();
+            $user_list = [];
+            foreach ($Servers as $sr) {
+
+                $API = new Mikrotik((object)[
+                    'l2tp_address' => $sr->mikrotik_domain,
+                    'mikrotik_port' => $sr->mikrotik_port,
+                    'username' => $sr->mikrotik_username,
+                    'password' => $sr->mikrotik_password,
+                ]);
+                $API->connect();
+
+                $BRIDGEINFO = $API->bs_mkt_rest_api_get("/ppp/active?encoding&service=ovpn");
+                if($BRIDGEINFO['ok']){
+                    foreach ($BRIDGEINFO['data'] as $row){
+                        RadAcct::where('username',$row['name'])->delete();
+                        $API->bs_mkt_rest_api_del("/ppp/active/" . $row['.id']);
+                    }
+                }
             }
 
 
-        })->everyFiveMinutes();
+        })->everyTenMinutes();
+        // Backup DB
         /*
         $schedule->call(function () {
             $users = User::whereHas('group',function($query){
@@ -73,57 +115,45 @@ class Kernel extends ConsoleKernel
             }
         })->everyTwoHours();
         */
+        $schedule->call(function(){
+            //Helper::get_backup();
 
-        $schedule->call(function () {
-            $API        = new Mikrotik();
-            $API->debug = false;
-            $Servers = Ras::select(['ipaddress','l2tp_address','id','name'])->where('server_type','l2tp')->where('is_enabled',1)->get();
-            $user_list = [];
-            foreach ($Servers as $sr) {
-                if ($API->connect($sr->ipaddress, 'admin', 'Amir@###1401')) {
-
-                    $BRIDGEINFO = $API->comm('/ppp/active/print', array(
-                        "?encoding" => "",
-                        "?service" => "ovpn"
-                    ));
-
-                    foreach ($BRIDGEINFO as $user) {
-                        $user_list[] = $user;
-                        RadAcct::where('username',$user['name'])->delete();
-                        $API->comm('/ppp/active/remove', array(
-                            ".id" => $user['.id'],
-                        ));
-                    }
-
-                }
-            }
-
-        })->everyTenMinutes();
-
-
-        $schedule->call(function () {
 
             $now = Carbon::now()->format('Y-m-d');
-            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date',$now)->where('expired',0)->get();
+            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->get();
 
             foreach ($findWgExpired as $row){
-                if($row->wg){
-                    $mik = new WireGuard($row->wg->server_id,'null');
-                    $peers = $mik->getUser($row->wg->public_key);
-
-                    if($peers['status']){
-                       $status =  $mik->ChangeConfigStatus($row->wg->public_key,0);
-                       if($status['status']) {
-                           SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
-                           $row->expired = 1;
-                           $row->save();
-                       }
+                foreach($row->wgs as $row_wg) {
+                    $mik = new WireGuard($row_wg->server_id, 'null');
+                    $peers = $mik->getUser($row_wg->public_key);
+                    $row_wg->is_enabled = 0;
+                    $row_wg->save();
+                    if ($peers['status']) {
+                        $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
+                        if ($status['status']) {
+                            SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
+                            $row->expired = 1;
+                            $row->save();
+                        }
                     }
                 }
-            }
-        })->everyTwoHours();
 
+            }
+        })->name('CheckExpiredWireguardAccount')->everyFourHours();
         $schedule->call(function () {
+
+
+            $data_no = User::whereHas('group',function ($query){
+                $query->where('group_type','expire');
+            })->where('service_group','l2tp_cisco')->get();
+
+            foreach ($data_no as $item){
+                RadAcct::where('username',$item->username)->where('acctstoptime','!=',NULL)->delete();
+                RadPostAuth::where('username',$item->username)->delete();
+            }
+
+
+
             $users = User::where('phonenumber','!=',null)->where('expire_set',1)->where('expire_date','<=',Carbon::now('Asia/Tehran')->addDay(3))->where('expire_date','>=',Carbon::now('Asia/Tehran')->subDays(3))->get();
             foreach ($users as $user){
                 if($user->expire_date) {
@@ -131,7 +161,9 @@ class Kernel extends ConsoleKernel
                     $sms->SendSmsExpire(Carbon::now()->diffInDays($user->expire_date, false));
                 }
             }
-        })->everySixHours();
+        })->name('SendSmsExpire')->everySixHours();
+
+
     }
 
     /**

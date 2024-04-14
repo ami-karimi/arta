@@ -9,6 +9,8 @@ use App\Models\ReselerMeta;
 use App\Models\UserMetas;
 use App\Models\PriceReseler;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Settings;
 
 class Helper
 {
@@ -190,30 +192,31 @@ class Helper
         $group_lists = Groups::get();
 
 
-          $user = User::where('id',$for)->first();
-          $sub_agent = null;
-          if($user) {
-              $sub_agent = ($user->creator ? $user->creator : $user->id);
+        $user = User::where('id',$for)->first();
+        $sub_agent = null;
+        if($user) {
+            $sub_agent = ($user->creator ? $user->creator : $user->id);
 
-          }
-
-
-          $Reselermetas = ReselerMeta::select(['key', 'value']);
-          $Reselermetas->where('reseler_id', ($for ? $sub_agent : auth()->user()->id));
-          $Reselermetas =   $Reselermetas->get();
+        }
 
 
-          $RsMtFull = Helper::toArray($Reselermetas);
+        $Reselermetas = ReselerMeta::select(['key', 'value']);
+        $Reselermetas->where('reseler_id', ($for ? $sub_agent : auth()->user()->id));
+        $Reselermetas =   $Reselermetas->get();
+
+
+        $RsMtFull = Helper::toArray($Reselermetas);
 
 
 
-          $group_re = [];
+        $group_re = [];
 
-         foreach ($group_lists as $row) {
+        foreach ($group_lists as $row) {
             $price = $row->price;
             $reseler_price =  self::getMePrice($row->id,$for,false,true);
             $re_sell_price =  self::getMePrice($row->id,$for,true);
             $enable = true;
+            $dis_status = 1;
 
             if(isset($RsMtFull['reseler_price_' . $row->id])){
                 $reseler_price =  $RsMtFull['reseler_price_' . $row->id];
@@ -230,9 +233,15 @@ class Helper
             }
 
 
-             if(isset($RsMtFull['disabled_group_' . $row->id])){
-                 $enable = (boolean) $RsMtFull['disabled_group_' . $row->id];
-             }
+            if(isset($RsMtFull['disabled_group_' . $row->id])){
+                $dis_status = $RsMtFull['disabled_group_' . $row->id];
+                if($RsMtFull['disabled_group_' . $row->id] == "1"){
+                    $enable = true;
+                }else{
+                    $enable = false;
+                }
+
+            }
 
             if($for){
                 if (isset($RsMtFull['price_for_reseler_' . $row->id."_for_".$for])) {
@@ -240,7 +249,12 @@ class Helper
                 }
 
                 if(isset($RsMtFull['disabled_group_' . $row->id."_for_".$for])){
-                    $enable = (boolean) $RsMtFull['disabled_group_' . $row->id."_for_".$for];
+                    $dis_status = $RsMtFull['disabled_group_' . $row->id."_for_".$for];
+                    if($RsMtFull['disabled_group_' . $row->id."_for_".$for] == "1"){
+                        $enable = true;
+                    }else{
+                        $enable = false;
+                    }
                 }
 
                 if($user->creator !== auth()->user()->id  && auth()->user()->creator && $user->creator || auth()->user()->role == 'admin' &&  $user->creator ){
@@ -264,10 +278,12 @@ class Helper
                 'id' => $row->id,
                 'name' => $row->name,
                 'multi_login' => $row->multi_login,
+                'reseler_price' => $reseler_price,
                 'price_for_reseler' => ($can_see ? $re_sell_price : 0),
                 'cmorgh_price' => $row->price,
                 'price' => $price,
-                'status' => $enable
+                'status' => $enable,
+                'status_code' => $dis_status,
             ];
 
 
@@ -302,6 +318,170 @@ class Helper
         return $incom;
     }
 
+    public static function GetSettings(){
+        $value = Cache::rememberForever('settings', function () {
+            return Settings::get()->toArray();
+        });
 
+
+        return $value;
+    }
+
+
+    public static function s($key){
+        $setting = self::GetSettings();
+        $key = array_search($key, array_column($setting, 'key'));
+
+        if(!$key){
+            return false;
+        }
+
+        return $setting[$key]['value'];
+    }
+
+    public static function SaveBackUpLog($array,$change){
+        foreach ($array as $key => $row){
+            if($row['ip'] == $change['ip']){
+                if(!isset($change['log'])){
+                    $array[$key] = $change;
+                }
+            }
+        }
+        $find = Settings::where('key','FTP_backup_server')->first();
+        $find->value = json_encode($array);
+        $find->save();
+    }
+
+    public static function get_backup(){
+        $setting = Settings::get()->toArray();
+        $backup_servers_l = Helper::toArray(array_filter($setting, function ($item) {
+            return $item['group'] == 'ftp_backup_servers';
+        }));
+        $ftp_system =  Helper::toArray(array_filter($setting,function($item){ return $item['group'] == 'ftp';}));
+        if(!count($ftp_system)){
+            return false;
+        }
+        if($ftp_system['FTP_enabled'] !== '1'){
+            return false;
+        }
+
+        $server_lists = json_decode($backup_servers_l['FTP_backup_server'],true);
+        $count = 0;
+        $count_server = count($server_lists);
+        while ($count < $count_server){
+
+               $server = $server_lists[$count];
+                $count++;
+                if($server['status_backup'] == "true"){
+
+                    if($server['type'] === "mikrotik"){
+
+                        // Save Mikrotik BackUp File
+                        $API = new Mikrotik((object)[
+                            'l2tp_address' => $server['mikrotik_domain'],
+                            'mikrotik_port' => $server['mikrotik_port'],
+                            'username' => $server['username'],
+                            'password' => $server['password'],
+                        ]);
+                        if($API->connect()['ok']){
+                            $filename = "ROS-".str_replace('.','_',$server['ip']).date('y-m-d_H-i');
+                            $re = $API->bs_mkt_rest_api_post('/system/backup/save',array(
+                                'name' => $filename
+                            ));
+                            // If Save OK
+                            if($re['ok']){
+                                $server['last_get_backup'] = date('Y-m-d H:i:s');
+                                $server['last_backup_name'] = $filename.".backup";
+                                $server['wait_download'] = "1";
+
+                                // Run Save To Internal Strong
+                                $ftp = new Ftp([
+                                    'ip' => $server['ip'],
+                                    'port' => $server['port'],
+                                    'username' => $server['username'],
+                                    'password' => $server['password'],
+                                ]);
+
+                                if($ftp->test_connection()) {
+                                    $saved_file = $ftp->SaveFile($server['last_backup_name']);
+                                    if($saved_file){
+                                        $server['wait_download'] = "0";
+                                        $server['saved_backup'] = 1;
+
+                                        // Upload BackUp To Server
+
+                                        $status = self::uploadBackupToServer($ftp_system,$server);
+                                        if($status){
+                                            $filename=  $server['last_backup_name'];
+                                            $server['last_upload_server'] = date('Y-m-d H:i:s');
+                                            $server['saved_backup'] = 0;
+                                        }
+                                    }
+                                }
+
+
+                            }
+                        }
+                    }
+
+
+                    Helper::SaveBackUpLog($server_lists,$server);
+
+                }
+
+        }
+    }
+
+    public static function uploadBackupToServer($ftp_system,$server){
+        $ftp = new Ftp([
+            'ip' => $ftp_system['FTP_ip'],
+            'port' => $ftp_system['FTP_port'],
+            'username' => $ftp_system['FTP_username'],
+            'password' => $ftp_system['FTP_password'],
+        ]);
+        if(!$ftp->test_connection()) {
+           return false;
+        }
+        $upload =  $ftp->uploadFileToBackUp($server['last_backup_name'],$server['ip']);
+        if($upload){
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function get_db_backup(){
+        $setting = Settings::get()->toArray();
+
+        $ftp_system =  Helper::toArray(array_filter($setting,function($item){ return $item['group'] == 'ftp';}));
+        if(!count($ftp_system)){
+            return false;
+        }
+        if($ftp_system['FTP_enabled'] !== '1'){
+            return false;
+        }
+
+        $filename = "backupDB-" . date('Y-m-d_H_i') . ".gz";
+        $save_path = public_path('backups/') . $filename;
+        $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD')
+            . " --host=" . env('DB_HOST') . " " . env('DB_DATABASE')
+            ."  --ignore-table=".env('DB_DATABASE').".radpostauth --ignore-table=".env('DB_DATABASE').".radacct". "  | gzip > " . $save_path;
+
+        $returnVar = NULL;
+        $output  = NULL;
+
+        exec($command, $output, $returnVar);
+
+
+        self::uploadBackupToServer($ftp_system,[
+            'last_backup_name' => $filename,
+            'ip' => 'DB',
+        ]);
+
+
+        return true;
+    }
 }
+
+
 

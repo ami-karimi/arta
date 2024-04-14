@@ -9,19 +9,21 @@ use App\Models\Financial;
 use App\Models\UserGraph;
 use App\Utility\SendNotificationAdmin;
 use App\Utility\V2rayApi;
+use App\Utility\V2raySN;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Ras;
 use App\Models\Groups;
 use App\Models\RadAcct;
+use Illuminate\Support\Facades\Cache;
 use Morilog\Jalali\Jalalian;
 use App\Models\RadPostAuth;
 use App\Models\UserMetas;
 use App\Models\ReselerMeta;
 use App\Utility\Helper;
 use App\Utility\SaveActivityUser;
-
+use App\Models\TelegramVerifyCode;
 
 class UserController extends Controller
 {
@@ -276,8 +278,6 @@ class UserController extends Controller
 
        return new GetServerCollection(Ras::where('is_enabled',1)->orderBy('name','DESC')->get());
    }
-
-
    public function get_groups(){
        $ballance = Financial::where('for',auth()->user()->id)->where('approved',1)->where('type','plus')->get()->sum('price');
        $ballance_minus = Financial::where('for',auth()->user()->id)->where('approved',1)->where('type','minus')->get()->sum('price');
@@ -295,11 +295,9 @@ class UserController extends Controller
 
          ]);
    }
-
    public function get_group(){
        return response()->json(Helper::getGroupPriceReseler('one',auth()->user()->group_id));
    }
-
    public function charge_account(Request $request){
        $findGroups = Helper::getGroupPriceReseler('one',$request->id,true);
        if(!$findGroups){
@@ -349,6 +347,10 @@ class UserController extends Controller
        if($findGroup->group_type == 'volume'){
            if($findGroup->group_volume > 0){
                $find->max_usage = @round(((((int)$findGroup->group_volume * 1024) * 1024) * 1024)) ;
+               $find->upload_usage = 0 ;
+               $find->download_usage = 0 ;
+               $find->usage = 0 ;
+
            }
        }
 
@@ -390,4 +392,147 @@ class UserController extends Controller
        ]);
 
    }
+
+
+   public function tg_verify_code_create(){
+      $find_last =  TelegramVerifyCode::where('user_id',auth()->user()->id)->first();
+
+       if($find_last){
+           if($find_last->status == 'use'){
+               $find_user = User::where('tg_user_id',$find_last->tg_user_id)->where('service_group','telegram')->first();
+               return  response()->json([
+                   'status' => true,
+                   'result' => [
+                       'verify_code' => false,
+                       'expired' =>   false,
+                       'tg_user_id' => $find_user->tg_user_id,
+                       'name' =>    $find_user->name,
+                   ]
+               ]);
+           }
+           if($find_last->expired_at > time()){
+               return  response()->json([
+                   'status' => true,
+                   'result' => [
+                       'tg_user_id' => false,
+                       'name' =>    false,
+                       'verify_code' => $find_last->verify_code,
+                       'expired' =>    $find_last->expired_at - time(),
+                   ]
+               ]);
+           }
+       }
+
+       $verifyCode = substr(random_int(1111,99999999999999),1,6);
+       $expire = time() + 180;
+       TelegramVerifyCode::updateOrCreate([
+           'user_id' => auth()->user()->id,
+       ],[
+           'user_id' => auth()->user()->id,
+           'verify_code' => $verifyCode,
+           'status' => 'active',
+           'expired_at' => time() + 180
+       ]);
+
+
+       return  response()->json([
+           'status' => true,
+           'result' => [
+             'tg_user_id' => false,
+              'name' =>    false,
+             'verify_code' => $verifyCode,
+             'expired' =>   $expire - time(),
+           ]
+       ]);
+
+
+
+   }
+    public function is_base64($s)
+    {
+        // Check if there are valid base64 characters
+        if (!preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $s)) return false;
+
+        // Decode the string in strict mode and check the results
+        $decoded = base64_decode($s, true);
+        if(false === $decoded) return false;
+
+        // Encode the string again
+        if(base64_encode($decoded) != $s) return false;
+
+        return true;
+    }
+   public function v2ray_subs($username){
+        if(!$this->is_base64($username)){
+            return response()->json(['status' => 'Not Validate'],502);
+        }
+        $decode = base64_decode($username);
+
+       $data = cache()->remember('V2ray_Subs_'.$username, 5, function () use($decode) {
+           $userDetial = User::where('username',$decode)->where('service_group','v2ray')->first();
+           if(!$userDetial){
+               return ['status' => false,'message' => 'Not Find User'];
+           }
+
+           $V2ray = new V2raySN(
+               [
+                   'HOST' => $userDetial->v2ray_server->ipaddress,
+                   "PORT" => $userDetial->v2ray_server->port_v2ray,
+                   "USERNAME" => $userDetial->v2ray_server->username_v2ray,
+                   "PASSWORD" => $userDetial->v2ray_server->password_v2ray,
+                   "CDN_ADDRESS"=> $userDetial->v2ray_server->cdn_address_v2ray,
+
+               ]
+           );
+
+           if($V2ray->error['status']){
+               return ['status' => false,'message' => 'Not Connect V2ray Server'];
+           }
+
+           $client = $V2ray->get_user((int) $userDetial->protocol_v2ray,$userDetial->username);
+           $clients = $V2ray->get_client($userDetial->username);
+           $expire_time = ((int) $clients['expiryTime'] > 0 ? (int) $clients['expiryTime'] /1000 : 0);
+           if($expire_time  > 0){
+               $ex = date('Y-m-d H:i:s', $expire_time);
+               $left = "(".Carbon::now()->diffInDays($ex, false)." Day)";
+               $expire_time = $left;
+           }
+
+           $url  = $client['user']['url'];
+           $usage = $clients['up'] +  $clients['down'];
+           $total = $clients['total'];
+           $preg_left = ($total > 0 ? ($usage * 100 / $total) : 0);
+           $preg_left = 100  - $preg_left  ;
+           $left_usage = $this->formatBytes($total - $usage);
+
+
+           $ts = "vless://accountdetil-ss@".$userDetial->v2ray_server->cdn_address_v2ray.":80?mode=gun&security=tls&encryption=none&type=grpc&serviceName=#";
+           $ts .= "🔸 Info- ";
+           $ts .= $userDetial->username;
+           $ts .= " - ";
+           $ts .= ($preg_left > 20 ? '🔋' : '🪫');
+           $ts .= $left_usage;
+           if($expire_time){
+               $ts .= " - ";
+               $ts .= "⏱".$expire_time;
+           }
+           $re = [];
+           $re[] = $ts;
+           $re[] = $url;
+
+
+           return ['status' => true,'data' => $re];
+       });
+
+
+       if($data['status']){
+           foreach ($data['data'] as $row){
+               echo $row .PHP_EOL;
+           }
+           die('');
+
+       }
+
+   }
+
 }

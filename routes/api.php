@@ -13,9 +13,11 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
-
 Route::get('/ping', [\App\Http\Controllers\ApiController::class, 'index']);
+
+
+Route::get('/setting', [\App\Http\Controllers\ApiController::class, 'getSetting']);
+
 
 
 Route::post('/login_user', [\App\Http\Controllers\AuthController::class, 'login_user'])->name('login_user');
@@ -28,6 +30,8 @@ Route::get('/login', function(){
 
 Route::get('/download/{image}', [\App\Http\Controllers\Admin\WireGuardController::class, 'download']);
 
+
+
 Route::prefix('mobile')->group(function () {
     Route::post('/sign-in', [\App\Http\Controllers\Mobile\AuthController::class, 'sign_in'])->name('sign_in');
     Route::post('/config', [\App\Http\Controllers\Mobile\AuthController::class, 'is_valid_token'])->name('is_valid_token');
@@ -37,6 +41,34 @@ Route::prefix('mobile')->group(function () {
 
 
 });
+
+Route::middleware(['trust_api'])->group(function () {
+    Route::prefix('telegram')->group(function () {
+        Route::get('/service_group', [\App\Http\Controllers\Telegram\ApiController::class, 'get_service']);
+        Route::get('/service_child/{id}', [\App\Http\Controllers\Telegram\ApiController::class, 'get_service_child']);
+        Route::get('/service_info/{parent_id}/{child_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'getServiceInfo']);
+        Route::get('/service_info/{parent_id}/{child_id}/{server_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'getServiceANDServer']);
+        Route::get('/get_server/{type}', [\App\Http\Controllers\Telegram\ApiController::class, 'get_server']);
+        Route::post('/place_order', [\App\Http\Controllers\Telegram\ApiController::class, 'place_order']);
+        Route::get('/check_last_order/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'check_last_order']);
+        Route::get('/check_last_order/{user_id}/{type}', [\App\Http\Controllers\Telegram\ApiController::class, 'check_last_order']);
+        Route::post('/order_remove/{user_id}/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'order_remove']);
+        Route::post('/order_remove/{user_id}/{order_id}/{type}', [\App\Http\Controllers\Telegram\ApiController::class, 'order_remove']);
+        Route::get('/get_cart_number', [\App\Http\Controllers\Telegram\ApiController::class, 'get_cart_number']);
+        Route::post('/change_order_status/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'change_order_status']);
+        Route::post('/accept_order/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'accept_order']);
+        Route::get('/manage_service/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'manage_service']);
+        Route::post('/manage_service_setting/{user_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'manage_service_setting']);
+
+
+        Route::post('/recharge_account/{order_id}', [\App\Http\Controllers\Telegram\ApiController::class, 'recharge_account']);
+
+
+    });
+});
+
+Route::get('/get_qr', [\App\Http\Controllers\Admin\V2rayController::class, 'get_qr']);
+
 
 Route::middleware(['auth:api'])->group(function () {
 
@@ -54,6 +86,9 @@ Route::middleware(['auth:api'])->group(function () {
           Route::get('/get_group', [\App\Http\Controllers\User\UserController::class, 'get_group']);
 
           Route::POST('/charge_account', [\App\Http\Controllers\User\UserController::class, 'charge_account']);
+
+
+          Route::POST('/get_telegram_verify_code', [\App\Http\Controllers\User\UserController::class, 'tg_verify_code_create']);
 
 
            Route::prefix('v2ray')->group(function () {
@@ -75,11 +110,22 @@ Route::middleware(['auth:api'])->group(function () {
     // Admin Route
     Route::middleware(['is_admin'])->group(function () {
 
+        Route::prefix('ftp')->group(function () {
+
+          Route::post('/test_ftp', [\App\Http\Controllers\Admin\SettingsController::class, 'test_ftp']);
+
+        });
+        Route::prefix('settings')->group(function () {
+            Route::post('/save', [\App\Http\Controllers\Admin\SettingsController::class, 'save_setting']);
+            Route::get('/get', [\App\Http\Controllers\Admin\SettingsController::class, 'getSettings']);
+
+        });
 
         Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
         Route::prefix('v2ray')->group(function () {
             Route::get('/status', [\App\Http\Controllers\Admin\AdminsController::class, 'GetRealV2rayServerStatus']);
+            Route::get('/get_services/{server_id}', [\App\Http\Controllers\Admin\V2rayController::class, 'get_services']);
         });
 
         Route::get('/getDashboard', [\App\Http\Controllers\Admin\AdminsController::class, 'getDashboard']);
@@ -159,6 +205,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/create', [\App\Http\Controllers\Admin\FinancialController::class, 'create']);
             Route::post('/edit/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'edit']);
             Route::post('/save_custom_price/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'save_custom_price']);
+            Route::DELETE('destory/{id}', [\App\Http\Controllers\Admin\FinancialController::class, 'destory']);
 
         });
 
@@ -190,7 +237,9 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::delete('/delete/{id}', [\App\Http\Controllers\Agent\WireGuardController::class, 'delete']);
 
             });
-
+            Route::prefix('v2ray')->group(function () {
+                Route::get('/get_services/{server_id}', [\App\Http\Controllers\Agent\V2rayController::class, 'get_services']);
+            });
 
             Route::prefix('financial')->group(function () {
                 Route::get('/list', [\App\Http\Controllers\Agent\FinancialController::class, 'index']);
@@ -199,6 +248,7 @@ Route::middleware(['auth:api'])->group(function () {
             });
             Route::prefix('users')->group(function () {
                 Route::get('/list', [\App\Http\Controllers\Agent\UserController::class, 'index']);
+                Route::post('/create_v2', [\App\Http\Controllers\Agent\UserController::class, 'create_v2']);
                 Route::post('/group_deactive', [\App\Http\Controllers\Agent\UserController::class, 'group_deactive']);
                 Route::post('/group_active', [\App\Http\Controllers\Agent\UserController::class, 'group_active']);
                 Route::get('/show/{id}', [\App\Http\Controllers\Agent\UserController::class, 'show']);

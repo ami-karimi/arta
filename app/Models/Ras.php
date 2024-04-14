@@ -14,4 +14,9 @@ class Ras extends Model
     public function getUsersOnline(){
         return $this->hasMany(RadAcct::class,'nasipaddress','ipaddress')->where('acctstoptime','=',NULL);
     }
+
+    public function WireGuards(){
+        return $this->hasMany(WireGuardUsers::class,'server_id','id')->where('is_enabled','=',1);
+    }
+
 }

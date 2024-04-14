@@ -212,7 +212,7 @@ class FinancialController extends Controller
                 [
                     'reseler_id' => $agent->id,
                     'key' => 'disabled_group_' . $findGroup['id'],
-                    'value' => $request->item['status'],
+                    'value' => (!$request->item['status'] ? 3 : 1),
                 ]);
 
 
@@ -290,6 +290,14 @@ class FinancialController extends Controller
             'message'=> 'بروزرسانی با موفقت انجام شد!'
         ]);
         */
+    }
+
+    public function destory($id){
+        Financial::where('id',$id)->delete();
+
+        return response()->json([
+            'message' => 'عملیات با موفقیت انجام شد!',
+        ]);
     }
 
 }

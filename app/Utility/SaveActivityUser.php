@@ -89,6 +89,9 @@ class SaveActivityUser
        if($type == 'add_left_day'){
            self::add_left_day();
        }
+       if($type == 'add_left_volume'){
+           self::add_left_volume();
+       }
    }
 
    public static function ChangeStatusAccount(){
@@ -168,7 +171,7 @@ class SaveActivityUser
    public static function change_group_user(){
        $content = vsprintf('گروه کاربری کاربر از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -176,7 +179,7 @@ class SaveActivityUser
    public static function change_user_protocol(){
        $content = vsprintf('پرتکل کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -184,7 +187,7 @@ class SaveActivityUser
    public static function change_user_port(){
        $content = vsprintf('پرت کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -192,7 +195,7 @@ class SaveActivityUser
    public static function change_user_transmission(){
        $content = vsprintf('transmission کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -200,7 +203,7 @@ class SaveActivityUser
    public static function change_user_location(){
        $content = vsprintf('لوکیشن کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -208,7 +211,7 @@ class SaveActivityUser
    public static function remark_v2ray(){
        $content = vsprintf('ریمارک کاربر  از (%s) به (%s) تغییر کرد.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -216,7 +219,7 @@ class SaveActivityUser
    public static function user_recharge_account(){
        $content = vsprintf('حساب کاربری شارژ شد!',[]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -225,7 +228,7 @@ class SaveActivityUser
    public static function by_volume_v2ray(){
        $content = vsprintf('مقدار حجم %s خریداری شد. مانده قبلی: %s',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -233,7 +236,7 @@ class SaveActivityUser
    public static function buy_new_volume(){
        $content = vsprintf('مقدار حجم %s گیگ اضافه خریداری شد. مانده قبلی: %s گیگ',[self::$data['new'],self::$data['last']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -241,7 +244,7 @@ class SaveActivityUser
    public static function change_wg_server(){
        $content = vsprintf('کانفیگ کاربر از سرور (%s) حذف شد و بر روی سرور (%s) قرار گرفت.',[self::$data['last'],self::$data['new']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -249,7 +252,7 @@ class SaveActivityUser
    public static function add_left_day(){
        $content = vsprintf('مقدار %s روز باقیمانده به دور بعد انتقال یافت.',[self::$data['day']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);
@@ -257,7 +260,15 @@ class SaveActivityUser
    public static function buy_day_for_account(){
        $content = vsprintf('مقدار (%s) روز به انقضا اضافه شد. میزان روز مجاز استفاده کل : (%s روز)',[self::$data['new'],self::$data['total']]);
        Activitys::create([
-           'by' => auth()->user()->id,
+           'by' => self::$by,
+           'user_id' => self::$user_id,
+           'content' => $content,
+       ]);
+   }
+   public static function add_left_volume(){
+       $content = vsprintf('مقدار %s گیگ حجم باقیمانده به دور بعد انتقال یافت.',[self::$data['new']]);
+       Activitys::create([
+           'by' => self::$by,
            'user_id' => self::$user_id,
            'content' => $content,
        ]);

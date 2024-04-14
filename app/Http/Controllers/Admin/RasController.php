@@ -18,6 +18,7 @@ class RasController extends Controller
         $all = $request->all();
         $all['is_enabled'] = ( $request->is_enabled == 'true' ? 1 : 0);
         $all['unlimited'] = ( $request->unlimited  == 'true' ? 1 : 0);
+        $all['mikrotik_server'] = ( $request->mikrotik_server  == 'true' ? 1 : 0);
         $all['in_app'] = ( $request->in_app == 'true' ? 1 : 0);
         $all['config'] =   ($request->config ? preg_replace("/\r\n\r\n|\r\r|\n\n/",'\n',$request->config) : '');
 
@@ -42,9 +43,10 @@ class RasController extends Controller
         if(!$find){
             return;
         }
-        $req = $request->only(['name','secret','flag','config','ipaddress','in_app','unlimited','is_enabled','l2tp_address','server_location','password_v2ray','port_v2ray','username_v2ray','cdn_address_v2ray','server_location']);
+        $req = $request->only(['mikrotik_domain','mikrotik_port','mikrotik_username','mikrotik_password','name','secret','flag','config','ipaddress','in_app','unlimited','is_enabled','l2tp_address','server_location','password_v2ray','port_v2ray','username_v2ray','cdn_address_v2ray','server_location','cdn_address_v2ray']);
         $req['is_enabled'] =( $request->is_enabled  == 'true' ? 1 : 0);
         $req['unlimited'] = ( $request->unlimited  == 'true' ? 1 : 0);
+        $req['mikrotik_server'] = ( $request->mikrotik_server  == 'true' ? 1 : 0);
         $req['in_app'] = (  $request->in_app  == 'true' ? 1 : 0);
         $req['config'] =   ($request->config ?  preg_replace("/\r\n\r\n|\r\r|\n\n/",'\n',$request->config) : '');
         $flag = null;

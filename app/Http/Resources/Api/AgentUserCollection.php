@@ -8,6 +8,7 @@ use App\Models\Ras;
 use App\Models\UserGraph;
 use App\Utility\Helper;
 use App\Utility\V2rayApi;
+use App\Utility\V2raySN;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -78,32 +79,46 @@ class AgentUserCollection extends ResourceCollection
                 $v2ray_user = false;
                 $usage = 0;
                 $total = 0;
-                /*
-                if($item->service_group == 'v2ray'){
 
-                    if($item->v2ray_server) {
-                        $login_s =new V2rayApi($item->v2ray_server->ipaddress,$item->v2ray_server->port_v2ray,$item->v2ray_server->username_v2ray,$item->v2ray_server->password_v2ray);
-                        if($login_s) {
-                            $usage = false;
-                            $v2ray_user =  $login_s->list(['port' => (int) $item->port_v2ray]);
-                            if($v2ray_user) {
-                                if (!$item->v2ray_id) {
-                                    $item->v2ray_id = $v2ray_user['id'];
-                                    $item->save();
-                                }
-                                $usage = $login_s->formatBytes($v2ray_user['usage'],2);
-                                $total = $login_s->formatBytes($v2ray_user['total'],2);
-                            }
-                        }
-                    }
-                }
-                */
                 if($item->group){
                     if($item->group->group_type == 'volume'){
                         $usage = $item->usage;
                     }
                 }
+                $online = ($item->isOnline ? 'online': 'offline');
                 $total = $item->max_usage;
+                if($item->service_group == 'v2ray') {
+                    $v2ray_user = true;
+                    $V2ray = new V2raySN(
+                        [
+                            'HOST' => $item->v2ray_server->ipaddress,
+                            "PORT" => $item->v2ray_server->port_v2ray,
+                            "USERNAME" => $item->v2ray_server->username_v2ray,
+                            "PASSWORD" => $item->v2ray_server->password_v2ray,
+                            "CDN_ADDRESS"=> $item->v2ray_server->cdn_address_v2ray,
+
+                        ]
+                    );
+
+                    if(!$V2ray->error['status']){
+                        $client = $V2ray->get_client($item->username);
+                        if($client){
+                            if(isset($client['up'])) {
+                                $usage = $client['up'] + $client['down'];
+                                $total = $client['total'];
+                                $v2ray_user = $client;
+                                $v2ray_user['online'] = in_array($item->username,$V2ray->getOnlines()) ? true : false;
+                                if($v2ray_user['online']){
+                                    $online = "online";
+                                }
+                                $v2ray_user['url'] = $item->v2ray_config_uri;
+                                $v2ray_user['url_encode'] = urlencode($item->v2ray_config_uri);
+                                $v2ray_user['sub_link'] = url('/sub/'.base64_encode($item->username));
+
+                            }
+                        }
+                    }
+                }
 
                 return [
                     'id' => $item->id,
@@ -125,7 +140,7 @@ class AgentUserCollection extends ResourceCollection
                     'group_id' => $item->group_id,
                     'expire_date' => ($item->expire_date !== NULL ? Jalalian::forge($item->expire_date)->__toString() : '---'),
                     'time_left' => ($item->expire_date !== NULL ? Carbon::now()->diffInDays($item->expire_date, false) : false),
-                    'status' => ($item->isOnline ? 'online': 'offline'),
+                    'status' => $online,
                     'first_login' =>($item->first_login !== NULL ? Jalalian::forge($item->first_login)->__toString() : '---'),
                     'is_enabled' => $item->is_enabled ,
                     'created_at' => Jalalian::forge($item->created_at)->__toString(),

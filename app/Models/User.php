@@ -76,5 +76,11 @@ class User extends Authenticatable implements JWTSubject
     function wg(){
         return $this->hasOne(WireGuardUsers::class,'user_id','id');
     }
+    function wgs(){
+        return $this->hasMany(WireGuardUsers::class,'user_id','id');
+    }
+    function tg_group(){
+        return $this->hasOne(ServiceChilds::class,'id','tg_group_id');
+    }
 
 }

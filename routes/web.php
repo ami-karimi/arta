@@ -18,6 +18,7 @@ use Inertia\Inertia;
 
 
 
+Route::get('/sub/{id}', [\App\Http\Controllers\User\UserController::class, 'v2ray_subs']);
 
 /*
 Route::get('/', function () {

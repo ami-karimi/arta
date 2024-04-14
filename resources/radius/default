@@ -865,6 +865,14 @@ post-auth {
 	#  Remove reply message if the response contains an EAP-Message
 	remove_reply_message_if_eap
 
+    if("%{sql:SELECT multi_login  FROM users  WHERE username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) AND radacct.saved = 0 }"){
+         	update reply {
+          	    &Reply-Message := "Maximum Online"
+              	&Framed-Pool := "Maximum Online"
+          	}
+          	reject
+       }
+
 
      if("%{sql:SELECT exp_val_minute,expire_value,expire_type FROM users WHERE username = '%{User-Name}' AND expire_set = 0  AND  expire_type != 'no_expire' }"){
      	"%{sql:UPDATE users SET expire_date = date_add(now(),interval +exp_val_minute MINUTE) ,first_login = FROM_UNIXTIME(%{integer:Event-Timestamp}), expire_set = 1 WHERE username = '%{User-Name}'}"
