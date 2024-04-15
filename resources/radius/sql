@@ -138,7 +138,7 @@ sql {
 #	read_profiles = yes
 
 	# Remove stale session if checkrad does not see a double login
-	delete_stale_sessions = yes
+	delete_stale_sessions = no
 
 	# Write SQL queries to a logfile. This is potentially useful for tracing
 	# issues with authorization queries.  See also "logfile" directives in
