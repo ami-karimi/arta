@@ -171,7 +171,7 @@ listen {
 	      #  this lifetime, the connection will be closed.
 	      #
 	      #  Setting this to 0 means "forever".
-	      lifetime = 0
+	      lifetime = 3600
 
 	      #
 	      #  The idle timeout, in seconds, of a TCP connection.
@@ -182,7 +182,7 @@ listen {
 	      #
 	      #  We STRONGLY RECOMMEND that you set an idle timeout.
 	      #
-	      idle_timeout = 60
+	      idle_timeout = 120
 	}
 
 
@@ -226,8 +226,8 @@ listen {
 
 		# Only for "proto = tcp". These are ignored for "udp" sockets.
 		#
-		idle_timeout = 0
-		lifetime = 0
+		idle_timeout = 60
+		lifetime = 3600
 		max_connections = 0
 	}
 }
@@ -246,20 +246,6 @@ listen {
 	}
 }
 
-listen {
-	ipv6addr = ::
-	port = 0
-	type = acct
-#	interface = eth0
-#	clients = per_socket_clients
-
-	limit {
-#		max_pps = 0
-#		idle_timeout = 0
-#		lifetime = 0
-#		max_connections = 0
-	}
-}
 
 #  Authorization. First preprocess (hints and huntgroups files),
 #  then realms, and finally look in the "users" file.
@@ -864,14 +850,6 @@ post-auth {
 
 	#  Remove reply message if the response contains an EAP-Message
 	remove_reply_message_if_eap
-
-    if("%{sql:SELECT multi_login  FROM users  WHERE username = '%{User-Name}' }" <=  "%{sql:SELECT  count(*) FROM users INNER JOIN radacct ON radacct.username = users.username WHERE users.username = '%{User-Name}' AND ISNULL(radacct.acctstoptime) AND radacct.saved = 0 }"){
-         	update reply {
-          	    &Reply-Message := "Maximum Online"
-              	&Framed-Pool := "Maximum Online"
-          	}
-          	reject
-       }
 
 
      if("%{sql:SELECT exp_val_minute,expire_value,expire_type FROM users WHERE username = '%{User-Name}' AND expire_set = 0  AND  expire_type != 'no_expire' }"){
