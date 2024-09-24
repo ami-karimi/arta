@@ -42,7 +42,7 @@ class ApiController extends Controller
 
 
         $now = Carbon::now('Asia/Tehran')->subDays(10);
-        $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->get();
+        $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',1)->get();
 
         foreach ($findWgExpired as $row){
             echo $row->username."-".$row->expire_date."</br>";
