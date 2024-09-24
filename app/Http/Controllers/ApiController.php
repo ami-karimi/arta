@@ -48,25 +48,13 @@ class ApiController extends Controller
             echo $row->username."-".$row->expire_date;
 
             foreach($row->wgs as $row_wg) {
-
-            echo $row_wg->user_ip;
-                /*
-                   $mik = new WireGuard($row_wg->server_id, 'null');
-                   $peers = $mik->getUser($row_wg->public_key);
-                   if ($peers['status']) {
-                       $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
-                       if ($status['status']) {
-                           SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
-                           $row->expired = 1;
-                           $row_wg->is_enabled = 0;
-                           $row_wg->save();
-                           $row->save();
-                       }
-                   }
-                 */
+                $mik = new WireGuard($row_wg->server_id, 'null');
+                $mik->removeConfig($row_wg->public_key);
+                $row_wg->delete();
                }
 
             echo "</br>";
+            $row->delete();
 
         }
 
