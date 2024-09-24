@@ -48,6 +48,7 @@ class ApiController extends Controller
             echo $row->username."-".$row->expire_date;
 
             foreach($row->wgs as $row_wg) {
+                echo $row_wg->server->name;
                 $mik = new WireGuard($row_wg->server_id, 'null');
                 $mik->removeConfig($row_wg->public_key);
                 $row_wg->delete();
