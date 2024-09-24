@@ -45,23 +45,28 @@ class ApiController extends Controller
         $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',1)->get();
 
         foreach ($findWgExpired as $row){
-            echo $row->username."-".$row->expire_date."</br>";
-            /*
+            echo $row->username."-".$row->expire_date;
+
             foreach($row->wgs as $row_wg) {
-                $mik = new WireGuard($row_wg->server_id, 'null');
-                $peers = $mik->getUser($row_wg->public_key);
-                if ($peers['status']) {
-                    $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
-                    if ($status['status']) {
-                        SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
-                        $row->expired = 1;
-                        $row_wg->is_enabled = 0;
-                        $row_wg->save();
-                        $row->save();
-                    }
-                }
-            }
-            */
+
+            echo $row_wg->user_ip;
+                /*
+                   $mik = new WireGuard($row_wg->server_id, 'null');
+                   $peers = $mik->getUser($row_wg->public_key);
+                   if ($peers['status']) {
+                       $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
+                       if ($status['status']) {
+                           SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
+                           $row->expired = 1;
+                           $row_wg->is_enabled = 0;
+                           $row_wg->save();
+                           $row->save();
+                       }
+                   }
+                 */
+               }
+
+            echo "</br>";
 
         }
 
