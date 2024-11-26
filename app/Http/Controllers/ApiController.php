@@ -55,21 +55,23 @@ class ApiController extends Controller
 
                 ]
             );
-            if(!$V2ray->error['status']){
+            if(!$V2ray->error['status']) {
                 $max = $userDetial->group->group_volume;
                 $max_usage = $max;
                 $v2_current = $V2ray->get_client($userDetial->username);
-                $expire = $v2_current['expiryTime'];
-                $V2ray->update_client($userDetial->uuid_v2ray, [
-                    'service_id' => $userDetial->protocol_v2ray,
-                    'username' => $userDetial->username,
-                    'multi_login' => $userDetial->group->multi_login,
-                    'totalGB' =>  $max_usage,
-                    'expiryTime' => $expire,
-                    'enable' => ($userDetial->is_enabled ? true : false),
-                ]);
+                if ($v2_current) {
+                    $expire = $v2_current['expiryTime'];
+                    $V2ray->update_client($userDetial->uuid_v2ray, [
+                        'service_id' => $userDetial->protocol_v2ray,
+                        'username' => $userDetial->username,
+                        'multi_login' => $userDetial->group->multi_login,
+                        'totalGB' => $max_usage,
+                        'expiryTime' => $expire,
+                        'enable' => ($userDetial->is_enabled ? true : false),
+                    ]);
 
-                echo "Updated:".$userDetial->username."</br>";
+                    echo "Updated:" . $userDetial->username . "</br>";
+                }
             }
 
 
