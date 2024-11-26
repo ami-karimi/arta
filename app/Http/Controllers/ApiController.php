@@ -42,22 +42,36 @@ class ApiController extends Controller
 
 
         $now = Carbon::now('Asia/Tehran')->subDays(10);
-        $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',1)->limit(30)->get();
+        $findWgExpired = User::where('service_group','v2ray')->where('group_id',50)->get();
 
-        foreach ($findWgExpired as $row){
-            echo $row->username."-".$row->expire_date;
+        foreach ($findWgExpired as $userDetial){
+            $V2ray = new V2raySN(
+                [
+                    'HOST' => $userDetial->v2ray_server->ipaddress,
+                    "PORT" => $userDetial->v2ray_server->port_v2ray,
+                    "USERNAME" => $userDetial->v2ray_server->username_v2ray,
+                    "PASSWORD" => $userDetial->v2ray_server->password_v2ray,
+                    "CDN_ADDRESS"=> $userDetial->v2ray_server->cdn_address_v2ray,
 
-            foreach($row->wgs as $row_wg) {
-                echo $row_wg->server->name;
-                echo "</br>";
-                echo $row_wg->user_ip;
-                $mik = new WireGuard($row_wg->server_id, 'null');
-                $mik->removeConfig($row_wg->public_key);
-                $row_wg->delete();
-               }
+                ]
+            );
+            if(!$V2ray->error['status']){
+                $max = $userDetial->group->group_volume;
+                $max_usage = $max;
+                $v2_current = $V2ray->get_client($userDetial->username);
+                $expire = $v2_current['expiryTime'];
+                $V2ray->update_client($userDetial->uuid_v2ray, [
+                    'service_id' => $userDetial->protocol_v2ray,
+                    'username' => $userDetial->username,
+                    'multi_login' => $userDetial->group->multi_login,
+                    'totalGB' =>  $max_usage,
+                    'expiryTime' => $expire,
+                    'enable' => ($userDetial->is_enabled ? true : false),
+                ]);
 
-            echo "</br>";
-            $row->delete();
+                echo "Updated:".$userDetial->username."</br>";
+            }
+
 
         }
 
