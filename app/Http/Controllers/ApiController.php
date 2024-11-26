@@ -41,6 +41,7 @@ class ApiController extends Controller
 
 
 
+        /*
         $now = Carbon::now('Asia/Tehran')->subDays(10);
         $findWgExpired = User::where('service_group','v2ray')->where('group_id',50)->get();
 
@@ -76,6 +77,7 @@ class ApiController extends Controller
 
 
         }
+        */
 
 
 
