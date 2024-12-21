@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Stogram;
 use App\Models\User;
+use App\Models\UserBackup;
 use App\Utility\Sms;
 use App\Utility\V2raySN;
 
@@ -36,6 +37,18 @@ class ApiController extends Controller
     }
 
     public function index(){
+
+
+
+        $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-15')->get();
+
+        var_dump($get);
+        /*
+        $getUsers = UserBackup::where('service_group','l2tp_cisco')->get();
+        */
+
+
+
 
 
 
