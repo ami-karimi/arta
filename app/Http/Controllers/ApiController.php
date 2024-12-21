@@ -45,6 +45,7 @@ class ApiController extends Controller
         foreach ($get as $user){
             $find = UserBackup::where('id',$user->id)->first();
             if($find){
+                echo $find->username;
                 $user->first_login = $find->first_login;
                 $user->expire_date = $find->expire_date;
                 $user->save();
