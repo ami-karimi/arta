@@ -40,7 +40,7 @@ class ApiController extends Controller
 
 
 
-        $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-15')->whereDate('first_login','<','2024-12-18')->get();
+        $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-16')->whereDate('first_login','<','2024-12-18')->get();
 
         foreach ($get as $user){
             echo $user->username."-".$user->first_login."</br>";
