@@ -43,7 +43,12 @@ class ApiController extends Controller
         $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-16')->whereDate('first_login','<','2024-12-18')->whereDate('created_at','<','2024-12-14')->get();
 
         foreach ($get as $user){
-            echo $user->username."-".$user->first_login."</br>";
+            $find = UserBackup::where('id',$user->id)->first();
+            if($find){
+                $user->first_login = $find->first_login;
+                $user->expire_date = $find->expire_date;
+                $user->save();
+            }
         }
         /*
         $getUsers = UserBackup::where('service_group','l2tp_cisco')->get();
