@@ -42,7 +42,9 @@ class ApiController extends Controller
 
         $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-15')->get();
 
-        var_dump($get);
+        foreach ($get as $user){
+            echo $user->username."-".$user->first_login."</br>";
+        }
         /*
         $getUsers = UserBackup::where('service_group','l2tp_cisco')->get();
         */
