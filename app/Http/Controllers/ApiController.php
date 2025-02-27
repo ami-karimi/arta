@@ -40,7 +40,22 @@ class ApiController extends Controller
 
     public function index(){
 
+        $API        = new Mikrotik( (object)[
+            'l2tp_address' => 's4.arta20.xyz',
+            'mikrotik_port' => '3232',
+            'username' => 'admin',
+            'password' => 'Amir@###1401',
+        ]);
+        $API->debug = false;
+        $res=$API->connect();
+        if($res['ok']) {
+            $BRIDGEINFO_Peers = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS');
+            if($BRIDGEINFO_Peers['ok']){
+                print_r($BRIDGEINFO_Peers);
+            }
+        }
 
+        /*
         $wire = WireGuardUsers::where('server_id',62)->whereNotNull('client_private_key')->get();
         $now = Carbon::now('Asia/Tehran')->subDays(15);
         $API        = new Mikrotik( (object)[
@@ -70,7 +85,7 @@ class ApiController extends Controller
                         $findUser = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key=' . $privateKey);
                         if (!count($findUser['data'])) {
                             $create_wr = new WireGuard(62, $config->user->username.rand(1,5));
-                            $user_wi = $create_wr->Run();
+                            $user_wi = $create_wr->Run($config->user_ip);
                         }
 
                     echo "</br>"  ;
@@ -84,6 +99,10 @@ class ApiController extends Controller
         }else {
             echo "Not Connect";
         }
+        */
+
+
+
         /*
 
         $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-16')->whereDate('first_login','<','2024-12-18')->whereDate('created_at','<','2024-12-14')->get();
