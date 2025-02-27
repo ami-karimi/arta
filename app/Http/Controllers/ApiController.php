@@ -69,6 +69,7 @@ class ApiController extends Controller
         }
 
         */
+        /*
 
         $wire = WireGuardUsers::where('server_id',62)->whereNotNull('client_private_key')->get();
         $now = Carbon::now('Asia/Tehran')->subDays(15);
@@ -117,7 +118,7 @@ class ApiController extends Controller
         }else {
             echo "Not Connect";
         }
-
+        */
 
 
 
