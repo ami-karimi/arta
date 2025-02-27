@@ -55,6 +55,8 @@ class ApiController extends Controller
                     echo "Private:".$privateKey;
                     echo "|";
                     echo "Public:".$publicKey;
+                    echo "|";
+                    echo $config->user->username;
                     echo "</br>";
 
                 }else{
