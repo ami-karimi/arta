@@ -52,8 +52,11 @@ class ApiController extends Controller
             $BRIDGEINFO_Peers = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS');
             if($BRIDGEINFO_Peers['ok']){
                 foreach ($BRIDGEINFO_Peers['data'] as $row){
-                    echo $row['public-key'];
-                    echo "</br>";
+                    $wire = WireGuardUsers::where('server_id',62)->where('public_key',$row['public-key'])->get();
+                    if(!$wire){
+                        echo "Not Found".$row['public-key'];
+                        echo "</br>";
+                    }
                 }
             }
         }
