@@ -100,8 +100,8 @@ class ApiController extends Controller
 
                         $findUser = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key=' . $privateKey);
                         if (!count($findUser['data'])) {
-                            //$create_wr = new WireGuard(62, $config->user->username.rand(1,5));
-                           // $user_wi = $create_wr->Run($config->user_ip,$privateKey);
+                            $create_wr = new WireGuard(62, $config->user->username.rand(1,5));
+                            $user_wi = $create_wr->Run($config->user_ip,$privateKey);
                         }
 
                     echo "</br>"  ;
