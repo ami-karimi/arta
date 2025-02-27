@@ -99,7 +99,7 @@ class ApiController extends Controller
                     echo $config->user_ip;
 
                         $findUser = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key=' . $config->public_key);
-                        if (count($findUser['data'])) {
+                        if (!count($findUser['data'])) {
                            // $API->bs_mkt_rest_api_del("/interface/wireguard/peers/" . $findUser['data'][0]['.id']);
                             $create_wr = new WireGuard(62, $config->user->username.rand(1,5));
                            $user_wi = $create_wr->Run($config->user_ip,$config->public_key);
