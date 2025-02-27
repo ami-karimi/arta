@@ -160,18 +160,18 @@ class WireGuard
         return ['status' => false,'message' => 'Not Find User'];
     }
 
-    public function Run($IP,$key){
+    public function Run(){
         $checkInterface = $this->getInterface();
 
         if(!$checkInterface['status']){
             return $checkInterface;
         }
 
-         $sd = $this->CreatePear($IP,$key);
+         $sd = $this->CreatePear();
 
-       // $this->CreateUserConfig();
+        $this->CreateUserConfig();
 
-        $this->addQuee(['ip' => $IP,'name' => $this->config_file]);
+        $this->addQuee(['ip' => $this->ip_address,'name' => $this->config_file]);
 
         return [
           'status' => ($sd['ok']  ? true : false),
@@ -181,7 +181,7 @@ class WireGuard
           'server_id' => $this->server_id,
           'server_pub_key' => $this->server_pub_key."=",
           'server_port' => $this->server_port,
-          'ip_address' => $IP,
+          'ip_address' => $this->ip_address,
 
         ];
     }
@@ -239,11 +239,11 @@ class WireGuard
         return false;
     }
 
-    public function CreatePear($IP,$key){
+    public function CreatePear(){
         return $this->ROS->bs_mkt_rest_api_add('/interface/wireguard/peers', array(
             'interface' => 'ROS_WG_USERS',
-            'allowed-address' => $IP."/32",
-            'public-key' => $key,
+            'allowed-address' => $this->ip_address."/32",
+            'public-key' => $this->client_public_key,
         ));
     }
 
