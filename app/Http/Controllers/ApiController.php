@@ -40,6 +40,7 @@ class ApiController extends Controller
 
     public function index(){
 
+        /*
         $API        = new Mikrotik( (object)[
             'l2tp_address' => 's4.arta20.xyz',
             'mikrotik_port' => '3232',
@@ -67,7 +68,8 @@ class ApiController extends Controller
             }
         }
 
-        /*
+        */
+
         $wire = WireGuardUsers::where('server_id',62)->whereNotNull('client_private_key')->get();
         $now = Carbon::now('Asia/Tehran')->subDays(15);
         $API        = new Mikrotik( (object)[
@@ -111,7 +113,7 @@ class ApiController extends Controller
         }else {
             echo "Not Connect";
         }
-        */
+
 
 
 
