@@ -169,7 +169,7 @@ class WireGuard
 
          $sd = $this->CreatePear();
 
-        $this->CreateUserConfig();
+       // $this->CreateUserConfig();
 
         $this->addQuee(['ip' => $this->ip_address,'name' => $this->config_file]);
 

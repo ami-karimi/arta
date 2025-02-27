@@ -62,7 +62,6 @@ class ApiController extends Controller
                     preg_match('/PublicKey\s*=\s*(.+)/', $content, $publicKeyMatch);
 
                     $privateKey = $privateKeyMatch[1] ?? null;
-                    $publicKey = $publicKeyMatch[1] ?? null;
                     echo "Private:".$privateKey;
                     echo "|";
                     echo $config->user->username;
@@ -70,7 +69,8 @@ class ApiController extends Controller
 
                         $findUser = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key=' . $privateKey);
                         if (!count($findUser['data'])) {
-                            echo "Not Found";
+                            $create_wr = new WireGuard(62, $config->user->username.rand(1,5));
+                            $user_wi = $create_wr->Run();
                         }
 
                     echo "</br>"  ;
