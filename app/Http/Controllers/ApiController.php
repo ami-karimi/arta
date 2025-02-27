@@ -51,7 +51,10 @@ class ApiController extends Controller
         if($res['ok']) {
             $BRIDGEINFO_Peers = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS');
             if($BRIDGEINFO_Peers['ok']){
-                print_r($BRIDGEINFO_Peers);
+                foreach ($BRIDGEINFO_Peers['data'] as $row){
+                    echo $row['public-key'];
+                    echo "</br>";
+                }
             }
         }
 
