@@ -56,6 +56,9 @@ class ApiController extends Controller
                     if(!$wire){
                         echo "Not Found".$row['public-key'];
                         echo "</br>";
+                        $API->bs_mkt_rest_api_del("/interface/wireguard/peers/" . $row['.id']);
+                        $API->bs_mkt_rest_api_get('/queue/simple?target='.$row['allowed-address']);
+
                     }else{
                         echo "Found:".$row['public-key'];
                         echo "</br>";
