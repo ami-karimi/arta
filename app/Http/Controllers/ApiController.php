@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Utility\Helper;
 use App\Utility\SaveActivityUser;
 use App\Utility\WireGuard;
+use App\Models\WireGuardUsers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Stogram;
@@ -38,7 +39,30 @@ class ApiController extends Controller
 
     public function index(){
 
+        $wire = WireGuardUsers::where('server_id',62)->whereNotNull('client_private_key')->get();
+        $now = Carbon::now('Asia/Tehran')->subDays(15);
+        foreach($wire as $config){
+            if($config->user){
+                $filename = "/var/www/html/arta/public/configs/".$config->profile_name.".conf";
+                if(is_file($filename)) {
+                    $content = file_get_contents($filename);
 
+                    preg_match('/PrivateKey\s*=\s*(.+)/', $content, $privateKeyMatch);
+                    preg_match('/PublicKey\s*=\s*(.+)/', $content, $publicKeyMatch);
+
+                    $privateKey = $privateKeyMatch[1] ?? null;
+                    $publicKey = $publicKeyMatch[1] ?? null;
+                    echo "Private:".$privateKey;
+                    echo "|";
+                    echo "Public:".$publicKey;
+                    echo "</br>";
+
+                }
+
+
+            }
+        }
+        /*
 
         $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-16')->whereDate('first_login','<','2024-12-18')->whereDate('created_at','<','2024-12-14')->get();
 
@@ -51,6 +75,7 @@ class ApiController extends Controller
                 $user->save();
             }
         }
+        */
         /*
         $getUsers = UserBackup::where('service_group','l2tp_cisco')->get();
         */
