@@ -56,6 +56,9 @@ class ApiController extends Controller
                     if(!$wire){
                         echo "Not Found".$row['public-key'];
                         echo "</br>";
+                    }else{
+                        echo "Found:".$row['public-key'];
+                        echo "</br>";
                     }
                 }
             }
