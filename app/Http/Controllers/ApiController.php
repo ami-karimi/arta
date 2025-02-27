@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Utility\Helper;
+use App\Utility\Mikrotik;
 use App\Utility\SaveActivityUser;
 use App\Utility\WireGuard;
 use App\Models\WireGuardUsers;
@@ -54,11 +55,24 @@ class ApiController extends Controller
                     $publicKey = $publicKeyMatch[1] ?? null;
                     echo "Private:".$privateKey;
                     echo "|";
-                    echo "Public:".$publicKey;
-                    echo "|";
                     echo $config->user->username;
-                    echo "</br>";
 
+
+                    $API        = new Mikrotik( (object)[
+                        'l2tp_address' => 's4.arta20.xyz',
+                        'mikrotik_port' => '3232',
+                        'username' => 'admin',
+                        'password' => 'Amir@###1401',
+                    ]);
+                    $API->debug = false;
+                    $res=$API->connect();
+                    if($res['ok']) {
+                        $findUser = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key=' . $privateKey);
+                        if (!count($findUser['data'])) {
+                            echo "Not Found";
+                        }
+                    }
+                    echo "</br>"  ;
                 }else{
                     echo $config->user->username;
                 }
