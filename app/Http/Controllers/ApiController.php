@@ -42,6 +42,15 @@ class ApiController extends Controller
 
         $wire = WireGuardUsers::where('server_id',62)->whereNotNull('client_private_key')->get();
         $now = Carbon::now('Asia/Tehran')->subDays(15);
+        $API        = new Mikrotik( (object)[
+            'l2tp_address' => 's4.arta20.xyz',
+            'mikrotik_port' => '3232',
+            'username' => 'admin',
+            'password' => 'Amir@###1401',
+        ]);
+        $API->debug = false;
+        $res=$API->connect();
+        if($res['ok']) {
         foreach($wire as $config){
             if($config->user){
                 $filename = "/var/www/html/arta/public/configs/".$config->profile_name.".conf";
@@ -58,20 +67,11 @@ class ApiController extends Controller
                     echo $config->user->username;
 
 
-                    $API        = new Mikrotik( (object)[
-                        'l2tp_address' => 's4.arta20.xyz',
-                        'mikrotik_port' => '3232',
-                        'username' => 'admin',
-                        'password' => 'Amir@###1401',
-                    ]);
-                    $API->debug = false;
-                    $res=$API->connect();
-                    if($res['ok']) {
                         $findUser = $API->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key=' . $privateKey);
                         if (!count($findUser['data'])) {
                             echo "Not Found";
                         }
-                    }
+
                     echo "</br>"  ;
                 }else{
                     echo $config->user->username;
@@ -79,6 +79,9 @@ class ApiController extends Controller
 
 
             }
+        }
+        }else {
+            echo "Not Connect";
         }
         /*
 
