@@ -40,6 +40,7 @@ class ApiController extends Controller
 
     public function index(){
 
+        /*
         $wire = WireGuardUsers::where('server_id',62)->whereNotNull('client_private_key')->get();
         $now = Carbon::now('Asia/Tehran')->subDays(15);
         $API        = new Mikrotik( (object)[
@@ -83,6 +84,8 @@ class ApiController extends Controller
         }else {
             echo "Not Connect";
         }
+        */
+
         /*
 
         $get = User::where('service_group','l2tp_cisco')->whereDate('first_login','>','2024-12-16')->whereDate('first_login','<','2024-12-18')->whereDate('created_at','<','2024-12-14')->get();
