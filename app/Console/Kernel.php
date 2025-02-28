@@ -116,7 +116,7 @@ class Kernel extends ConsoleKernel
         })->everyTwoHours();
         */
         $schedule->call(function(){
-            //Helper::get_backup();
+            Helper::get_backup();
 
 
             $now = Carbon::now()->format('Y-m-d');
