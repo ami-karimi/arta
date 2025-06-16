@@ -39,6 +39,27 @@ class ApiController extends Controller
     }
 
     public function index(){
+        $findWgExpired = User::where('service_group','v2ray')->where('protocol_v2ray',1)->get();
+        $login = new V2raySN(
+            [
+                'HOST' => "151.232.51.116",
+                "PORT" => "2084",
+                "USERNAME" => "amirtld",
+                "PASSWORD" => "Amir@###1401",
+                "CDN_ADDRESS"=> "v3.arta20.xyz",
+
+            ]
+        );
+        if(!$login->error['status']) {
+            foreach ($findWgExpired as $findUser) {
+
+                $tm = floor(microtime(true) * 1000);
+                $expiretime = $tm + (864000 * $findUser->group->expire_value * 100) ;
+
+                $add_client = $login->add_client(11,$findUser->username,5,$findUser->max_usage,$expiretime,true,$findUser->uuid_v2ray);
+
+            }
+        }
 
         /*
         $API        = new Mikrotik( (object)[
