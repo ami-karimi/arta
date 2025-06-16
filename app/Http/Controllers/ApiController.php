@@ -53,10 +53,11 @@ class ApiController extends Controller
         if(!$login->error['status']) {
             foreach ($findWgExpired as $findUser) {
 
-                $expiretime =  $findUser->group->expire_value;
+               // $expiretime =  $findUser->group->expire_value;
 
-                $add_client = $login->add_client(11,$findUser->username,5,round($findUser->max_usage /1073741824), $expiretime,true,$findUser->uuid_v2ray);
-
+               // $add_client = $login->add_client(11,$findUser->username,5,round($findUser->max_usage /1073741824), $expiretime,true,$findUser->uuid_v2ray);
+                $findUser->protocol_v2ray = 11;
+                $findUser->save();
             }
         }
 
