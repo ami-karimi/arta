@@ -142,13 +142,15 @@ class V2raySN {
         unlink($this->cookie_txt_path);
         return [];
     }
-    public function add_client(int $service_id,string $email,int $limit_ip = 2,int $totalGB,float $expiretime,bool $enable = true)
+    public function add_client(int $service_id,string $email,int $limit_ip = 2,int $totalGB,float $expiretime,bool $enable = true,$user_id = false)
     {
 
         $tm = floor(microtime(true) * 1000);
         $expiretime = $tm + (864000 * $expiretime * 100) ;
 
-        $user_id = $this->genUserId();
+        if(!$user_id){
+            $user_id = $this->genUserId();
+        }
         $data = $this->request("panel/api/inbounds/addClient",[
             'id' => $service_id,
             'settings' => json_encode([
