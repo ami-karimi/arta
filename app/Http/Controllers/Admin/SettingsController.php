@@ -68,7 +68,7 @@ class SettingsController extends Controller
                 'type' => 'private'
             ]);
         }
-        $allow_General = ['QR_WATRMARK','SITE_TITLE','FAV_ICON','SITE_LOGO'];
+        $allow_General = ['QR_WATRMARK','SITE_TITLE','FAV_ICON','SITE_LOGO','CREATE_WG_ACCOUNT','CREATE_OP_ACCOUNT','CREATE_V2_ACCOUNT'];
         if($request){
             foreach ($request->all() as $key => $value) {
                 if (in_array($key, $allow_General)) {

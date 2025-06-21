@@ -15,7 +15,11 @@ class GroupsController extends Controller
 
     }
     public function create(StoreGroupRequest $request){
-        Groups::create($request->all());
+
+        $all = $request->all();
+
+        $all['is_enabled'] = ($request->is_enabled ? 1 : 0);
+        Groups::create($all);
 
         return response()->json(['status' => true,'message' => 'گروه با موفقیت اضافه شد!']);
     }
@@ -24,7 +28,9 @@ class GroupsController extends Controller
         if(!$find){
             return;
         }
-        $find->update($request->only(['name','expire_type','expire_value','multi_login','price','price_reseler','group_type','group_volume']));
+        $req = $request->only(['name','expire_type','expire_value','multi_login','price','price_reseler','group_type','group_volume']);
+        $req['is_enabled'] = ($request->is_enabled ? 1 : 0);
+        $find->update($req);
         return response()->json(['status' => true,'message' => 'گروه با موفقیت بروزرسانی شد!']);
     }
 }

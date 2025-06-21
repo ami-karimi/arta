@@ -189,7 +189,7 @@ class Helper
 
     public static function GetReselerGroupList($type = 'list',$group_id = false,$for = false)
     {
-        $group_lists = Groups::get();
+        $group_lists = Groups::where('is_enabled',1)->get();
 
 
         $user = User::where('id',$for)->first();

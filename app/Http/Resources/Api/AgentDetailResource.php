@@ -72,6 +72,7 @@ class AgentDetailResource extends JsonResource
         return [
             'price_lists' => $priceList,
             'can_agent' => (!$this->creator ? true : false),
+
             'detail' => [
                 'id' => $this->id,
                 'name' => $this->name,
@@ -80,7 +81,10 @@ class AgentDetailResource extends JsonResource
                 'email' => $this->email,
                 'is_enabled' => $this->is_enabled,
                 'incom' => $this->incom,
-                'created_at' => Jalalian::forge($this->created_at)->__toString()
+                'created_at' => Jalalian::forge($this->created_at)->__toString(),
+                'can_create_wg' => ($this->can_create_wg ? true : false),
+                'can_create_op' => ($this->can_create_op ? true : false),
+                'can_create_v2' => ($this->can_create_v2 ? true : false),
             ],
             'users' => $this->when($this->agent_users !== null,  new UserCollection($this->agent_users()->paginate(10)))  ,
             'all_users_active' =>  $this->when($this->agent_users !== null, $this->agent_users()->where('is_enabled',1)->count()),

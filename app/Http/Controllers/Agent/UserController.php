@@ -1297,6 +1297,12 @@ class UserController extends Controller
 
         $incom  = Helper::getIncome(auth()->user()->id);
 
+        $create_wg = (Helper::s('CREATE_WG_ACCOUNT') == "1" && auth()->user()->can_create_wg ? true : false);
+        $create_v2 = (Helper::s('CREATE_V2_ACCOUNT') == "1" && auth()->user()->can_create_v2 ? true : false);;
+        $create_op = (Helper::s('CREATE_OP_ACCOUNT') == "1" && auth()->user()->can_create_op ? true : false);;
+
+
+
 
 
         return response()->json([
@@ -1304,7 +1310,11 @@ class UserController extends Controller
             'sub_agents' => $sub_agents,
             'groups_list' =>  $groups_list,
             'servers'=>  $servers,
-            'v2ray_servers'=>  $v2ray_servers
+            'v2ray_servers'=>  $v2ray_servers,
+            'create_op' => $create_op,
+            'create_v2' => $create_v2,
+            'create_wg ' => $create_wg,
+
         ]);
 
 

@@ -231,6 +231,10 @@ class AdminsController extends Controller
         if(!$request->is_enabled){
             $enabled = 0;
         }
+        $find->can_create_wg = (!$request->can_create_wg ? 0 : 1);
+        $find->can_create_op = (!$request->can_create_op ? 0 : 1);
+        $find->can_create_v2 = (!$request->can_create_v2 ? 0 : 1);
+
         $find->update($request->only(['name','email','role']));
         $find->is_enabled = $enabled;
         if($request->change_password){
