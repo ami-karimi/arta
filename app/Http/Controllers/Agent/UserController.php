@@ -1290,8 +1290,9 @@ class UserController extends Controller
 
 
 
-        $servers = Ras::select(['name','flag','server_location','id'])->withCount('WireGuards')->where('unlimited',1)->get();
-        $v2ray_servers = Ras::select(['flag','id','server_location','name'])->where('server_type','v2ray')->get();
+        $servers = Ras::select(['name','flag','server_location','id'])->withCount('WireGuards')->where('unlimited',1)->where('is_enabled',1)->get();
+
+        $v2ray_servers = Ras::select(['flag','id','server_location','name'])->where('server_type','v2ray')->where('is_enabled',1)->get();
 
 
         $incom  = Helper::getIncome(auth()->user()->id);
