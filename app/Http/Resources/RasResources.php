@@ -54,6 +54,7 @@ class RasResources extends ResourceCollection
                     'is_enabled' => $item->is_enabled,
                     'created_at' => $item->created_at,
                     'secret' => $item->secret,
+                    'can_recharge' => ($item->can_recharge ? true : false),
                     'in_app' => $item->in_app,
                     'config' => $item->config,
                     'flag' => $item->flag,

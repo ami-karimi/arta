@@ -440,6 +440,8 @@ class ApiController extends Controller
 
        // For Wireguard Account
         if($service_type == 'wireguard'){
+
+
            $days = $order->child->days;
            $findUser->exp_val_minute = floor($days * 1440);
            $findUser->expire_date = Carbon::now()->addMinutes($findUser->exp_val_minute);
@@ -447,6 +449,14 @@ class ApiController extends Controller
            $findUser->expire_set = 1;
 
            if($findUser->wg){
+               //can_recharge
+               $find = Ras::where('id',$findUser->wg->server_id)->where('can_recharge',1)->first();
+               if(!$find){
+                   return response()->json([
+                       'status' => false,
+                       'result' => 'امکان تمدید اکانت بر روی این سرور بسته میباشد!',
+                   ]);
+               }
                $mik = new WireGuard($findUser->wg->server_id,'null');
                $peers = $mik->getUser($findUser->wg->public_key);
                if($peers['status']){
@@ -485,6 +495,13 @@ class ApiController extends Controller
             }
         }
         if($findUser->service_group == 'v2ray'){
+            if(!$findUser->v2ray_server->can_recharge){
+                return response()->json([
+                    'status' => false,
+                    'result' => 'امکان تمدید اکانت بر روی این سرور بسته میباشد!',
+                ]);
+            }
+
             $login = new V2raySN(
                 [
                     'HOST' => $findUser->v2ray_server->ipaddress,
