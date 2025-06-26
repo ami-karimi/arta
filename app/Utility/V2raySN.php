@@ -127,11 +127,11 @@ class V2raySN {
     }
     public function InBoandList()
     {
-        return $this->request("panel/api/inbounds/list",[],'GET');
+        return $this->request("xui/api/inbounds/list",[],'GET');
     }
     public function getOnlines()
     {
-        $result =  $this->request("panel/api/inbounds/onlines",[],'POST');
+        $result =  $this->request("xui/api/inbounds/onlines",[],'POST');
         if(!is_array($result)){
             unlink($this->cookie_txt_path);
             return [];
@@ -151,7 +151,7 @@ class V2raySN {
         if(!$user_id){
             $user_id = $this->genUserId();
         }
-        $data = $this->request("panel/api/inbounds/addClient",[
+        $data = $this->request("xui/api/inbounds/addClient",[
             'id' => $service_id,
             'settings' => json_encode([
                 'clients' => [[
@@ -184,7 +184,7 @@ class V2raySN {
     }
 
     public function get_client($email = false){
-        $get = $this->request("panel/api/inbounds/getClientTraffics/".$email,[],'GET');
+        $get = $this->request("xui/api/inbounds/getClientTraffics/".$email,[],'GET');
         if(is_null($get)){
             unlink($this->cookie_txt_path);
             return false;
@@ -196,7 +196,7 @@ class V2raySN {
         return $get['obj'];
     }
     public function update_client($uuid = false,$data = []){
-        $get = $this->request("panel/api/inbounds/updateClient/".$uuid,[
+        $get = $this->request("xui/api/inbounds/updateClient/".$uuid,[
             'id' => (int) $data['service_id'],
             'settings' => json_encode([
                 'clients' => [[
@@ -219,7 +219,7 @@ class V2raySN {
     }
 
     public function reset_client($username,$inboundId){
-        $get = $this->request("panel/api/inbounds/$inboundId/resetClientTraffic/".$username);
+        $get = $this->request("xui/api/inbounds/$inboundId/resetClientTraffic/".$username);
         if(!$get['success']){
             return false;
         }
@@ -300,7 +300,7 @@ class V2raySN {
     public function get_user($id = false,$username = false) : array
     {
         $item = (array)$this->request(
-            "panel/api/inbounds/get/$id",[],'GET'
+            "xui/api/inbounds/get/$id",[],'GET'
         )['obj'];
 
         $user = [];
