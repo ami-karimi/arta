@@ -39,6 +39,12 @@ class ApiController extends Controller
     }
 
     public function index(){
+        $now = Carbon::now()->format('Y-m-d');
+
+        $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->pluck('id');
+
+        print_r($findWgExpired);
+        /*
         $findWgExpired = User::where('service_group','v2ray')->where('protocol_v2ray',1)->get();
         $login = new V2raySN(
             [
