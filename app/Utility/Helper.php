@@ -11,7 +11,8 @@ use App\Models\PriceReseler;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Settings;
-
+use Illuminate\Support\Facades\DB;
+use App\Models\JobsData;
 class Helper
 {
 
@@ -480,6 +481,51 @@ class Helper
 
 
         return true;
+    }
+
+    public static function get_expired_wg(){
+
+        $expiredGrouped = DB::table('users')
+            ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
+            ->where('users.expire_date', '<=', now())
+            ->where('users.expired', '=', 0)
+            ->select(
+                'wireguard_users.server_id',
+                DB::raw("GROUP_CONCAT(CONCAT(users.id, ':', wireguard_users.public_key)) as user_data"),
+                DB::raw('count(*) as total')
+            )
+            ->groupBy('wireguard_users.server_id')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'server_id' => $row->server_id,
+                    'count' => $row->total,
+                    'user_data' => array_map(function ($item) {
+                        [$userId, $publicKey] = explode(':', $item);
+                        return [
+                            'user_id' => $userId,
+                            'public_key' => $publicKey,
+                        ];
+                    }, explode(',', $row->user_data)),
+                ];
+            });
+
+
+
+        return $expiredGrouped;
+    }
+
+
+    public static function create_job($job_key = '',$job_target = 0,$status = 'pending',$result = null,$done_time = null){
+        $createJob = new JobsData();
+        $createJob->job_key = $job_key;
+        $createJob->job_target = $job_target;
+        $createJob->status = $status;
+        $createJob->result = $result;
+        if($done_time){
+            $createJob->done_time = $done_time;
+        }
+        return $createJob->save();
     }
 }
 
