@@ -2,265 +2,206 @@
 
 namespace App\Utility;
 
-
 use App\Models\Ras;
 use App\Models\WireGuardUsers;
-use \App\Utility\Mikrotik;
+use App\Utility\Mikrotik;
 
 class WireGuard
 {
+    public string $server_id;
+    public string $username;
+    public object $server;
 
-    public  $server_id;
-    public  $username;
-    public $server;
+    public string $server_pub_key;
+    public string $server_port;
+    public string $ip_address;
+    public object $ROS;
+    public string $client_private_key;
+    public string $client_public_key;
+    public string $config_file;
 
-    public $server_pub_key;
-    public $server_port;
-    public $ip_address;
-    public $ROS;
-    public $client_private_key;
-    public $client_public_key;
-    public $config_file;
-
-    public function __construct(
-        string $server_id,
-        string $username,
-    )
+    public function __construct(string $server_id, string $username)
     {
         $this->server_id = $server_id;
         $this->username = $username;
-        $find = Ras::where('id',$server_id)->first();
-        $this->server = $find;
-        $keypair = \sodium_crypto_kx_keypair();
-        $this->client_private_key = \base64_encode(\sodium_crypto_kx_secretkey($keypair));
-        $this->client_public_key = base64_encode(\sodium_crypto_kx_publickey($keypair));
+        $this->server = Ras::findOrFail($server_id);
 
-        $this->config_file = str_replace(' ','',$this->username).strtotime(date('Ymd'));
+        $keypair = sodium_crypto_kx_keypair();
+        $this->client_private_key = base64_encode(sodium_crypto_kx_secretkey($keypair));
+        $this->client_public_key = base64_encode(sodium_crypto_kx_publickey($keypair));
+        $this->config_file = preg_replace('/\s+/', '', $username) . time();
     }
 
-    public function removeConfig($public_key){
-        $API        = new Mikrotik(
-            (object)[
-                'l2tp_address' => $this->server->mikrotik_domain,
-                'mikrotik_port' => $this->server->mikrotik_port,
-                'username' => $this->server->mikrotik_username,
-                'password' => $this->server->mikrotik_password,
-            ]
-        );
-        $API->debug = false;
-        $res=$API->connect();
-        $this->ROS = $API;
-        if($res['ok']) {
-            $findUser  = $this->ROS->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key='.$public_key);
-            if($findUser['ok']){
-                if(count($findUser['data'])) {
-                    $this->ROS->bs_mkt_rest_api_del("/interface/wireguard/peers/" . $findUser['data'][0]['.id']);
-                    $this->delQuee(['allowed-address' => $findUser['data'][0]['allowed-address']]);
-                    return ['status' => true, 'message' => 'Removed User'];
-                }
-            }
-            return ['status' => true,'message' => 'User Not Find Im Delete Record'];
-        }else{
-            return ['status' => true,'message' => 'Not Can Connect Server'];
+    public function run(): array
+    {
+        $interface = $this->getInterface();
+        if (!$interface['status']) return $interface;
 
-        }
-
-    }
-
-    public function delQuee($data = []){
-
-        $findQuea  = $this->ROS->bs_mkt_rest_api_get('/queue/simple?target='.$data['allowed-address']);
-        if($findQuea['ok']) {
-            foreach ($findQuea['data'] as $row) {
-                $this->ROS->bs_mkt_rest_api_del('/queue/simple/' . $row['.id']);
-            }
-            return ['status' => true,'message' => 'Deleted'];
-        }
-        return ['status' => false,'message' => 'not Find'];
-
-    }
-
-    public function addQuee($data = []){
-
-        $add  = $this->ROS->bs_mkt_rest_api_add('/queue/simple', array(
-            'name' => $data['name'],
-            'target' => $data['ip'],
-            'max-limit' =>"80M/10M",
-        ));
-
-        return ['status' => true,'re' => $add];
-
-    }
-
-    public function getAllPears(){
-        $checkInterface = $this->getInterface();
-        if(!$checkInterface['status']){
-            return $checkInterface;
-        }
-
-        $findUser  = $this->ROS->comm('/interface/wireguard/peers/print', array(
-            '?interface' => 'ROS_WG_USERS',
-        ));
-
-        return ['status'=> true,'peers' => $findUser];
-    }
-
-    public function ChangeConfigStatus($public_key,$status ){
-        $API        = new Mikrotik( (object)[
-            'l2tp_address' => $this->server->mikrotik_domain,
-            'mikrotik_port' => $this->server->mikrotik_port,
-            'username' => $this->server->mikrotik_username,
-            'password' => $this->server->mikrotik_password,
-        ]);
-        $API->debug = false;
-        $res=$API->connect();
-        $this->ROS = $API;
-        if($res['ok']) {
-
-            $findUser = $this->ROS->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key=' . $public_key);
-            if (!count($findUser['data'])) {
-                return ['status' => false, 'message' => 'User Not Find'];
-            }
-
-            $re = $this->ROS->bs_mkt_rest_api_upd("/interface/wireguard/peers/".$findUser['data'][0]['.id'], array(
-                'disabled' => ($status ? 'no' : 'yes'),
-            ));
-            return ['status' => true,'re' => $re];
-        }
-
-        return ['status' => false,'re' => 'Not Connect Server'];
-
-
-    }
-    public function getUser($public_key){
-        $API        = new Mikrotik( (object)[
-            'l2tp_address' => $this->server->mikrotik_domain,
-            'mikrotik_port' => $this->server->mikrotik_port,
-            'username' => $this->server->mikrotik_username,
-            'password' => $this->server->mikrotik_password,
-        ]);
-        $API->debug = false;
-        if(!$this->server){
-            return ['status' => false, 'message' => 'Nots Can Connect To Server'];
-        }
-        $res=$API->connect();
-        if($res['ok']) {
-            $this->ROS = $API;
-        }else{
-            return ['status' => false,'message' => 'Not Conenct To Server'];
-        }
-        $BRIDGEINFO_Peers = $this->ROS->bs_mkt_rest_api_get('/interface/wireguard/peers?interface=ROS_WG_USERS&public-key='.$public_key);
-        if(!$BRIDGEINFO_Peers['ok']){
-            return ['status' => false,'message' => 'Not Find User'];
-        }
-        if(count($BRIDGEINFO_Peers['data'])){
-            return ['status' => true,'user' => $BRIDGEINFO_Peers['data'][0]];
-        }
-
-        return ['status' => false,'message' => 'Not Find User'];
-    }
-
-    public function Run(){
-        $checkInterface = $this->getInterface();
-
-        if(!$checkInterface['status']){
-            return $checkInterface;
-        }
-
-         $sd = $this->CreatePear();
-
-        $this->CreateUserConfig();
-
-        $this->addQuee(['ip' => $this->ip_address,'name' => $this->config_file]);
+        $peerCreated = $this->createPeer();
+        $this->createUserConfig();
+        $this->addQueue(['ip' => $this->ip_address, 'name' => $this->config_file]);
 
         return [
-          'status' => ($sd['ok']  ? true : false),
-          'client_private_key' => $this->client_private_key,
-          'client_public_key' => $this->client_public_key,
-          'config_file' => $this->config_file,
-          'server_id' => $this->server_id,
-          'server_pub_key' => $this->server_pub_key."=",
-          'server_port' => $this->server_port,
-          'ip_address' => $this->ip_address,
-
+            'status' => $peerCreated['ok'],
+            'client_private_key' => $this->client_private_key,
+            'client_public_key' => $this->client_public_key,
+            'config_file' => $this->config_file,
+            'server_id' => $this->server_id,
+            'server_pub_key' => $this->server_pub_key . '=',
+            'server_port' => $this->server_port,
+            'ip_address' => $this->ip_address,
         ];
     }
 
+    public function removeConfig(string $public_key): array
+    {
+        if (!$this->connect()) return ['status' => false, 'message' => 'Cannot connect to server'];
 
+        $peer = $this->ROS->bs_mkt_rest_api_get("/interface/wireguard/peers?interface=ROS_WG_USERS&public-key={$public_key}");
+        if ($peer['ok'] && !empty($peer['data'])) {
+            $this->ROS->bs_mkt_rest_api_del("/interface/wireguard/peers/{$peer['data'][0]['.id']}");
+            $this->deleteQueue(['allowed-address' => $peer['data'][0]['allowed-address']]);
+            return ['status' => true, 'message' => 'User removed'];
+        }
 
-    public function getInterface(){
-        $API        = new Mikrotik( (object)[
+        return ['status' => true, 'message' => 'User not found; local record deleted'];
+    }
+
+    public function changeConfigStatus(string $public_key, bool $enable): array
+    {
+        if (!$this->connect()) return ['status' => false, 'message' => 'Cannot connect to server'];
+
+        $peer = $this->ROS->bs_mkt_rest_api_get("/interface/wireguard/peers?interface=ROS_WG_USERS&public-key={$public_key}");
+        if (empty($peer['data'])) {
+            return ['status' => false, 'message' => 'User not found'];
+        }
+
+        $response = $this->ROS->bs_mkt_rest_api_upd(
+            "/interface/wireguard/peers/{$peer['data'][0]['.id']}",
+            ['disabled' => $enable ? 'no' : 'yes']
+        );
+
+        return ['status' => true, 'response' => $response];
+    }
+
+    public function getUser(string $public_key): array
+    {
+        if (!$this->connect()) return ['status' => false, 'message' => 'Cannot connect to server'];
+
+        $peer = $this->ROS->bs_mkt_rest_api_get("/interface/wireguard/peers?interface=ROS_WG_USERS&public-key={$public_key}");
+
+        if ($peer['ok'] && !empty($peer['data'])) {
+            return ['status' => true, 'user' => $peer['data'][0]];
+        }
+
+        return ['status' => false, 'message' => 'User not found'];
+    }
+
+    public function getAllPeers(): array
+    {
+        $interface = $this->getInterface();
+        if (!$interface['status']) return $interface;
+
+        $peers = $this->ROS->comm('/interface/wireguard/peers/print', ['?interface' => 'ROS_WG_USERS']);
+        return ['status' => true, 'peers' => $peers];
+    }
+
+    private function connect(): bool
+    {
+        $api = new Mikrotik((object)[
             'l2tp_address' => $this->server->mikrotik_domain,
             'mikrotik_port' => $this->server->mikrotik_port,
             'username' => $this->server->mikrotik_username,
             'password' => $this->server->mikrotik_password,
         ]);
-        $API->debug = false;
-        if(!$this->server){
-            return ['status' => false, 'message' => 'Nots Can Connect To Server'];
-        }
-        $res=$API->connect();
-        if($res['ok']){
-            $this->ROS = $API;
-            $BRIDGEINFO = $API->bs_mkt_rest_api_get('/interface/wireguard?name=ROS_WG_USERS');
 
-            if(!$BRIDGEINFO['ok']){
-                return ['status' => false, 'message' => 'Could Not Get Interface List'];
-            }
-            if(count($BRIDGEINFO['data'])) {
-                $this->server_pub_key = $BRIDGEINFO['data'][0]['public-key'];
-                $this->server_port = $BRIDGEINFO['data'][0]['listen-port'];
-                $this->ROS = $API;
+        $api->debug = false;
 
-                $newIp = $this->findIpaddress();
-                $this->ip_address = $newIp;
-                return ['status' => true];
-            }
-            return ['status' => false, 'message' => 'Not Can Get Wireguard Interface'];
-        }
-
-        return ['status' => false, 'message' => 'Not Can Connect To Server'];
-    }
-
-    public function findIpaddress(){
-
-        $to = 253;
-        $AllIp = [];
-        for ($i = 2; $i < 255;$i++){
-            $AllIp[] = "12.11.10." . $i;
-        }
-        foreach ($AllIp as $ip) {
-            $findIp = WireGuardUsers::where('server_id',$this->server->id)->where('user_ip',$ip)->first();
-            if (!$findIp) {
-                return $ip;
-            }
+        if ($api->connect()['ok']) {
+            $this->ROS = $api;
+            return true;
         }
 
         return false;
     }
 
-    public function CreatePear(){
-        return $this->ROS->bs_mkt_rest_api_add('/interface/wireguard/peers', array(
+    private function getInterface(): array
+    {
+        if (!$this->connect()) {
+            return ['status' => false, 'message' => 'Cannot connect to server'];
+        }
+
+        $interface = $this->ROS->bs_mkt_rest_api_get('/interface/wireguard?name=ROS_WG_USERS');
+        if ($interface['ok'] && !empty($interface['data'])) {
+            $data = $interface['data'][0];
+            $this->server_pub_key = $data['public-key'];
+            $this->server_port = $data['listen-port'];
+            $this->ip_address = $this->findAvailableIp();
+            return ['status' => true];
+        }
+
+        return ['status' => false, 'message' => 'WireGuard interface not found'];
+    }
+
+    private function findAvailableIp(): string|false
+    {
+        for ($i = 2; $i <= 254; $i++) {
+            $ip = "12.11.10.$i";
+            $exists = WireGuardUsers::where('server_id', $this->server_id)->where('user_ip', $ip)->exists();
+            if (!$exists) return $ip;
+        }
+
+        return false;
+    }
+
+    private function createPeer(): array
+    {
+        return $this->ROS->bs_mkt_rest_api_add('/interface/wireguard/peers', [
             'interface' => 'ROS_WG_USERS',
-            'allowed-address' => $this->ip_address."/32",
+            'allowed-address' => "{$this->ip_address}/32",
             'public-key' => $this->client_public_key,
-        ));
+        ]);
     }
 
-    public function CreateUserConfig(){
-        $fp = fopen(public_path()."/configs/".$this->config_file.".conf","wb");
-        $content = "[Interface] \n";
-        $content .= "PrivateKey = ".$this->client_private_key;
-        $content .= "\nAddress = ".$this->ip_address."/32";
-        $content .= "\nDNS = 8.8.8.8";
-        $content .= "\n[Peer]";
-        $content .= "\nPublicKey = ".$this->server_pub_key;
-        $content .= "\nAllowedIPs = 0.0.0.0/0";
-        $content .= "\nEndpoint = ".$this->server->l2tp_address.":".$this->server_port;
-        $content .= "\nPersistentKeepalive = 10";
-        fwrite($fp,$content);
-        fclose($fp);
+    private function createUserConfig(): void
+    {
+        $path = public_path("configs/{$this->config_file}.conf");
+        $config = <<<CONF
+[Interface]
+PrivateKey = {$this->client_private_key}
+Address = {$this->ip_address}/32
+DNS = 8.8.8.8
+
+[Peer]
+PublicKey = {$this->server_pub_key}
+AllowedIPs = 0.0.0.0/0
+Endpoint = {$this->server->l2tp_address}:{$this->server_port}
+PersistentKeepalive = 10
+CONF;
+        file_put_contents($path, $config);
     }
 
+    private function addQueue(array $data): array
+    {
+        $response = $this->ROS->bs_mkt_rest_api_add('/queue/simple', [
+            'name' => $data['name'],
+            'target' => $data['ip'],
+            'max-limit' => "80M/10M",
+        ]);
+
+        return ['status' => true, 'response' => $response];
+    }
+
+    private function deleteQueue(array $data): array
+    {
+        $queues = $this->ROS->bs_mkt_rest_api_get('/queue/simple?target=' . $data['allowed-address']);
+        if ($queues['ok']) {
+            foreach ($queues['data'] as $queue) {
+                $this->ROS->bs_mkt_rest_api_del('/queue/simple/' . $queue['.id']);
+            }
+            return ['status' => true, 'message' => 'Queue(s) deleted'];
+        }
+
+        return ['status' => false, 'message' => 'No queue found'];
+    }
 }
-
