@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserBackup;
 use App\Utility\Sms;
 use App\Utility\V2raySN;
+use Illuminate\Support\Facades\DB;
 
 class ApiController extends Controller
 {
@@ -43,7 +44,32 @@ class ApiController extends Controller
 
         $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->pluck('id');
 
-        print_r($findWgExpired);
+
+        $expiredGrouped = DB::table('users')
+            ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
+            ->where('users.expire_date', '<=', now())
+            ->where('users.expired', '=', 0)
+            ->select(
+                'wireguard_users.server_id',
+                DB::raw("GROUP_CONCAT(CONCAT(users.id, ':', wireguard_users.public_key)) as user_data"),
+                DB::raw('count(*) as total')
+            )
+            ->groupBy('wireguard_users.server_id')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'server_id' => $row->server_id,
+                    'count' => $row->total,
+                    'user_data' => array_map(function ($item) {
+                        [$userId, $publicKey] = explode(':', $item);
+                        return [
+                            'user_id' => $userId,
+                            'public_key' => $publicKey,
+                        ];
+                    }, explode(',', $row->user_data)),
+                ];
+            });
+        return response()->json($expiredGrouped);
         /*
         $findWgExpired = User::where('service_group','v2ray')->where('protocol_v2ray',1)->get();
         $login = new V2raySN(

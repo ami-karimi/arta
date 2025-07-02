@@ -44,9 +44,7 @@ class DisableWireguardExpiredAccount implements ShouldQueue
             $peers = $mik->getUser($public_key);
             $job = Helper::create_job('wireguard_expired',$user_id,'pending');
             if ($peers['status']) {
-              // $status = $mik->ChangeConfigStatus($public_key, 0);
-                $status['status'] = false;
-                $status['message'] = "test";
+               $status = $mik->ChangeConfigStatus($public_key, 0);
                 if ($status['status']) {
                     $find_user = User::where('id',$user_id)->first();
                     $find_config = WireGuardUsers::where('user_id',$user_id)->where('public_key',$public_key)->first();
