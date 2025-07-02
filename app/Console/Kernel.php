@@ -117,7 +117,6 @@ class Kernel extends ConsoleKernel
         })->everyTwoHours();
         */
         $schedule->call(function(){
-            //Helper::get_backup();
 
 
          $expired_WG = Helper::get_expired_wg();
@@ -127,9 +126,10 @@ class Kernel extends ConsoleKernel
              DisableWireguardExpiredAccount::dispatch($server,$wg['user_data']);
          }
 
+            Helper::get_backup();
 
 
-        })->name('CheckExpiredWireguardAccount')->everyMinute();
+        })->name('CheckExpiredWireguardAccount')->everyFourHours();
 
         $schedule->call(function () {
 
