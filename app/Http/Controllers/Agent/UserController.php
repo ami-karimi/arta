@@ -1003,8 +1003,24 @@ class UserController extends Controller
 
 
         if($find->is_enabled !== ($request->is_enabled == true ? 1 : 0)){
+            if($find->expire_date) {
+                if ($find->expired || $find->expire_date <= now()) {
+                    return response()->json(['status' => false, 'message' => 'اکانت منقضی شده است امکان فعال و یا غیرفعال سازی وجود ندارد!'], 502);
+                }
+            }
             $find->is_enabled = ($request->is_enabled == true ? 1 : 0);
             SaveActivityUser::send($find->id,auth()->user()->id,'active_status',['status' => $find->is_enabled]);
+            if($find->service_group == 'wireguard'){
+                $AllConfig = WireGuardUsers::where('user_id',$find->id)->get();
+                foreach ($AllConfig as $row){
+                    $wireGuard = new WireGuard($row->server_id,$row->profile_name);
+                    $wireGuard->ChangeConfigStatus($row->public_key, ($request->is_enabled == true ? 1 : 0));
+                    $row->is_enabled = ($request->is_enabled === true ? 1 : 0);
+                    $row->save();
+                }
+
+            }
+
             if($login){
                 $login->update_client($find->uuid_v2ray, [
                     'service_id' => $find->protocol_v2ray,
