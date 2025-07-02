@@ -525,7 +525,8 @@ class Helper
         if($done_time){
             $createJob->done_time = $done_time;
         }
-        return $createJob->save();
+         $createJob->save();
+        return $createJob;
     }
 }
 

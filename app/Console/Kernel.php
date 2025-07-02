@@ -19,6 +19,7 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Utility\SmsSend;
 use App\Utility\Ftp;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\DisableWireguardExpiredAccount;
 
 class Kernel extends ConsoleKernel
 {
@@ -116,31 +117,20 @@ class Kernel extends ConsoleKernel
         })->everyTwoHours();
         */
         $schedule->call(function(){
-            Helper::get_backup();
+            //Helper::get_backup();
 
 
-            $now = Carbon::now()->format('Y-m-d');
-            $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->get();
+         $expired_WG = Helper::get_expired_wg();
 
-            foreach ($findWgExpired as $row){
-                foreach($row->wgs as $row_wg) {
-                    $mik = new WireGuard($row_wg->server_id, 'null');
-                    $peers = $mik->getUser($row_wg->public_key);
+         foreach ($expired_WG as $wg){
+             $server = new WireGuard($wg['server_id'], 'null');
+             DisableWireguardExpiredAccount::dispatch($server,$wg['user_data']);
+         }
 
-                    if ($peers['status']) {
-                        $status = $mik->ChangeConfigStatus($row_wg->public_key, 0);
-                        if ($status['status']) {
-                            SaveActivityUser::send($row->id, 2, 'active_status', ['status' => 0]);
-                            $row->expired = 1;
-                            $row_wg->is_enabled = 0;
-                            $row_wg->save();
-                            $row->save();
-                        }
-                    }
-                }
 
-            }
-        })->name('CheckExpiredWireguardAccount')->everyFourHours();
+
+        })->name('CheckExpiredWireguardAccount')->everyMinute();
+
         $schedule->call(function () {
 
 
