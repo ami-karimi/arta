@@ -37,20 +37,21 @@ class WireGuard
         $interface = $this->getInterface();
         if (!$interface['status']) return $interface;
 
-        $peerCreated = $this->createPeer();
-        $this->createUserConfig();
-        $this->addQueue(['ip' => $this->ip_address, 'name' => $this->config_file]);
+           $peerCreated = $this->createPeer();
+           $this->createUserConfig();
+           $this->addQueue(['ip' => $this->ip_address, 'name' => $this->config_file]);
 
-        return [
-            'status' => $peerCreated['ok'],
-            'client_private_key' => $this->client_private_key,
-            'client_public_key' => $this->client_public_key,
-            'config_file' => $this->config_file,
-            'server_id' => $this->server_id,
-            'server_pub_key' => $this->server_pub_key . '=',
-            'server_port' => $this->server_port,
-            'ip_address' => $this->ip_address,
-        ];
+            return [
+                'status' => $peerCreated['ok'],
+                'client_private_key' => $this->client_private_key,
+                'client_public_key' => $this->client_public_key,
+                'config_file' => $this->config_file,
+                'server_id' => $this->server_id,
+                'server_pub_key' => $this->server_pub_key . '=',
+                'server_port' => $this->server_port,
+                'ip_address' => $this->ip_address,
+            ];
+
     }
 
     public function removeConfig(string $public_key): array
@@ -137,6 +138,9 @@ class WireGuard
             $this->server_pub_key = $data['public-key'];
             $this->server_port = $data['listen-port'];
             $this->ip_address = $this->findAvailableIp();
+            if(!$this->ip_address){
+                return ['status' => false, 'message' => 'WireGuard interface not found'];
+            }
             return ['status' => true];
         }
 
