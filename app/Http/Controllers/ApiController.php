@@ -86,6 +86,7 @@ class ApiController extends Controller
                 ];
             });
         return response()->json($expiredGrouped);
+        */
         /*
         $findWgExpired = User::where('service_group','v2ray')->where('protocol_v2ray',1)->get();
         $login = new V2raySN(
