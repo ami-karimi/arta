@@ -44,7 +44,8 @@ class ApiController extends Controller
 
         $server = new WireGuard(62, 'null');
         $peers = $server->getAllPeers();
-        return response()->json($peers);
+
+        return response()->json($peers['user']);
 
 
         /*
