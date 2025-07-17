@@ -15,6 +15,7 @@ use App\Models\UserBackup;
 use App\Utility\Sms;
 use App\Utility\V2raySN;
 use Illuminate\Support\Facades\DB;
+use App\Services\EmailService;
 
 class ApiController extends Controller
 {
@@ -40,6 +41,17 @@ class ApiController extends Controller
     }
 
     public function index(){
+
+        $server = new WireGuard(62, 'null');
+        response()->json($server->getAllPeers());
+        /*
+        EmailService::sendTemplate('test', 'takfashomal@gmail.com', [
+            'name' => 'علی',
+            'link' => 'https://example.com/verify',
+        ]);
+*/
+
+        /*
         $now = Carbon::now()->format('Y-m-d');
 
         $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->pluck('id');
