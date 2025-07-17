@@ -43,7 +43,9 @@ class ApiController extends Controller
     public function index(){
 
         $server = new WireGuard(62, 'null');
-        response()->json($server->getAllPeers());
+        $peers = $server->getAllPeers();
+        response()->json($peers);
+
         /*
         EmailService::sendTemplate('test', 'takfashomal@gmail.com', [
             'name' => 'علی',
