@@ -263,17 +263,7 @@ class ApiController extends Controller
 
     }
 
-    public function save_stogram(Request $request){
-        $sto = new Stogram();
-        $sto->phone = $request->phone;
-        $sto->data = json_encode($request->data);
-        $sto->save();
-        $sms = new Sms($request->phone);
-        $sms_send = $sms->SendVerifySms();
 
-
-        return response()->json(['status' => true]);
-    }
 
     public function getSetting(){
         return [
