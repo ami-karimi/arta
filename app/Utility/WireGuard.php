@@ -103,7 +103,7 @@ class WireGuard
         $interface = $this->getInterface();
         if (!$interface['status']) return $interface;
 
-        $peers = $this->ROS->comm('/interface/wireguard/peers/print', ['?interface' => 'ROS_WG_USERS']);
+        $peers = $this->ROS->comm('/interface/wireguard/peers', ['?interface' => 'ROS_WG_USERS']);
         return ['status' => true, 'peers' => $peers];
     }
 
