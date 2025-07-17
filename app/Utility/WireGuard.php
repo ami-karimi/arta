@@ -103,13 +103,8 @@ class WireGuard
         $interface = $this->getInterface();
         if (!$interface['status']) return $interface;
 
-        $peer = $this->ROS->bs_mkt_rest_api_get("/interface/wireguard/peers?interface=ROS_WG_USERS");
-
-        if ($peer['ok'] && !empty($peer['data'])) {
-            return ['status' => true, 'user' => $peer['data']];
-        }
-
-        return ['status' => false, 'message' => 'User not found'];
+        $peers = $this->ROS->comm('/interface/wireguard/peers/print', ['?interface' => 'ROS_WG_USERS']);
+        return ['status' => true, 'peers' => $peers];
     }
 
     private function connect(): bool
