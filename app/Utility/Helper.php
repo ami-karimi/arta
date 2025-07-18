@@ -514,7 +514,6 @@ class Helper
         $expiredGrouped = DB::table('users')
             ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
             ->where('users.expire_date', '<=', now())
-            ->where('users.expired', '=', 0)
             ->select(
                 'wireguard_users.server_id',
                 DB::raw("GROUP_CONCAT(CONCAT(users.id, ':', wireguard_users.public_key)) as user_data"),
@@ -527,7 +526,10 @@ class Helper
                     'server_id' => $row->server_id,
                     'count' => $row->total,
                     'user_data' => array_map(function ($item) {
-                        [$userId, $publicKey] = explode(':', $item);
+                        $parts = explode(':', $item);
+                        $userId = $parts[0] ?? null;
+                        $publicKey = $parts[1] ?? null;
+
                         return [
                             'user_id' => $userId,
                             'public_key' => $publicKey,
@@ -535,7 +537,6 @@ class Helper
                     }, explode(',', $row->user_data)),
                 ];
             });
-
 
 
         return $expiredGrouped;
