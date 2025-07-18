@@ -80,7 +80,7 @@ class ApiController extends Controller
 
         $expiredGrouped = DB::table('users')
             ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
-            ->where('users.expire_date', '<=', now())
+            ->where('users.expire_date', '<=', $tenDaysAgo)
             ->select(
                 'wireguard_users.server_id',
                 DB::raw("GROUP_CONCAT(CONCAT(users.id, ':', wireguard_users.public_key)) as user_data"),
@@ -105,8 +105,7 @@ class ApiController extends Controller
                 ];
             });
 
-        print_r($expiredGrouped);
-        /*
+
 
         foreach ($expiredGrouped as $wg){
             $server = new WireGuard($wg['server_id'], 'null');
@@ -118,7 +117,7 @@ class ApiController extends Controller
                 print_r($find);
             }
         }
-        */
+
 
         /*
         $findWgExpired = User::where('service_group','v2ray')->where('protocol_v2ray',1)->get();
