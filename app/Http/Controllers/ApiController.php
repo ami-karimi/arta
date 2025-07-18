@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\DisableWireguardExpiredAccount;
 use App\Utility\Helper;
 use App\Utility\Mikrotik;
 use App\Utility\SaveActivityUser;
@@ -42,11 +43,26 @@ class ApiController extends Controller
 
     public function index(){
 
-        $server = new WireGuard(62, 'null');
+        /*
+        $server = new WireGuard(89, 'null');
         $peers = $server->getAllPeers();
 
-        return response()->json($peers['user']);
 
+         $notIn = [];
+         foreach ($peers['user'] as $row){
+             $find = WireGuardUsers::where('public_key',$row['public-key'])->first();
+             if(!$find){
+                 $notIn[] = [
+                     'public-key' => $row['public-key'],
+                 ];
+             }
+         }
+         foreach ($notIn as $key){
+            $server->removeConfig($key['public-key']);
+         }
+        return response()->json($notIn);
+
+       */
 
         /*
         EmailService::sendTemplate('test', 'takfashomal@gmail.com', [
@@ -55,16 +71,16 @@ class ApiController extends Controller
         ]);
 */
 
-        /*
-        $now = Carbon::now()->format('Y-m-d');
 
-        $findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->pluck('id');
 
+        //$findWgExpired = User::where('service_group','wireguard')->whereDate('expire_date','<=',$now)->where('expired',0)->pluck('id');
+        $now = Carbon::now();
+
+        $tenDaysAgo = $now->copy()->subDays(7);
 
         $expiredGrouped = DB::table('users')
             ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
-            ->where('users.expire_date', '<=', now())
-            ->where('users.expired', '=', 0)
+            ->where('users.expire_date', '<=', $tenDaysAgo)
             ->select(
                 'wireguard_users.server_id',
                 DB::raw("GROUP_CONCAT(CONCAT(users.id, ':', wireguard_users.public_key)) as user_data"),
@@ -85,8 +101,17 @@ class ApiController extends Controller
                     }, explode(',', $row->user_data)),
                 ];
             });
-        return response()->json($expiredGrouped);
-        */
+
+        foreach ($expiredGrouped as $wg){
+            $server = new WireGuard($wg['server_id'], 'null');
+            foreach ($wg['user_data'] as $row){
+                $server->removeConfig($row['public_key']);
+                $find = WireGuardUsers::where('public_key',$row['public_key'])->first();
+                $find->user->delete();
+                $find->delete();
+            }
+        }
+
         /*
         $findWgExpired = User::where('service_group','v2ray')->where('protocol_v2ray',1)->get();
         $login = new V2raySN(

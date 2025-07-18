@@ -143,9 +143,7 @@ class WireGuard
             $this->server_pub_key = $data['public-key'];
             $this->server_port = $data['listen-port'];
             $this->ip_address = $this->findAvailableIp();
-            if(!$this->ip_address){
-                return ['status' => false, 'message' => 'WireGuard interface not found'];
-            }
+
             return ['status' => true];
         }
 
