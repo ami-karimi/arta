@@ -514,6 +514,7 @@ class Helper
         $expiredGrouped = DB::table('users')
             ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
             ->where('users.expire_date', '<=', now())
+            ->where('users.expired', '=',0)
             ->select(
                 'wireguard_users.server_id',
                 DB::raw("GROUP_CONCAT(CONCAT(users.id, ':', wireguard_users.public_key)) as user_data"),
