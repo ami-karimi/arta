@@ -104,6 +104,8 @@ class ApiController extends Controller
                     }, explode(',', $row->user_data)),
                 ];
             });
+
+        print_r($expiredGrouped);
         /*
 
         foreach ($expiredGrouped as $wg){
