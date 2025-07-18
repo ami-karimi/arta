@@ -77,9 +77,7 @@ class ApiController extends Controller
         $now = Carbon::now();
 
         $tenDaysAgo = $now->copy()->subDays(7);
-        $expired_WG = Helper::get_expired_wg();
 
-        /*
         $expiredGrouped = DB::table('users')
             ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
             ->where('users.expire_date', '<=', $tenDaysAgo)
@@ -92,19 +90,13 @@ class ApiController extends Controller
             ->groupBy('wireguard_users.server_id')
             ->get()
             ->map(function ($row) {
-                return [
-                    'server_id' => $row->server_id,
-                    'count' => $row->total,
-                    'user_data' => array_map(function ($item) {
-                        [$userId, $publicKey] = explode(':', $item);
-                        return [
-                            'user_id' => $userId,
-                            'public_key' => $publicKey,
-                        ];
-                    }, explode(',', $row->user_data)),
-                ];
+
             });
 
+
+         return response()->json($expiredGrouped);
+
+        /*
         foreach ($expiredGrouped as $wg){
             $server = new WireGuard($wg['server_id'], 'null');
             foreach ($wg['user_data'] as $row){
