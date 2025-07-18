@@ -80,23 +80,18 @@ class ApiController extends Controller
 
         $expiredGrouped = DB::table('users')
             ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
-            ->where('users.expire_date', '<=', $tenDaysAgo)
-            ->where('users.service_group', '=', 'wireguard')
+            ->where('users.expire_date', '<=', now())
             ->select(
                 'wireguard_users.server_id',
                 DB::raw("GROUP_CONCAT(CONCAT(users.id, ':', wireguard_users.public_key)) as user_data"),
                 DB::raw('count(*) as total')
             )
             ->groupBy('wireguard_users.server_id')
-            ->get()
-            ->map(function ($row) {
+            ->get();
 
-            });
-
-
-         return response()->json($expiredGrouped);
-
+        print_r($expiredGrouped);
         /*
+
         foreach ($expiredGrouped as $wg){
             $server = new WireGuard($wg['server_id'], 'null');
             foreach ($wg['user_data'] as $row){
