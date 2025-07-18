@@ -129,7 +129,7 @@ class Kernel extends ConsoleKernel
          //   Helper::get_backup();
 
 
-        })->name('CheckExpiredWireguardAccount')->everyMinute();
+        })->name('CheckExpiredWireguardAccount')->everyFourHours();
 
         $schedule->call(function () {
 
