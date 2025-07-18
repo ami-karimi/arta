@@ -29,7 +29,7 @@ class WireGuard
         $keypair = sodium_crypto_kx_keypair();
         $this->client_private_key = base64_encode(sodium_crypto_kx_secretkey($keypair));
         $this->client_public_key = base64_encode(sodium_crypto_kx_publickey($keypair));
-        $this->config_file = preg_replace('/\s+/', '', $username) . time();
+        $this->config_file = preg_replace('/\s+/', '', $username) .rand(1,99);
     }
 
     public function run(): array
