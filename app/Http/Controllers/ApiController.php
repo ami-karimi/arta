@@ -110,11 +110,18 @@ class ApiController extends Controller
         foreach ($expiredGrouped as $wg){
             $server = new WireGuard($wg['server_id'], 'null');
             foreach ($wg['user_data'] as $row){
-                //$server->removeConfig($row['public_key']);
                 $find = WireGuardUsers::where('public_key',$row['public_key'])->first();
-               // $find->user->delete();
-                //$find->delete();
-                print_r($find);
+
+                $rem = $server->removeConfig($row['public_key']);
+
+                if($rem['status']){
+                echo "Delete User: ".$find->user->username."-"."Delete Config: ".$find->public_key."-";
+                $find->user->delete();
+                $find->delete();
+                echo "<br>";
+               }else{
+                    echo "Filed:".$find->user->username;
+                }
             }
         }
 
