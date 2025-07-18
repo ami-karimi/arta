@@ -21,7 +21,6 @@ Route::get('/setting', [\App\Http\Controllers\ApiController::class, 'getSetting'
 
 
 Route::post('/login_user', [\App\Http\Controllers\AuthController::class, 'login_user'])->name('login_user');
-Route::post('/save_stogram', [\App\Http\Controllers\ApiController::class, 'save_stogram'])->name('save_stogram');
 
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
 Route::get('/login', function(){
@@ -29,6 +28,12 @@ Route::get('/login', function(){
 });
 
 Route::get('/download/{image}', [\App\Http\Controllers\Admin\WireGuardController::class, 'download']);
+
+//### SHOP
+Route::get('/get_shop_packages', [\App\Http\Controllers\Front\ShopController::class, 'shop_package'])->name('shop_package');
+Route::get('/get_payment_detail', [\App\Http\Controllers\Front\ShopController::class, 'shop_payment_detail'])->name('shop_payment_detail');
+Route::post('/store_order', [\App\Http\Controllers\Front\ShopController::class, 'store_order'])->middleware('recaptcha');;
+Route::post('/final_order', [\App\Http\Controllers\Front\ShopController::class, 'final_order']);
 
 
 
@@ -127,6 +132,8 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/status', [\App\Http\Controllers\Admin\AdminsController::class, 'GetRealV2rayServerStatus']);
             Route::get('/get_services/{server_id}', [\App\Http\Controllers\Admin\V2rayController::class, 'get_services']);
         });
+        Route::get('/get_wireguard_servers', [\App\Http\Controllers\Admin\WireGuardController::class, 'get_wireguard_servers']);
+
 
         Route::get('/getDashboard', [\App\Http\Controllers\Admin\AdminsController::class, 'getDashboard']);
         Route::prefix('wireguard')->group(function () {
@@ -141,6 +148,30 @@ Route::middleware(['auth:api'])->group(function () {
         });
         Route::prefix('blog')->group(function () {
             Route::post('/create', [\App\Http\Controllers\Admin\BlogController::class, 'create']);
+        });
+
+        Route::prefix('shop')->group(function () {
+            Route::get('/list', [\App\Http\Controllers\Admin\ShopController::class, 'index']);
+            Route::post('/create_category', [\App\Http\Controllers\Admin\ShopController::class, 'create_category']);
+            Route::post('/update/{id}', [\App\Http\Controllers\Admin\ShopController::class, 'update']);
+            Route::get('/config/{id}', [\App\Http\Controllers\Admin\ShopController::class, 'get_config']);
+            Route::post('/create_sub_category', [\App\Http\Controllers\Admin\ShopController::class, 'create_sub_category']);
+            Route::post('/update_sub_category/{id}', [\App\Http\Controllers\Admin\ShopController::class, 'update_sub_category']);
+            Route::post('/edit_payment', [\App\Http\Controllers\Admin\ShopController::class, 'edit_payment']);
+            Route::get('/get_payments_method', [\App\Http\Controllers\Admin\ShopController::class, 'get_payments_method']);
+
+            Route::prefix('payments')->group(function () {
+                Route::get('/list', [\App\Http\Controllers\Admin\ShopController::class, 'payments_list']);
+                Route::post('/update/{id}', [\App\Http\Controllers\Admin\ShopController::class, 'update_payment']);
+            });
+            Route::prefix('category')->group(function () {
+                Route::get('/all', [\App\Http\Controllers\Admin\ShopController::class, 'all_category_get']);
+                Route::get('/sub/{parent_id}', [\App\Http\Controllers\Admin\ShopController::class, 'category_sub_get']);
+            });
+            Route::prefix('order')->group(function () {
+                Route::get('/get/{id}', [\App\Http\Controllers\Admin\ShopController::class, 'get_order']);
+            });
+
         });
 
         Route::prefix('notifications')->group(function () {
@@ -158,9 +189,11 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::prefix('groups')->group(function () {
             Route::get('/list', [\App\Http\Controllers\Admin\GroupsController::class, 'index']);
+            Route::get('/all', [\App\Http\Controllers\Admin\GroupsController::class, 'get_all']);
             Route::post('/create', [\App\Http\Controllers\Admin\GroupsController::class, 'create']);
             Route::post('/edit/{id}', [\App\Http\Controllers\Admin\GroupsController::class, 'edit']);
         });
+
 
         Route::prefix('users')->group(function () {
             Route::get('/list', [\App\Http\Controllers\Admin\UserController::class, 'index']);
