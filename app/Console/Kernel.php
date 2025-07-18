@@ -126,7 +126,7 @@ class Kernel extends ConsoleKernel
              DisableWireguardExpiredAccount::dispatch($server,$wg['user_data']);
          }
 
-         //   Helper::get_backup();
+           Helper::get_backup();
 
 
         })->name('CheckExpiredWireguardAccount')->everyFourHours();
