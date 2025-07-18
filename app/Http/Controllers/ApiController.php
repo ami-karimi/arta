@@ -77,7 +77,9 @@ class ApiController extends Controller
         $now = Carbon::now();
 
         $tenDaysAgo = $now->copy()->subDays(7);
+        $expired_WG = Helper::get_expired_wg();
 
+        /*
         $expiredGrouped = DB::table('users')
             ->join('wireguard_users', 'users.id', '=', 'wireguard_users.user_id')
             ->where('users.expire_date', '<=', $tenDaysAgo)
@@ -113,6 +115,7 @@ class ApiController extends Controller
                 print_r($find);
             }
         }
+        */
 
         /*
         $findWgExpired = User::where('service_group','v2ray')->where('protocol_v2ray',1)->get();

@@ -2,7 +2,7 @@
 
 namespace App\Utility;
 
-
+use Carbon\Carbon;
 use App\Models\Financial;
 use App\Models\Groups;
 use App\Models\ReselerMeta;
@@ -13,8 +13,34 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Settings;
 use Illuminate\Support\Facades\DB;
 use App\Models\JobsData;
+use App\Models\ShopOrders;
+use Morilog\Jalali\Jalalian;
+
+
 class Helper
 {
+
+
+    public static function generateOrderCode(string $prefix): string
+    {
+        do {
+            $number = str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+            $orderCode = $prefix . $number;
+        } while (ShopOrders::where('order_id', $orderCode)->exists());
+
+        return $orderCode;
+    }
+
+    public static function generateUsername(string $prefix): string
+    {
+        do {
+            $number = str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+            $username = $prefix . $number;
+        } while (User::where('username', $username)->exists());
+
+        return $username;
+    }
+
 
     public static function toArray($array = [],$keys = 'key' ,$values = 'value') {
 
@@ -527,6 +553,15 @@ class Helper
         }
          $createJob->save();
         return $createJob;
+    }
+
+    public static function check_expired($time){
+        if (Carbon::now()->greaterThanOrEqualTo($time)) {
+            return false;
+        }
+
+
+        return Jalalian::forge($time)->ago();
     }
 }
 
