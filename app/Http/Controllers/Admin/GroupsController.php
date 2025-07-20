@@ -14,6 +14,9 @@ class GroupsController extends Controller
         return new GroupsCollection(Groups::orderBy('id','DESC')->paginate(10));
 
     }
+    public function get_all(){
+        return new GroupsCollection(Groups::orderBy('id','DESC')->get());
+    }
     public function create(StoreGroupRequest $request){
 
         $all = $request->all();

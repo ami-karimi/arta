@@ -48,6 +48,7 @@ class V2rayController extends Controller
                     'protocol' => $row['protocol'],
                     'remark' => $row['remark'],
                     'tag' => $row['tag'],
+                    'counts' => Helper::ContV2rayUsers($row['clientStats']),
                 ];
             }
             return response()->json($re);
@@ -74,5 +75,12 @@ class V2rayController extends Controller
             ->build();
 
         echo $qrCode->getString();
+    }
+
+    public function get_v2ray_server(){
+
+        $servers = Ras::select('id','name')->where('server_type','v2ray')->where('is_enabled',1)->get();
+
+        return response()->json($servers);
     }
 }

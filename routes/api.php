@@ -33,7 +33,9 @@ Route::get('/download/{image}', [\App\Http\Controllers\Admin\WireGuardController
 Route::get('/get_shop_packages', [\App\Http\Controllers\Front\ShopController::class, 'shop_package'])->name('shop_package');
 Route::get('/get_payment_detail', [\App\Http\Controllers\Front\ShopController::class, 'shop_payment_detail'])->name('shop_payment_detail');
 Route::post('/store_order', [\App\Http\Controllers\Front\ShopController::class, 'store_order'])->middleware('recaptcha');;
+Route::post('/get_order_detail', [\App\Http\Controllers\Front\ShopController::class, 'get_order_detail'])->middleware('recaptcha');;
 Route::post('/final_order', [\App\Http\Controllers\Front\ShopController::class, 'final_order']);
+Route::post('/update_order', [\App\Http\Controllers\Front\ShopController::class, 'update_order']);
 
 
 
@@ -133,6 +135,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/get_services/{server_id}', [\App\Http\Controllers\Admin\V2rayController::class, 'get_services']);
         });
         Route::get('/get_wireguard_servers', [\App\Http\Controllers\Admin\WireGuardController::class, 'get_wireguard_servers']);
+        Route::get('/get_v2ray_server', [\App\Http\Controllers\Admin\V2rayController::class, 'get_v2ray_server']);
 
 
         Route::get('/getDashboard', [\App\Http\Controllers\Admin\AdminsController::class, 'getDashboard']);
@@ -170,6 +173,8 @@ Route::middleware(['auth:api'])->group(function () {
             });
             Route::prefix('order')->group(function () {
                 Route::get('/get/{id}', [\App\Http\Controllers\Admin\ShopController::class, 'get_order']);
+                Route::post('create_account/{id}', [\App\Http\Controllers\Admin\ShopController::class, 'create_account']);
+                Route::get('list', [\App\Http\Controllers\Admin\ShopController::class, 'order_list']);
             });
 
         });

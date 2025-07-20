@@ -2,6 +2,10 @@
 
 namespace App\Utility;
 
+use App\Http\Resources\WireGuardConfigCollection;
+use App\Models\AcctSaved;
+use App\Models\Ras;
+use App\Models\WireGuardUsers;
 use Carbon\Carbon;
 use App\Models\Financial;
 use App\Models\Groups;
@@ -15,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\JobsData;
 use App\Models\ShopOrders;
 use Morilog\Jalali\Jalalian;
+use App\Models\ShopOrderEvents;
 
 
 class Helper
@@ -561,9 +566,231 @@ class Helper
         if (Carbon::now()->greaterThanOrEqualTo($time)) {
             return false;
         }
-
-
         return Jalalian::forge($time)->ago();
+    }
+
+
+    public static function CreateWireguardAccount($server_id = false,$username = false){
+        $create_wr = new WireGuard($server_id,$username);
+        $findExistIP = $create_wr->findAvailableIp();
+        $return = [];
+        if(!$findExistIP){
+            $return['status'] = false;
+            $return['result'] = 'Not Free Ip In Server';
+
+            return $return;
+        }
+        $user_wi = $create_wr->Run();
+        if($user_wi['status']) {
+            exec('qrencode -t png -o /var/www/html/arta/public/configs/'.$user_wi['config_file'].".png -r /var/www/html/arta/public/configs/".$user_wi['config_file'].".conf");
+            $return['status'] = true;
+            $return['result'] = [
+                'config_file' => $user_wi['config_file'],
+                'client_private_key' => $user_wi['client_private_key'],
+                'client_public_key' => $user_wi['client_public_key'],
+                'ip_address' => $user_wi['ip_address'],
+                'server_name' => $create_wr->server_name
+
+            ];
+            return $return;
+        }
+        $return['status'] = false;
+        $return['result'] = $user_wi['message'];
+        return $return;
+    }
+
+    public static function CreateV2rayAccount($user,$server,$username,$group){
+        $result = [];
+        $V2ray = new V2raySN(
+            [
+                'HOST' =>  $server->ipaddress,
+                "PORT" =>  $server->port_v2ray,
+                "USERNAME" => $server->username_v2ray,
+                "PASSWORD"=> $server->password_v2ray,
+                "CDN_ADDRESS"=> $server->cdn_address_v2ray,
+
+            ]
+        );
+        if($V2ray->error['status']){
+            $result['status'] = false;
+            $result['result'] = $V2ray->error['message'];
+            return $result;
+        }
+        $expire_date = 0;
+        if($group->expire_value > 0){
+            $expire_date = $group->expire_value;
+            if($group->expire_type !== 'days'){
+                $expire_date *= 30;
+            }
+        }
+        $add_client = $V2ray->add_client((int) $user->protocol_v2ray,$username,(int) $group->multi_login,$group->group_volume,$expire_date,true);
+        if(!$add_client['success']){
+            $result['status'] = false;
+            $result['result'] = $V2ray->error['msg'];
+            return $result;
+        }
+        $client = $V2ray->get_user((int) $user->protocol_v2ray,$username);
+
+        return [
+          'status' => true,
+          'uuid_v2ray' =>  $add_client['uuid'],
+          'v2ray_config_uri' => $client['user']['url'],
+          'user' => $client['user'],
+          'sub_link' => url('/sub/'.base64_encode($username)),
+        ];
+    }
+
+    public static function AccountConfig($service_group = null,$user_list = [],$group_id = null,$name = null,$phonenumber = null,$creator = false,$data = []){
+        $result = [];
+
+        if($service_group == 'v2ray'){
+            if(!isset($data['protocol_v2ray'])) {
+                $result['status'] = false;
+                $result['result'] = 'protocol_v2ray no Set';
+                return $result;
+                }
+            if(!isset($data['v2ray_location'])) {
+                $result['status'] = false;
+                $result['result'] = 'v2ray_location no Set';
+                return $result;
+                }
+        }
+        if($service_group == 'wireguard') {
+            if(!isset($data['wg_server_id'])) {
+                $result['status'] = false;
+                $result['result'] = 'wg_server_id no Set';
+                return $result;
+            }
+        }
+
+
+            $findGroup = Groups::where('id',$group_id)->first();
+
+        $req_all = [];
+
+        foreach ($user_list as $user){
+             $exp_val_minute = 0;
+             $max_usage = 0;
+             $multi_login = $findGroup->multi_login;
+
+             $req_all = [];
+
+            $req_all['username'] = $user['username'];
+
+            $req_all['password'] = $user['password'];
+
+            if($name){
+                 $req_all['name'] = $name;
+             }
+             if($phonenumber){
+                 $req_all['phonenumber'] = $phonenumber;
+             }
+             $req_all['group_id'] = $group_id;
+             $req_all['service_group'] = $service_group;
+
+
+             // Check Time
+             switch ($findGroup->expire_type){
+                 case 'minutes':
+                     $exp_val_minute = $findGroup->expire_value;
+                     break;
+                 case 'hours':
+                     $exp_val_minute = floor($findGroup->expire_value * 60);
+                     $max_usage = @round(400000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                     break;
+                 case 'days':
+                     $exp_val_minute = floor($findGroup->expire_value * 1440);
+                     $max_usage =  @round(1999999999.9999998  * $findGroup->expire_value) * $findGroup->multi_login;
+                     break;
+                 case 'month':
+                     $exp_val_minute = floor($findGroup->expire_value * 43800);
+                     $max_usage =  @round(((((int) 100 *1024) * 1024) * 1024 )  * $findGroup->expire_value) * $findGroup->multi_login;
+                     break;
+                 case 'year':
+                     $exp_val_minute = floor($findGroup->expire_value * 525600);
+                     $max_usage =  @round(90000000000  * $findGroup->expire_value) * $findGroup->multi_login;
+                     break;
+             }
+
+            $req_all['exp_val_minute'] = $exp_val_minute;
+            $req_all['max_usage'] = $max_usage;
+            $req_all['expire_value'] = (int) $findGroup->expire_value;
+            $req_all['expire_type'] = $findGroup->expire_type;
+            $req_all['expire_set'] = 0;
+            $req_all['multi_login'] = $multi_login;
+
+            if($findGroup->group_type == 'volume') {
+                $req_all['max_usage'] = @round((((int) $findGroup->group_volume *1024) * 1024) * 1024 ) ;
+            }
+
+
+
+            if($findGroup->group_type == 'expire' && $findGroup->first_login == 0) {
+                $req_all['expire_value'] = (int) $findGroup->expire_value;
+                $req_all['expire_type'] = $findGroup->expire_type;
+                $req_all['expire_date'] = Carbon::now()->addMinutes($req_all['exp_val_minute']);
+                $req_all['first_login'] = Carbon::now();
+                $req_all['expire_set'] = 1;
+            }
+
+
+            if($service_group == 'v2ray'){
+                $req_all['volume_v2ray'] =   $findGroup->group_volume;
+                $req_all['protocol_v2ray'] =  $data['protocol_v2ray'];
+                $req_all['v2ray_location'] =  $data['v2ray_location'];
+            }
+            if($service_group == 'wireguard') {
+                $req_all['wg_server_id'] = $data['wg_server_id'];
+            }
+
+            $req_all['creator'] = $creator;
+
+
+        }
+
+        return [
+            'status' => true,
+            'result' => $req_all
+        ];
+
+    }
+
+
+    public static function SaveEventOrder($order_id,$text){
+        $event = new ShopOrderEvents();
+        $event->order_id = $order_id;
+        $event->text =  $text;
+        $event->save();
+
+        return $event;
+    }
+
+
+    public static function ContV2rayUsers($clients){
+        $expiredCount = 0;
+        $usedUpCount = 0;
+        $activeCount = 0;
+        $now = time();
+        foreach ($clients as $user) {
+            if ($user['enable']) {
+                $activeCount++;
+            }
+
+            if ($user['expiryTime'] > 0 && $user['expiryTime'] < $now) {
+                $expiredCount++;
+            }
+
+            if ($user['total'] > 0 && ($user['up'] + $user['down']) >= $user['total']) {
+                $usedUpCount++;
+            }
+        }
+
+
+        return [
+             'expiredCount' => $expiredCount + $usedUpCount,
+             'activeCount' => $activeCount,
+        ];
+
     }
 }
 

@@ -19,13 +19,14 @@ class WireGuard
     public string $client_private_key;
     public string $client_public_key;
     public string $config_file;
+    public string $server_name;
 
     public function __construct(string $server_id, string $username)
     {
         $this->server_id = $server_id;
         $this->username = $username;
         $this->server = Ras::findOrFail($server_id);
-
+        $this->server_name = $this->server->name;
         $keypair = sodium_crypto_kx_keypair();
         $this->client_private_key = base64_encode(sodium_crypto_kx_secretkey($keypair));
         $this->client_public_key = base64_encode(sodium_crypto_kx_publickey($keypair));
@@ -36,12 +37,15 @@ class WireGuard
     {
         $interface = $this->getInterface();
         if (!$interface['status']) return $interface;
-
+           if(!$this->findAvailableIp()){
+               return ['status' => false, 'message' => 'Not Ip'];
+           }
            $peerCreated = $this->createPeer();
            $this->createUserConfig();
            $this->addQueue(['ip' => $this->ip_address, 'name' => $this->config_file]);
 
             return [
+                'message' => 'success',
                 'status' => $peerCreated['ok'],
                 'client_private_key' => $this->client_private_key,
                 'client_public_key' => $this->client_public_key,
@@ -150,7 +154,7 @@ class WireGuard
         return ['status' => false, 'message' => 'WireGuard interface not found'];
     }
 
-    private function findAvailableIp(): string|false
+    public function findAvailableIp(): string|false
     {
         for ($i = 2; $i <= 254; $i++) {
             $ip = "12.11.10.$i";

@@ -24,6 +24,11 @@ class WireGuardController extends Controller
         ]);
 
     }
+    public function get_wireguard_servers(){
+        $servers = Ras::select(['name','id','ipaddress','server_location','unlimited'])->where('is_enabled',1)->where('unlimited',1)->get();
+
+        return response()->json($servers);
+    }
 
     public function update($id,Request $request){
         $find = WireGuardUsers::where('id',$id)->first();

@@ -22,4 +22,8 @@ class ShopOrders extends Model
         return $this->hasMany(ShopPayments::class,'order_id','id');
     }
 
+    public function user(){
+       return $this->hasOne(User::class,'id','user_id');
+    }
+
 }

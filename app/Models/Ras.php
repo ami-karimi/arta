@@ -16,7 +16,7 @@ class Ras extends Model
     }
 
     public function WireGuards(){
-        return $this->hasMany(WireGuardUsers::class,'server_id','id')->where('is_enabled','=',1);
+        return $this->hasMany(WireGuardUsers::class,'server_id','id');
     }
 
 }
