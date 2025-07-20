@@ -37,6 +37,7 @@ class OrderResource extends JsonResource
                        'location' =>  $this->user->wg->server->server_location,
                        'servername' =>  $this->user->wg->server->name,
                        'flag' =>  $this->user->wg->server->flag,
+                       'qr_link' =>   url('/configs/'.$this->user->wg->profile_name.".png"),
                        'config_file' => url("/configs/".$this->user->wg->profile_name.".conf"),
                        'config_download_patch' => url("/api/download/".$this->user->wg->profile_name.".conf"),
                    ];
